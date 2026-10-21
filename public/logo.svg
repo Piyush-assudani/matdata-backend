@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="mp_emerald" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="50%" stop-color="#047857" />
+      <stop offset="100%" stop-color="#0f766e" />
+    </linearGradient>
+    <linearGradient id="mp_gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <linearGradient id="mp_saffron" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff9933" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+    <filter id="mp_shadow" x="-10%" y="-10%" width="125%" height="130%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#047857" flood-opacity="0.35" />
+    </filter>
+    <filter id="slip_shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Outer Rounded Squircle -->
+  <rect x="24" y="24" width="464" height="464" rx="108" fill="url(#mp_emerald)" filter="url(#mp_shadow)" />
+  <!-- Inner Highlight Border -->
+  <rect x="24" y="24" width="464" height="464" rx="108" stroke="#ffffff" stroke-width="4" stroke-opacity="0.2" fill="none" />
+
+  <!-- Center Golden Democratic Aura -->
+  <circle cx="256" cy="230" r="140" fill="url(#mp_gold)" opacity="0.16" />
+
+  <!-- Ballot Box Base Platform -->
+  <rect x="136" y="278" width="240" height="130" rx="20" fill="#ffffff" fill-opacity="0.15" stroke="#ffffff" stroke-opacity="0.75" stroke-width="3" />
+  <!-- Golden Ballot Slot -->
+  <rect x="186" y="298" width="140" height="14" rx="7" fill="url(#mp_gold)" />
+
+  <!-- Descending Vote Slip -->
+  <g filter="url(#slip_shadow)">
+    <!-- White Card -->
+    <rect x="171" y="116" width="170" height="190" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="2" />
+    <!-- Saffron Header Stripe -->
+    <path d="M 172 132 C 172 123.16 179.16 116 188 116 L 324 116 C 332.84 116 340 123.16 340 132 L 340 138 L 172 138 Z" fill="url(#mp_saffron)" />
+    <!-- Micro Ballot Lines -->
+    <rect x="194" y="154" width="70" height="5" rx="2.5" fill="#94a3b8" />
+    <rect x="194" y="165" width="45" height="4" rx="2" fill="#cbd5e1" />
+    <!-- Dynamic Emerald Checkmark -->
+    <path d="M 212 214 L 244 246 L 298 184" fill="none" stroke="#059669" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+
+  <!-- 3 Civic Star Dots -->
+  <circle cx="206" cy="358" r="5" fill="#ffffff" opacity="0.9" />
+  <circle cx="256" cy="358" r="6" fill="url(#mp_gold)" />
+  <circle cx="306" cy="358" r="5" fill="#ffffff" opacity="0.9" />
+</svg>

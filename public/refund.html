@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="hi" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>धनवापसी एवं रद्दीकरण नीति (Refund & Cancellation) | Matdata Portal</title>
+  <meta name="description" content="Matdata Portal (मतदाता पोर्टल) चुनाव प्रबंधन सेवाओं हेतु आधिकारिक धनवापसी एवं रद्दीकरण नीति।">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #059669;
+      --primary-dark: #047857;
+      --primary-light: #ecfdf5;
+      --accent: #f59e0b;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.7;
+    }
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .header-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(5, 150, 105, 0.2);
+    }
+    .brand-title {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .brand-title span { color: var(--primary); }
+    .brand-subtitle { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+    .nav-links { display: flex; align-items: center; gap: 16px; }
+    .nav-link {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--primary);
+      background-color: var(--primary-light);
+    }
+    main { max-width: 960px; margin: 36px auto; padding: 0 20px; }
+    .doc-container {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 48px;
+      box-shadow: 0 4px 24px -2px rgba(15, 23, 42, 0.05);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    h1 { font-size: 32px; font-weight: 900; letter-spacing: -0.7px; margin-bottom: 8px; }
+    .meta-bar {
+      font-size: 13px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+      margin-bottom: 32px;
+    }
+    h2 {
+      font-size: 20px;
+      font-weight: 800;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h2::before {
+      content: "";
+      width: 4px;
+      height: 20px;
+      background: var(--primary);
+      border-radius: 2px;
+      display: inline-block;
+    }
+    p, li { font-size: 15px; color: #334155; margin-bottom: 14px; }
+    ul { padding-left: 24px; margin-bottom: 20px; }
+    footer {
+      border-top: 1px solid var(--border);
+      background: #ffffff;
+      padding: 24px 20px;
+      margin-top: 60px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    footer a { color: var(--primary); text-decoration: none; font-weight: 600; margin: 0 8px; }
+    @media (max-width: 640px) {
+      .doc-container { padding: 24px 20px; }
+      h1 { font-size: 24px; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <a href="/" class="brand-link">
+        <img src="/logo.svg" alt="Matdata Portal" class="brand-logo">
+        <div>
+          <div class="brand-title">Matdata <span>Portal</span></div>
+          <div class="brand-subtitle">मतदाता प्रबंधन एवं चुनाव वॉर-रूम</div>
+        </div>
+      </a>
+      <nav class="nav-links">
+        <a href="/privacy.html" class="nav-link">Privacy Policy</a>
+        <a href="/terms.html" class="nav-link">Terms of Service</a>
+        <a href="/refund.html" class="nav-link active">Refund Policy</a>
+        <a href="/contact.html" class="nav-link">Contact Us</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="doc-container">
+      <div class="badge">वाणिज्यिक शर्तें</div>
+      <h1>धनवापसी एवं रद्दीकरण नीति (Refund &amp; Cancellation)</h1>
+      <div class="meta-bar">
+        प्लेटफ़ॉर्म: <strong>Matdata Portal (मतदाता पोर्टल)</strong> &bull; लागू तिथि: 1 जनवरी 2026
+      </div>
+
+      <p>
+        <strong>Matdata Portal</strong> चुनाव अभियान अवधि के लिए समर्पित डिजिटल सॉफ्टवेयर और WhatsApp API मैसेजिंग अवसंरचना प्रदान करता है।
+      </p>
+
+      <h2>1. सेवा सक्रियण एवं सेटअप शुल्क</h2>
+      <p>
+        चुनाव अभियान के लिए सर्वर प्रावधान, डेटाबेस कॉन्फ़िगरेशन एवं कस्टम व्हाट्सएप बिजनेस एपीआई चैनल सेटअप तुरंत आरंभ हो जाता है। अतः खाता सक्रियण के पश्चात प्रारंभिक सेटअप शुल्क अप्रतिदेय (Non-Refundable) होता है।
+      </p>
+
+      <h2>2. तकनीकी विफलता की स्थिति में धनवापसी</h2>
+      <p>
+        यदि हमारी प्रणाली में किसी अप्रत्याशित गंभीर तकनीकी समस्या के कारण सेवा निरंतर 48 घंटे से अधिक बाधित रहती है, तो ग्राहक अप्रयुक्त अवधि या अप्रयुक्त मैसेज क्रेडिट के आनुपातिक मूल्य की धनवापसी के लिए दावा कर सकते हैं।
+      </p>
+
+      <h2>3. धनवापसी अनुरोध प्रक्रिया</h2>
+      <p>
+        धनवापसी संबंधी किसी भी प्रश्न अथवा अनुरोध हेतु खाता धारक अपने पंजीकृत ईमेल से <strong>billing@matdataportal.app</strong> पर लेनदेन संदर्भ संख्या सहित संपर्क कर सकते हैं। स्वीकृत रिफंड 5 से 7 कार्य दिवसों में मूल भुगतान माध्यम में प्रेषित कर दिए जाते हैं।
+      </p>
+    </div>
+  </main>
+
+  <footer>
+    &copy; 2026 Matdata Portal (मतदाता पोर्टल). सर्वाधिकार सुरक्षित। &bull;
+    <a href="/privacy.html">Privacy Policy</a> &bull;
+    <a href="/terms.html">Terms of Service</a> &bull;
+    <a href="/refund.html">Refund Policy</a> &bull;
+    <a href="/contact.html">Contact Us</a>
+  </footer>
+
+</body>
+</html>

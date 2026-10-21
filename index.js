@@ -42,10 +42,34 @@ app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/privacy.html', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'privacy.html')));
-app.get('/privacy', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'privacy.html')));
-app.get('/terms.html', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'terms.html')));
-app.get('/terms', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'terms.html')));
+app.get(['/privacy', '/privacy.html'], (_req, res) => res.sendFile(path.join(__dirname, 'public', 'privacy.html')));
+app.get(['/terms', '/terms.html'], (_req, res) => res.sendFile(path.join(__dirname, 'public', 'terms.html')));
+app.get(['/refund', '/refund.html'], (_req, res) => res.sendFile(path.join(__dirname, 'public', 'refund.html')));
+app.get(['/contact', '/contact.html'], (_req, res) => res.sendFile(path.join(__dirname, 'public', 'contact.html')));
+
+app.get('/api/legal/policies', (_req, res) => {
+  const host = _req.get('host') || 'localhost:5003';
+  const proto = _req.protocol || 'http';
+  res.json({
+    platform: 'Matdata Portal (मतदाता पोर्टल)',
+    version: '2026.1',
+    effectiveDate: '2026-01-01',
+    lastUpdated: new Date().toISOString(),
+    policies: {
+      privacy: { title: 'Privacy Policy (गोपनीयता नीति)', path: '/privacy.html', url: `${proto}://${host}/privacy.html` },
+      terms: { title: 'Terms of Service (नियम और शर्तें)', path: '/terms.html', url: `${proto}://${host}/terms.html` },
+      refund: { title: 'Refund Policy (धनवापसी नीति)', path: '/refund.html', url: `${proto}://${host}/refund.html` },
+      contact: { title: 'Contact & Grievance (संपर्क एवं शिकायत)', path: '/contact.html', url: `${proto}://${host}/contact.html` }
+    },
+    compliance: {
+      eciGuidelinesCompliant: true,
+      itAct2000Compliant: true,
+      dpdpAct2023Compliant: true,
+      metaWhatsAppCloudApiCompliant: true,
+      commercialDataSaleProhibited: true
+    }
+  });
+});
 
 app.use('/api', apiLimiter); // Apply rate limiter to all API routes
 

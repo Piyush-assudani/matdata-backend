@@ -1,219 +1,290 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi" class="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Terms of Service - Matdata Portal Election Campaign Platform & Meta WhatsApp Services</title>
-  <meta name="description" content="Official Terms of Service for Matdata Portal Election Campaign Management Platform and Meta WhatsApp Business API integration.">
+  <title>नियम और शर्तें (Terms of Service) | Matdata Portal (मतदाता पोर्टल)</title>
+  <meta name="description" content="Matdata Portal (मतदाता पोर्टल) चुनाव प्रबंधन एवं डिजिटल सेवा हेतु आधिकारिक नियम व सेवा शर्तें।">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #1e3a8a;
-      --primary-light: #2563eb;
-      --accent: #ea580c;
-      --surface: #ffffff;
+      --primary: #059669;
+      --primary-dark: #047857;
+      --primary-light: #ecfdf5;
+      --accent: #f59e0b;
       --bg: #f8fafc;
-      --text: #0f172a;
+      --card: #ffffff;
+      --text-main: #0f172a;
       --text-muted: #475569;
       --border: #e2e8f0;
-      --success: #16a34a;
+      --border-focus: #10b981;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, sans-serif;
       background-color: var(--bg);
-      color: var(--text);
-      line-height: 1.65;
-      padding: 0;
-      margin: 0;
+      color: var(--text-main);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
     }
     header {
-      background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
-      color: #ffffff;
-      padding: 40px 20px;
-      text-align: center;
-      border-bottom: 3px solid var(--accent);
-    }
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      margin-bottom: 8px;
-    }
-    .brand-badge {
-      background: var(--accent);
-      color: #ffffff;
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 12px;
-      text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-    .subtitle {
-      color: #93c5fd;
-      font-size: 14px;
-      max-width: 650px;
-      margin: 0 auto;
-    }
-    main {
-      max-width: 860px;
-      margin: 30px auto;
-      padding: 0 20px 60px;
-    }
-    .policy-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 36px 32px;
-      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
-    }
-    h1 {
-      font-size: 26px;
-      font-weight: 800;
-      color: var(--primary);
-      margin-bottom: 8px;
-    }
-    .last-updated {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 24px;
-      padding-bottom: 16px;
+      background: #ffffff;
       border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
-    h2 {
-      font-size: 18px;
-      font-weight: 700;
-      color: #0f172a;
-      margin: 28px 0 12px;
+    .header-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 14px 20px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: space-between;
+    }
+    .brand-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(5, 150, 105, 0.2);
+    }
+    .brand-title {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+    .brand-title span { color: var(--primary); }
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .nav-link {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--primary);
+      background-color: var(--primary-light);
+    }
+    main {
+      max-width: 960px;
+      margin: 36px auto;
+      padding: 0 20px;
+    }
+    .doc-container {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 48px;
+      box-shadow: 0 4px 24px -2px rgba(15, 23, 42, 0.05);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -0.7px;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+    .meta-bar {
+      font-size: 13px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+      margin-bottom: 32px;
+    }
+    h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     h2::before {
       content: "";
       width: 4px;
-      height: 18px;
-      background: var(--primary-light);
+      height: 20px;
+      background: var(--primary);
       border-radius: 2px;
+      display: inline-block;
     }
-    p, ul, ol {
-      font-size: 14.5px;
-      color: var(--text-muted);
+    p, li {
+      font-size: 15px;
+      color: #334155;
       margin-bottom: 14px;
     }
     ul, ol {
-      padding-left: 22px;
+      padding-left: 24px;
+      margin-bottom: 20px;
     }
-    li {
-      margin-bottom: 8px;
-    }
-    .highlight-box {
+    li { margin-bottom: 8px; }
+    strong { color: #0f172a; }
+    .alert-box {
       background: #eff6ff;
-      border: 1.5px solid #bfdbfe;
-      border-radius: 10px;
+      border: 1px solid #bfdbfe;
+      border-left: 4px solid #2563eb;
       padding: 16px 20px;
-      margin: 20px 0;
+      border-radius: 12px;
+      margin: 24px 0;
+    }
+    .alert-box h4 {
+      color: #1e40af;
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .alert-box p {
+      color: #1d4ed8;
+      margin-bottom: 0;
+      font-size: 14px;
     }
     footer {
-      text-align: center;
-      padding: 24px 20px;
-      font-size: 13px;
-      color: var(--text-muted);
       border-top: 1px solid var(--border);
       background: #ffffff;
+      padding: 24px 20px;
+      margin-top: 60px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
     }
     footer a {
-      color: var(--primary-light);
+      color: var(--primary);
       text-decoration: none;
       font-weight: 600;
+      margin: 0 8px;
     }
-    footer a:hover {
-      text-decoration: underline;
-    }
+    footer a:hover { text-decoration: underline; }
     @media (max-width: 640px) {
-      .policy-card { padding: 24px 18px; }
-      h1 { font-size: 22px; }
+      .doc-container { padding: 24px 20px; }
+      h1 { font-size: 24px; }
+      .nav-links { display: none; }
     }
   </style>
 </head>
 <body>
 
   <header>
-    <div class="brand">
-      <span>Matdata Portal</span>
-      <span class="brand-badge">Election Portal</span>
-    </div>
-    <div class="subtitle">
-      Terms of Service &amp; Acceptable Messaging Usage Agreement
+    <div class="header-inner">
+      <a href="/" class="brand-link">
+        <img src="/logo.svg" alt="Matdata Portal" class="brand-logo">
+        <div>
+          <div class="brand-title">Matdata <span>Portal</span></div>
+          <div class="brand-subtitle">मतदाता प्रबंधन एवं चुनाव वॉर-रूम</div>
+        </div>
+      </a>
+      <nav class="nav-links">
+        <a href="/privacy.html" class="nav-link">Privacy Policy</a>
+        <a href="/terms.html" class="nav-link active">Terms of Service</a>
+        <a href="/refund.html" class="nav-link">Refund Policy</a>
+        <a href="/contact.html" class="nav-link">Contact Us</a>
+      </nav>
     </div>
   </header>
 
   <main>
-    <article class="policy-card">
-      <h1>Terms of Service</h1>
-      <div class="last-updated">
-        Effective Date: <strong>October 10, 2026</strong> · Last Updated: <strong>October 2026</strong>
+    <div class="doc-container">
+      <div class="badge">सेवा अनुबंध एवं नियम</div>
+      <h1>नियम और शर्तें (Terms of Service)</h1>
+      <div class="meta-bar">
+        प्लेटफ़ॉर्म: <strong>Matdata Portal (मतदाता पोर्टल)</strong> &bull; लागू तिथि: 1 जनवरी 2026 &bull; नवीनतम अद्यतन: 2026
       </div>
 
-      <div class="highlight-box">
-        <strong>Binding Agreement</strong>
-        <p style="margin: 0;">
-          These Terms of Service govern your access to and usage of the Matdata Portal web application, backend API, voter slip management utilities, and associated Meta WhatsApp Business Messaging features. By logging into or using this platform, you agree to these terms in full.
+      <p>
+        <strong>Matdata Portal (मतदाता पोर्टल)</strong> प्लेटफ़ॉर्म, इसके वेब एप्लिकेशन, मोबाइल ऐप एवं एपीआई सेवाओं का उपयोग करने पर आप निम्नलिखित नियमों व शर्तों से बाध्य होने के लिए सहमति व्यक्त करते हैं। कृपया इन्हें ध्यानपूर्वक पढ़ें।
+      </p>
+
+      <h2>1. प्लेटफ़ॉर्म का स्वरूप एवं उद्देश्य (Platform Scope)</h2>
+      <p>
+        Matdata Portal एक उन्नत तकनीकी चुनावी वॉर-रूम सॉफ्टवेयर है, जिसका उपयोग केवल लोकतांत्रिक चुनाव अभियानों के प्रबंधन, बूथ समन्वय, कार्यकर्ताओं के कार्य आवंटन तथा मतदाताओं को उनकी सार्वजनिक मतदान पर्ची (Voter Information Slip) उपलब्ध कराने हेतु किया जाता है।
+      </p>
+
+      <h2>2. उपयोगकर्ता खाते एवं उत्तरदायित्व (Account Responsibilities)</h2>
+      <ul>
+        <li>उपयोगकर्ता (प्रत्याशी, चुनाव प्रबंधक या कार्यकर्ता) अपने लॉगिन क्रेडेंशियल्स की गोपनीयता बनाए रखने के लिए व्यक्तिगत रूप से जिम्मेदार हैं।</li>
+        <li>किसी भी अनाधिकृत उपयोग अथवा सुरक्षा उल्लंघन की स्थिति में उपयोगकर्ता को तुरंत सिस्टम एडमिनिस्ट्रेटर को सूचित करना होगा।</li>
+        <li>प्रत्येक खाता केवल अधिकृत चुनाव अभियान कार्यों हेतु ही उपयोग किया जा सकता है।</li>
+      </ul>
+
+      <h2>3. चुनाव आयोग के नियमों का अनिवार्य पालन (ECI Compliance)</h2>
+      <div class="alert-box">
+        <h4>आदर्श आचार संहिता (Model Code of Conduct) का अनुपालन</h4>
+        <p>
+          उपयोगकर्ता वचनबद्ध हैं कि प्लेटफ़ॉर्म द्वारा जनरेट की जाने वाली किसी भी डिजिटल पर्ची या संदेश में भारतीय निर्वाचन आयोग (ECI) के दिशा-निर्देशों एवं जनप्रतिनिधित्व अधिनियम 1951 का उल्लंघन नहीं किया जाएगा। साइलेंस पीरियड (चुनाव प्रचार समाप्त होने के पश्चात) के दौरान कोई भी बल्क मैसेजिंग वर्जित रहेगी।
         </p>
       </div>
 
-      <h2>1. Permitted Purpose &amp; Scope of Use</h2>
-      <p>
-        Matdata Portal is intended strictly for legitimate election campaign operations, booth volunteer coordination, voter slip generation, and informational outreach by authorized political parties, candidates, and campaign teams in accordance with democratic and statutory frameworks.
-      </p>
-
-      <h2>2. Meta WhatsApp Business Usage Requirements</h2>
-      <p>When utilizing our WhatsApp automated dispatch and messaging capabilities, all users and campaign administrators agree to:</p>
+      <h2>4. Meta WhatsApp मैसेजिंग नियम (WhatsApp API Use)</h2>
       <ul>
-        <li>Strictly adhere to <strong>Meta's WhatsApp Business Messaging Policy</strong>, Commerce Policy, and Technical Guidelines.</li>
-        <li>Transmit messages exclusively for informational election notices, voter booth guidance, and digital voter slip distribution.</li>
-        <li>Refrain from dispatching unauthorized bulk spam, harassment, hate speech, defamatory content, or misinformation.</li>
-        <li>Honor recipient opt-out requests (&quot;STOP&quot; / &quot;UNSUBSCRIBE&quot;) immediately and without condition.</li>
+        <li>WhatsApp मैसेजिंग का उपयोग केवल कानूनी, आधिकारिक और मतदाता-सहायक उद्देश्यों के लिए ही किया जाएगा।</li>
+        <li>नफरती भाषण (Hate Speech), भ्रामक सूचना (Misinformation), या आक्रामक प्रचार सामग्री का प्रसारण पूर्णतः प्रतिबंधित है। ऐसा पाए जाने पर खाता तुरंत निरस्त कर दिया जाएगा।</li>
+        <li>मतदाता द्वारा "STOP" या "बंद करें" का अनुरोध किए जाने पर कार्यकर्ता प्रणाली के माध्यम से उस नंबर पर संदेश भेजना तुरंत रोकेंगे।</li>
       </ul>
 
-      <h2>3. User Accounts &amp; Access Controls</h2>
+      <h2>5. बौद्धिक संपदा अधिकार (Intellectual Property)</h2>
       <p>
-        Access to Matdata Portal is segregated by Role-Based Access Control (RBAC). Super Administrators maintain complete tenant oversight; campaign workers and client accounts are restricted to permitted wards and voter search functions. Sharing credentials across unauthorized third parties is strictly prohibited.
+        Matdata Portal के समस्त सॉफ्टवेयर कोड, यूआई डिज़ाइन, लोगो, ब्रांडिंग, डेटाबेस संरचना और एल्गोरिदम सर्वाधिकार सुरक्षित हैं। प्लेटफ़ॉर्म का अनधिकृत क्लोन, रिवर्स इंजीनियरिंग या अनधिकृत प्रतिरूपण कानूनन दंडनीय है।
       </p>
 
-      <h2>4. Compliance with Election Commission of India (ECI) Laws</h2>
+      <h2>6. देयता की सीमा (Limitation of Liability)</h2>
       <p>
-        Users are exclusively responsible for ensuring that all campaign content, appeal texts, and distribution schedules comply with the Model Code of Conduct (MCC), ECI statutory silence periods (e.g., 48 hours prior to poll close), and applicable electoral spending regulations.
+        Matdata Portal केवल तकनीकी अवसंरचना (Infrastructure Provider) के रूप में कार्य करता है। उपयोगकर्ताओं द्वारा अपलोड किए गए विशिष्ट चुनाव डेटा अथवा कार्यकर्ताओं द्वारा भेजे गए संदेशों की सामग्री के लिए संबंधित अभियान प्रबंधन ही जिम्मेदार होगा।
       </p>
 
-      <h2>5. Limitation of Liability</h2>
+      <h2>7. शासी कानून एवं क्षेत्राधिकार (Governing Law)</h2>
       <p>
-        Matdata Portal provides software tools on an &quot;as is&quot; and &quot;as available&quot; basis. We are not liable for campaign outcomes, telecommunication network downtimes, third-party carrier delays, or Meta WhatsApp Cloud API outages beyond our direct infrastructure.
+        ये नियम भारतीय कानूनों के अधीन होंगे और किसी भी विवाद की स्थिति में न्यायिक क्षेत्राधिकार राजस्थान / नई दिल्ली स्थित सक्षम न्यायालयों के पास रहेगा।
       </p>
 
-      <h2>6. Termination of Service</h2>
-      <p>
-        We reserve the right to suspend or terminate any user account or tenant organization that violates Meta messaging policies, breaches data security, or attempts unauthorized penetration or scraping of electoral registers.
-      </p>
-
-      <h2>7. Contact Information</h2>
-      <p>For questions or formal inquiries concerning these Terms of Service, contact:</p>
-      <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px 18px; font-size: 14px;">
-        <strong>Legal Desk:</strong> Matdata Portal Compliance Operations<br>
-        <strong>Email:</strong> <a href="mailto:support@matdataportal.app" style="color: var(--primary-light);">support@matdataportal.app</a><br>
-        <strong>Website:</strong> <a href="/" style="color: var(--primary-light);">https://matdataportal.app</a>
-      </div>
-    </article>
+    </div>
   </main>
 
   <footer>
-    &copy; 2026 Matdata Portal. All Rights Reserved. &bull; <a href="/privacy.html">Privacy Policy</a> &bull; <a href="/">Dashboard</a>
+    &copy; 2026 Matdata Portal (मतदाता पोर्टल). सर्वाधिकार सुरक्षित। &bull;
+    <a href="/privacy.html">Privacy Policy</a> &bull;
+    <a href="/terms.html">Terms of Service</a> &bull;
+    <a href="/refund.html">Refund Policy</a> &bull;
+    <a href="/contact.html">Contact Us</a>
   </footer>
 
 </body>
