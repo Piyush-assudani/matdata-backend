@@ -7,7 +7,8 @@ exports.verifyToken = async (req, res, next) => {
 
   let claims;
   try {
-    claims = jwt.verify(token, process.env.JWT_SECRET);
+    const JWT_SECRET = process.env.JWT_SECRET || 'MatdataPortal_on_top';
+    claims = jwt.verify(token, JWT_SECRET);
   } catch (err) {
     return res.status(401).json({ message: 'Invalid or Expired Token' });
   }

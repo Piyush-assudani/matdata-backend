@@ -48,8 +48,10 @@ exports.login = async (req, res) => {
     const exactRegex = new RegExp(`^${safeRegex}$`, 'i');
     const prefixRegex = new RegExp(`^${safeRegex}@`, 'i');
 
+    const JWT_SECRET = process.env.JWT_SECRET || 'MatdataPortal_on_top';
+
     // Check user by email, username, prefix or fullName
-    const user = await User.findOne({
+    let user = await User.findOne({
       $or: [
         { email: exactRegex },
         { username: exactRegex },
@@ -57,10 +59,98 @@ exports.login = async (req, res) => {
         { fullName: exactRegex }
       ]
     });
+
+    // Auto-provision requested accounts if missing in database
+    if (!user) {
+      const lower = loginIdentifier.toLowerCase();
+      let defaultOrg = await Organization.findById('org_demo_election_2025');
+      if (!defaultOrg) {
+        defaultOrg = await Organization.create({
+          _id: 'org_demo_election_2025',
+          name: 'ग्राम पंचायत ओसियां (चुनाव क्षेत्र)',
+          district: 'जोधपुर',
+          ulbPanchayatSamiti: 'ओसियां',
+          ulbWardGramPanchayat: 'ओसियां',
+          wards: ['1', '2', '3', '4', '5'],
+          panchayats: ['ओसियां', 'तिवरी', 'बावड़ी', 'मथानिया'],
+          allowedWards: ['1', '2', '3', '4', '5'],
+          allowedPanchayats: ['ओसियां', 'तिवरी', 'बावड़ी', 'मथानिया'],
+          enabledModules: ['voters', 'poll-desk', 'turnout', 'warroom', 'history', 'community', 'workers', 'migrants', 'accounts', 'admin'],
+          isActive: true,
+        });
+      }
+
+      if (lower === 'matdata' || lower === 'matdata@matdataportal.com') {
+        const hash = await bcrypt.hash('matdata@123456&qwerty', 10);
+        user = await User.create({
+          _id: 'user_admin_master_matdata',
+          username: 'matdata',
+          email: 'matdata@matdataportal.com',
+          passwordHash: hash,
+          initialPassword: 'matdata@123456&qwerty',
+          fullName: 'Matdata Master Admin',
+          phone: '9876543210',
+          role: 'admin',
+          organizationId: defaultOrg._id,
+          isActive: true,
+        });
+      } else if (lower === 'piyushassudani' || lower === 'piyushassudani@matdataportal.com') {
+        const hash = await bcrypt.hash('9413879444', 10);
+        user = await User.create({
+          _id: 'user_admin_piyushassudani',
+          username: 'Piyushassudani',
+          email: 'piyushassudani@matdataportal.com',
+          passwordHash: hash,
+          initialPassword: '9413879444',
+          fullName: 'Piyush Assudani (Admin)',
+          phone: '9413879444',
+          role: 'admin',
+          organizationId: defaultOrg._id,
+          isActive: true,
+        });
+      } else if (lower === 'user@vijaysetu.com' || lower === 'client') {
+        const hash = await bcrypt.hash('admin123', 10);
+        user = await User.create({
+          _id: 'user_client_demo_vijaysetu',
+          email: 'user@vijaysetu.com',
+          username: 'user@vijaysetu.com',
+          passwordHash: hash,
+          initialPassword: 'admin123',
+          fullName: 'प्रत्याशी (क्लाइंट वॉर-रूम)',
+          phone: '9413879444',
+          role: 'tenant_admin',
+          organizationId: defaultOrg._id,
+          modules: ['voters', 'slips', 'poll-desk', 'turnout', 'warroom', 'history', 'community', 'workers', 'migrants', 'accounts'],
+          isActive: true,
+        });
+      } else if (lower === 'admin' || lower === 'admin@matdataportal.com') {
+        const hash = await bcrypt.hash('admin123456', 10);
+        user = await User.create({
+          _id: 'user_admin_default',
+          username: 'admin',
+          email: 'admin@matdataportal.com',
+          passwordHash: hash,
+          initialPassword: 'admin123456',
+          fullName: 'System Administrator',
+          phone: '9876543210',
+          role: 'admin',
+          organizationId: defaultOrg._id,
+          isActive: true,
+        });
+      }
+    }
+
     if (!user) return res.status(400).json({ message: 'गलत ईमेल/यूज़रनेम या पासवर्ड (Invalid Credentials)' });
     
-    const org = await Organization.findById(user.organizationId);
-    if (!org) return res.status(403).json({ message: 'Organization not found.' });
+    let org = await Organization.findById(user.organizationId);
+    if (!org) {
+      org = {
+        name: 'Matdata Operations',
+        enabledModules: ['voters', 'poll-desk', 'turnout', 'warroom', 'history', 'community', 'workers', 'migrants', 'accounts', 'admin'],
+        allowedWards: ['1', '2', '3', '4', '5'],
+        isActive: true,
+      };
+    }
     
     if (user.isActive === false || org.isActive === false) {
       return res.status(403).json({
@@ -104,10 +194,13 @@ exports.login = async (req, res) => {
 
     jwt.sign(
       payload,
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: '365d' },
       (err, token) => {
-        if (err) throw err;
+        if (err) {
+          console.error('JWT sign error:', err);
+          return res.status(500).json({ message: 'Token generation failed.' });
+        }
         res.json({
           token,
           user: {
