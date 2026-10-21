@@ -45,14 +45,73 @@ const ensureSchema = async () => {
       }
     }
 
-    // 2. Ensure Super Admin Account exists
+    // 2. Ensure Master Admin Account (matdata / matdata@123456&qwerty)
+    const masterPassHash = await bcrypt.hash('matdata@123456&qwerty', 10);
+    let masterAdmin = await User.findOne({
+      $or: [{ username: /^matdata$/i }, { email: /^matdata@/i }]
+    });
+    if (!masterAdmin) {
+      masterAdmin = await User.create({
+        _id: 'user_admin_master_matdata',
+        username: 'matdata',
+        email: 'matdata@matdataportal.com',
+        passwordHash: masterPassHash,
+        initialPassword: 'matdata@123456&qwerty',
+        fullName: 'Matdata Master Admin',
+        phone: '9876543210',
+        role: 'admin',
+        organizationId: defaultOrgId,
+        isActive: true,
+      });
+      console.log('✅ Master Admin created: ID: matdata, Pass: matdata@123456&qwerty');
+    } else {
+      masterAdmin.username = 'matdata';
+      masterAdmin.passwordHash = masterPassHash;
+      masterAdmin.initialPassword = 'matdata@123456&qwerty';
+      masterAdmin.role = 'admin';
+      masterAdmin.isActive = true;
+      await masterAdmin.save();
+      console.log('✅ Master Admin updated: ID: matdata');
+    }
+
+    // 3. Ensure Second Admin Account (Piyushassudani / 9413879444)
+    const secondPassHash = await bcrypt.hash('9413879444', 10);
+    let secondAdmin = await User.findOne({
+      $or: [{ username: /^Piyushassudani$/i }, { email: /^piyushassudani@/i }]
+    });
+    if (!secondAdmin) {
+      secondAdmin = await User.create({
+        _id: 'user_admin_piyushassudani',
+        username: 'Piyushassudani',
+        email: 'piyushassudani@matdataportal.com',
+        passwordHash: secondPassHash,
+        initialPassword: '9413879444',
+        fullName: 'Piyush Assudani (Admin)',
+        phone: '9413879444',
+        role: 'admin',
+        organizationId: defaultOrgId,
+        isActive: true,
+      });
+      console.log('✅ Second Admin created: ID: Piyushassudani, Pass: 9413879444');
+    } else {
+      secondAdmin.username = 'Piyushassudani';
+      secondAdmin.passwordHash = secondPassHash;
+      secondAdmin.initialPassword = '9413879444';
+      secondAdmin.role = 'admin';
+      secondAdmin.isActive = true;
+      await secondAdmin.save();
+      console.log('✅ Second Admin updated: ID: Piyushassudani');
+    }
+
+    // Default admin fallback
     const adminEmail = (process.env.BOOTSTRAP_ADMIN_EMAIL || 'admin@matdataportal.com').trim().toLowerCase();
     const adminPassword = process.env.BOOTSTRAP_ADMIN_PASSWORD || 'admin123456';
-    let adminUser = await User.findOne({ email: adminEmail });
-    if (!adminUser) {
-      adminUser = await User.create({
+    let defaultAdminUser = await User.findOne({ email: adminEmail });
+    if (!defaultAdminUser) {
+      await User.create({
         _id: `user_admin_root`,
         email: adminEmail,
+        username: 'admin',
         passwordHash: await bcrypt.hash(adminPassword, 10),
         fullName: 'मुख्य व्यवस्थापक (Admin)',
         phone: '9876543210',
@@ -60,181 +119,152 @@ const ensureSchema = async () => {
         organizationId: defaultOrgId,
         isActive: true,
       });
-      console.log(`✅ Default Admin created: ${adminEmail} (Password: ${adminPassword})`);
     }
 
-    // Also ensure demo worker account
-    const workerEmail = 'worker@matdataportal.com';
-    let workerUser = await User.findOne({ email: workerEmail });
-    if (!workerUser) {
-      await User.create({
-        _id: `user_worker_demo`,
-        email: workerEmail,
-        passwordHash: await bcrypt.hash('worker123456', 10),
-        fullName: 'बूथ कार्यकर्ता (Demo)',
-        phone: '9876543211',
-        role: 'worker',
-        organizationId: defaultOrgId,
-        modules: ['voters', 'poll-desk', 'turnout', 'history'],
+    // 4. Ensure Dummy Client (Candidate/Organization) exists
+    const clientOrgId = 'org_client_demo';
+    let clientOrg = await Organization.findById(clientOrgId);
+    if (!clientOrg) {
+      clientOrg = await Organization.create({
+        _id: clientOrgId,
+        name: 'विधानसभा क्षेत्र 14 (प्रत्याशी वॉर-रूम डेमो)',
+        district: 'जयपुर',
+        ulbPanchayatSamiti: 'विधानसभा 14',
+        ulbWardGramPanchayat: 'वार्ड 1-10',
+        wards: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+        panchayats: ['वार्ड 1', 'वार्ड 2', 'वार्ड 3', 'वार्ड 4', 'वार्ड 5', 'वार्ड 6', 'वार्ड 7', 'वार्ड 8', 'वार्ड 9', 'वार्ड 10'],
+        allowedWards: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+        allowedPanchayats: ['वार्ड 1', 'वार्ड 2', 'वार्ड 3', 'वार्ड 4', 'वार्ड 5', 'वार्ड 6', 'वार्ड 7', 'वार्ड 8', 'वार्ड 9', 'वार्ड 10'],
+        enabledModules: ['voters', 'slips', 'poll-desk', 'turnout', 'warroom', 'history', 'community', 'workers', 'migrants', 'accounts', 'admin'],
         isActive: true,
+        whatsappEnabled: true,
+        whatsappCredits: 5000,
+        whatsappUsed: 120,
       });
+      console.log('✅ Dummy Client Organization created:', clientOrg.name);
     }
 
-    // 3. Seed Realistic Voters if database has 0 voters
-    const voterCount = await Voter.countDocuments({ organizationId: defaultOrgId });
-    if (voterCount === 0) {
-      console.log('🌱 Seeding sample voter records with Panchayats, Wards, Deleted & Unreadable samples...');
+    // 5. Ensure Client User Account (user@vijaysetu.com / admin123)
+    const clientPassHash = await bcrypt.hash('admin123', 10);
+    const clientEmails = ['user@vijaysetu.com', 'user@matdataportal.com'];
+    for (const cEmail of clientEmails) {
+      let clientUser = await User.findOne({ email: new RegExp(`^${cEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') });
+      if (!clientUser) {
+        clientUser = await User.create({
+          _id: `user_client_${cEmail.split('@')[0]}_${cEmail.split('@')[1].replace(/[^a-zA-Z0-9]/g, '_')}`,
+          email: cEmail,
+          username: cEmail,
+          passwordHash: clientPassHash,
+          initialPassword: 'admin123',
+          fullName: 'प्रत्याशी (क्लाइंट वॉर-रूम)',
+          phone: '9413879444',
+          role: 'tenant_admin',
+          organizationId: clientOrgId,
+          modules: ['voters', 'slips', 'poll-desk', 'turnout', 'warroom', 'history', 'community', 'workers', 'migrants', 'accounts'],
+          isActive: true,
+        });
+        console.log(`✅ Client Account created: ${cEmail} (Password: admin123)`);
+      } else {
+        clientUser.passwordHash = clientPassHash;
+        clientUser.initialPassword = 'admin123';
+        clientUser.organizationId = clientOrgId;
+        clientUser.role = 'tenant_admin';
+        clientUser.isActive = true;
+        await clientUser.save();
+        console.log(`✅ Client Account updated: ${cEmail}`);
+      }
+    }
+
+    // 6. Ensure 360+ Voters seeded for the Client Organization
+    const clientVoterCount = await Voter.countDocuments({ organizationId: clientOrgId });
+    if (clientVoterCount < 300) {
+      console.log(`🌱 Seeding 360 realistic voter records for Client Organization (${clientOrgId})...`);
       
-      const samplePanchayats = ['ओसियां', 'तिवरी', 'बावड़ी', 'मथानिया'];
-      const sampleCastes = ['जाट', 'राजपूत', 'ब्राह्मण', 'विश्नोई', 'मेघवाल', 'प्रजापत', 'मुस्लिम', 'गुर्जर', 'शर्मा'];
-      const sampleNames = [
-        { name: 'रामनिवास शर्मा', rel: 'राधेश्याम शर्मा', type: 'पिता', gender: 'पुरुष', age: 48, house: '12' },
-        { name: 'सुनीता शर्मा', rel: 'रामनिवास शर्मा', type: 'पति', gender: 'स्त्री', age: 44, house: '12' },
-        { name: 'मुकेश विश्नोई', rel: 'हनुमानराम विश्नोई', type: 'पिता', gender: 'पुरुष', age: 32, house: '15' },
-        { name: 'कविता विश्नोई', rel: 'मुकेश विश्नोई', type: 'पति', gender: 'स्त्री', age: 29, house: '15' },
-        { name: 'गणपत प्रजापत', rel: 'घेवरराम प्रजापत', type: 'पिता', gender: 'पुरुष', age: 52, house: '24' },
-        { name: 'शांति देवी', rel: 'गणपत प्रजापत', type: 'पति', gender: 'स्त्री', age: 49, house: '24' },
-        { name: 'सुरेश कुमार जाट', rel: 'भंवरलाल जाट', type: 'पिता', gender: 'पुरुष', age: 38, house: '31' },
-        { name: 'मंजू चौधरी', rel: 'सुरेश कुमार जाट', type: 'पति', gender: 'स्त्री', age: 35, house: '31' },
-        { name: 'अशोक सिंह', rel: 'डूंगर सिंह', type: 'पिता', gender: 'पुरुष', age: 42, house: '45' },
-        { name: 'नसीम बानो', rel: 'मोहम्मद आरिफ', type: 'पति', gender: 'स्त्री', age: 36, house: '56' },
-        { name: 'किशनलाल मेघवाल', rel: 'मोहनराम मेघवाल', type: 'पिता', gender: 'पुरुष', age: 55, house: '62' },
-        { name: 'तारा देवी', rel: 'किशनलाल मेघवाल', type: 'पति', gender: 'स्त्री', age: 51, house: '62' },
-        { name: 'प्रकाश सोलंकी', rel: 'बाबूलाल सोलंकी', type: 'पिता', gender: 'पुरुष', age: 26, house: '78' },
-        { name: 'पूजा सोलंकी', rel: 'प्रकाश सोलंकी', type: 'पति', gender: 'स्त्री', age: 24, house: '78' },
-        { name: 'भंवर सिंह राठौड़', rel: 'गोविंद सिंह राठौड़', type: 'पिता', gender: 'पुरुष', age: 60, house: '89' },
+      const maleNames = [
+        'रामनिवास', 'सुरेश', 'मुकेश', 'गणपत', 'अशोक', 'दिनेश', 'राकेश', 'मनोज', 'प्रकाश', 'राजेश',
+        'भंवरलाल', 'डूंगरराम', 'हनुमान', 'कमलेश', 'महेंद्र', 'सत्यनारायण', 'गोविंद', 'विकास', 'संजय', 'अनिल',
+        'कैलाश', 'श्रवण', 'ओमप्रकाश', 'जगदीश', 'नरेश', 'पवन', 'सुनील', 'जितेंद्र', 'प्रदीप', 'किशन'
+      ];
+      const femaleNames = [
+        'सुनीता', 'कविता', 'शांति', 'मंजू', 'पूजा', 'गायत्री', 'कौशल्या', 'कमला', 'तारा', 'विमला',
+        'संतोष', 'ललिता', 'ममता', 'सरिता', 'रेखा', 'आशा', 'सुशीला', 'सीमा', 'उषा', 'प्रिया',
+        'निर्मला', 'अनिता', 'पिंकी', 'दुर्गा', 'मोनिका', 'सुमन', 'किरण', 'गीता', 'माया', 'भावना'
+      ];
+      const casteList = [
+        { caste: 'ब्राह्मण', surHi: 'शर्मा', surEn: 'Sharma' },
+        { caste: 'राजपूत', surHi: 'शेखावत', surEn: 'Shekhawat' },
+        { caste: 'राजपूत', surHi: 'राठौड़', surEn: 'Rathore' },
+        { caste: 'जाट', surHi: 'चौधरी', surEn: 'Choudhary' },
+        { caste: 'जाट', surHi: 'जाट', surEn: 'Jat' },
+        { caste: 'विश्नोई', surHi: 'विश्नोई', surEn: 'Bishnoi' },
+        { caste: 'मेघवाल', surHi: 'मेघवाल', surEn: 'Meghwal' },
+        { caste: 'प्रजापत', surHi: 'प्रजापत', surEn: 'Prajapat' },
+        { caste: 'मुस्लिम', surHi: 'खान', surEn: 'Khan' },
+        { caste: 'गुर्जर', surHi: 'गुर्जर', surEn: 'Gurjar' },
+        { caste: 'सैनी', surHi: 'सैनी', surEn: 'Saini' },
+        { caste: 'वैश्य', surHi: 'अग्रवाल', surEn: 'Agarwal' }
       ];
 
-      const votersToInsert = [];
-      let serialCounter = 1;
+      const clientVoters = [];
+      const totalToGenerate = 360;
 
-      // Create Active voters across 4 Panchayats and 5 Wards
-      for (const panchayat of samplePanchayats) {
-        for (let ward = 1; ward <= 3; ward++) {
-          for (let i = 0; i < sampleNames.length; i++) {
-            const item = sampleNames[i];
-            const caste = sampleCastes[i % sampleCastes.length];
-            votersToInsert.push({
-              _id: `voter_${defaultOrgId}_${serialCounter}`,
-              epic: `RJ/24/OSN/${String(serialCounter).padStart(7, '0')}`,
-              wardNo: String(ward),
-              panchayat: panchayat,
-              panchayatHi: panchayat,
-              partNo: String(ward),
-              serialNo: serialCounter,
-              nameEn: item.name,
-              nameHi: item.name,
-              relativeNameEn: item.rel,
-              relativeNameHi: item.rel,
-              relationType: item.type,
-              houseNo: item.house,
-              age: item.age,
-              gender: item.gender,
-              caste: caste,
-              status: 'Active',
-              supportStatus: i % 3 === 0 ? 'core' : i % 3 === 1 ? 'swing' : 'unmarked',
-              voted: i % 4 === 0,
-              organizationId: defaultOrgId,
-              isMigrant: i === 7,
-              migrantLocation: i === 7 ? 'अहमदाबाद (गुजरात)' : '',
-            });
-            serialCounter++;
-          }
-        }
+      for (let i = 1; i <= totalToGenerate; i++) {
+        const isFemale = i % 2 === 0;
+        const firstName = isFemale ? femaleNames[i % femaleNames.length] : maleNames[i % maleNames.length];
+        const casteInfo = casteList[i % casteList.length];
+        const fullNameHi = `${firstName} ${casteInfo.surHi}`;
+        const fullNameEn = `${firstName} ${casteInfo.surEn}`;
+        
+        const relFirst = maleNames[(i + 7) % maleNames.length];
+        const relNameHi = `${relFirst} ${casteInfo.surHi}`;
+        const relType = isFemale ? (i % 3 === 0 ? 'पिता' : 'पति') : 'पिता';
+        
+        const wardNum = ((i - 1) % 10) + 1;
+        const houseNum = String(((i * 7) % 85) + 1);
+        const age = 18 + ((i * 13) % 65);
+        
+        const supportModes = ['core', 'swing', 'opponent', 'unmarked'];
+        const support = supportModes[i % 4];
+        const isVoted = i % 3 === 0;
+        const isMigrant = i % 14 === 0;
+        const migrantCities = ['सूरत (गुजरात)', 'मुंबई', 'अहमदाबाद', 'बेंगलुरु', 'पुणे', 'दिल्ली'];
+
+        clientVoters.push({
+          _id: `voter_${clientOrgId}_${String(i).padStart(4, '0')}`,
+          epic: `RJ/14/082/${String(1000 + i).padStart(6, '0')}`,
+          wardNo: String(wardNum),
+          panchayat: `वार्ड ${wardNum}`,
+          panchayatHi: `वार्ड ${wardNum}`,
+          partNo: String(wardNum),
+          serialNo: i,
+          nameEn: fullNameEn,
+          nameHi: fullNameHi,
+          relativeNameEn: relNameHi,
+          relativeNameHi: relNameHi,
+          relationType: relType,
+          houseNo: houseNum,
+          houseNoHi: houseNum,
+          age: age,
+          gender: isFemale ? 'स्त्री' : 'पुरुष',
+          mobileNo: `9829${String(100000 + i).slice(1)}`,
+          caste: casteInfo.caste,
+          status: i === 357 ? 'Deleted' : i === 358 ? 'Unreadable' : 'Active',
+          supportStatus: support,
+          voted: isVoted,
+          votedAt: isVoted ? new Date(Date.now() - (i * 360000)) : null,
+          isMigrant: isMigrant,
+          migrantLocation: isMigrant ? migrantCities[i % migrantCities.length] : '',
+          villageName: `विधानसभा वार्ड ${wardNum}`,
+          villageNameHi: `विधानसभा वार्ड ${wardNum}`,
+          boothName: `राजकीय उच्च माध्यमिक विद्यालय, कक्ष क्र. ${wardNum}`,
+          organizationId: clientOrgId,
+          familyId: `FAM_${wardNum}_${houseNum}`,
+          notes: i === 357 ? 'ECI सूची में विलोपित' : i === 358 ? 'धुंधला OCR नाम' : ''
+        });
       }
 
-      // Add Sample DELETED Voters (ECI विलोपित) for the Review/Recovery panel
-      votersToInsert.push(
-        {
-          _id: `voter_${defaultOrgId}_deleted_1`,
-          epic: `RJ/24/OSN/DEL0001`,
-          wardNo: '1',
-          panchayat: 'ओसियां',
-          panchayatHi: 'ओसियां',
-          partNo: '1',
-          serialNo: 991,
-          nameEn: 'मोहनलाल सुथार',
-          nameHi: 'मोहनलाल सुथार (विलोपित)',
-          relativeNameEn: 'चुन्नीलाल सुथार',
-          relativeNameHi: 'चुन्नीलाल सुथार',
-          relationType: 'पिता',
-          houseNo: '18',
-          age: 68,
-          gender: 'पुरुष',
-          caste: 'सुथार',
-          status: 'Deleted',
-          notes: 'मतदाता सूची में विलोपित (#DELETED#) मार्क था',
-          organizationId: defaultOrgId,
-        },
-        {
-          _id: `voter_${defaultOrgId}_deleted_2`,
-          epic: `RJ/24/OSN/DEL0002`,
-          wardNo: '2',
-          panchayat: 'तिवरी',
-          panchayatHi: 'तिवरी',
-          partNo: '2',
-          serialNo: 992,
-          nameEn: 'कमला देवी',
-          nameHi: 'कमला देवी (विलोपित)',
-          relativeNameEn: 'मदनलाल सैन',
-          relativeNameHi: 'मदनलाल सैन',
-          relationType: 'पति',
-          houseNo: '44',
-          age: 58,
-          gender: 'स्त्री',
-          caste: 'सैन',
-          status: 'Deleted',
-          notes: 'मतदाता सूची में विलोपित (#DELETED#) मार्क था',
-          organizationId: defaultOrgId,
-        }
-      );
-
-      // Add Sample UNREADABLE Voters (अपठनीय / धुंधला OCR) for the Edit/Add panel
-      votersToInsert.push(
-        {
-          _id: `voter_${defaultOrgId}_unreadable_1`,
-          epic: `RJ/24/OSN/UNR0001`,
-          wardNo: '1',
-          panchayat: 'ओसियां',
-          panchayatHi: 'ओसियां',
-          partNo: '1',
-          serialNo: 995,
-          nameEn: 'अपठनीय मतदाता #995',
-          nameHi: 'धुंधला नाम (अपठनीय #995)',
-          relativeNameEn: 'गोपाराम',
-          relativeNameHi: 'गोपाराम',
-          relationType: 'पिता',
-          houseNo: '52',
-          age: 32,
-          gender: 'पुरुष',
-          status: 'Unreadable',
-          notes: 'PDF स्कैन में नाम धुंधला/अस्पष्ट था - संपादन की आवश्यकता है',
-          organizationId: defaultOrgId,
-        },
-        {
-          _id: `voter_${defaultOrgId}_unreadable_2`,
-          epic: `RJ/24/OSN/UNR0002`,
-          wardNo: '3',
-          panchayat: 'बावड़ी',
-          panchayatHi: 'बावड़ी',
-          partNo: '3',
-          serialNo: 996,
-          nameEn: 'अपठनीय मतदाता #996',
-          nameHi: 'धुंधला नाम (अपठनीय #996)',
-          relativeNameEn: 'भंवरू खां',
-          relativeNameHi: 'भंवरू खां',
-          relationType: 'पिता',
-          houseNo: '81',
-          age: 40,
-          gender: 'पुरुष',
-          status: 'Unreadable',
-          notes: 'PDF स्कैन में नाम धुंधला/अस्पष्ट था - संपादन की आवश्यकता है',
-          organizationId: defaultOrgId,
-        }
-      );
-
-      await Voter.insertMany(votersToInsert, { ordered: false });
-      console.log(`✅ Inserted ${votersToInsert.length} demo voters with Panchayat and Ward support!`);
+      await Voter.insertMany(clientVoters, { ordered: false });
+      console.log(`✅ Successfully inserted ${clientVoters.length} voter records for Client Organization!`);
     }
   } catch (err) {
     console.error('Database initialization notice:', err.message);
