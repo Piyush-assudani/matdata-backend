@@ -17,7 +17,7 @@ const featureRoutes = require('./routes/features');
 
 const app = express();
 app.set('trust proxy', true);
-const PORT = process.env.PORT || 5002;
+const PORT = process.env.PORT || 5003;
 
 // Rate Limiting (Token Bucket / Throttling)
 const rateLimit = require('express-rate-limit');
@@ -64,7 +64,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/features', featureRoutes.router);
 app.use('/api/admin/pdf', require('./routes/admin_pdf'));
 
-app.get('/api/health', async (_req, res) => {
+app.get(['/health', '/api/health'], async (_req, res) => {
   try {
     const mongoose = require('mongoose');
     if (mongoose.connection.readyState === 1) {

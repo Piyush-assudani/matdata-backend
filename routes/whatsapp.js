@@ -51,7 +51,7 @@ function getPublicBaseUrl(req) {
     forwardedHost.startsWith('192.168.') ||
     forwardedHost.startsWith('10.')
   ) {
-    return `http://${forwardedHost || 'localhost:5002'}`;
+    return `http://${forwardedHost || 'localhost:5003'}`;
   }
   return `${forwardedProto}://${forwardedHost}`;
 }
