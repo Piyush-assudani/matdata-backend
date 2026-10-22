@@ -144,6 +144,7 @@ router.post('/organizations', verifyToken, isAdmin, async (req, res) => {
   const isWpEnabled = typeof req.body.whatsappEnabled === 'boolean' ? req.body.whatsappEnabled : true;
   const slipConfig = req.body.slipConfig && typeof req.body.slipConfig === 'object' ? req.body.slipConfig : {};
 
+  try {
     const passwordHash = await bcrypt.hash(password, 10);
     const orgPayload = {
       _id: id,
