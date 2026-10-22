@@ -869,15 +869,128 @@ router.delete('/master-data', verifyToken, isAdmin, async (req, res) => {
   }
 
   const query = { organizationId: orgId };
-  if (wardNo) query.wardNo = wardNo;
+  if (wardNo) {
+    const cleanWard = wardNo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    query.wardNo = { $regex: new RegExp(`^\\s*(?:वार्ड\\s*)?${cleanWard}\\s*$`, 'i') };
+  }
 
   try {
     const result = await Voter.deleteMany(query);
+
+    // 🚀 REMOVE WARD FROM ORGANIZATION LIST WHEN WARD DATA IS DELETED:
+    if (wardNo) {
+      const org = await Organization.findById(orgId);
+      if (org) {
+        const cleanTarget = String(wardNo).trim();
+        const filterFn = (w) => {
+          const str = String(w).trim();
+          return str !== cleanTarget && str !== `वार्ड ${cleanTarget}` && str.replace(/^वार्ड\s*/, '') !== cleanTarget.replace(/^वार्ड\s*/, '');
+        };
+        const updatedAllowed = (Array.isArray(org.allowedWards) ? org.allowedWards : []).filter(filterFn);
+        const updatedWards = (Array.isArray(org.wards) ? org.wards : []).filter(filterFn);
+        
+        const slipConfig = org.slipConfig || {};
+        if (slipConfig.wardPollingStations && typeof slipConfig.wardPollingStations === 'object') {
+          delete slipConfig.wardPollingStations[cleanTarget];
+          delete slipConfig.wardPollingStations[`वार्ड ${cleanTarget}`];
+        }
+
+        await Organization.updateOne(
+          { _id: orgId },
+          { 
+            $set: { 
+              allowedWards: updatedAllowed,
+              wards: updatedWards,
+              slipConfig: slipConfig
+            } 
+          }
+        );
+      }
+    } else {
+      // When ALL master data of an organization is deleted, clear all ward registrations
+      await Organization.updateOne(
+        { _id: orgId },
+        { 
+          $set: { 
+            allowedWards: [],
+            wards: []
+          } 
+        }
+      );
+    }
+
     cache.flushAll(); // Clear cache to reflect deletions
-    res.json({ message: 'Records deleted successfully.', deletedCount: result.deletedCount });
+    res.json({ 
+      success: true,
+      message: wardNo 
+        ? `वार्ड ${wardNo} का डेटा और वार्ड सूची से नाम सफलतापूर्वक हटा दिया गया (${result.deletedCount} रिकॉर्ड्स डिलीट हुए)।` 
+        : `संगठन का सारा वोटर डेटा और संबंधित सभी वार्ड्स सफलतापूर्वक हटा दिए गए (${result.deletedCount} रिकॉर्ड्स डिलीट हुए)।`, 
+      deletedCount: result.deletedCount,
+      wardNo: wardNo || undefined
+    });
   } catch (err) {
     console.error('Master data bulk delete failed:', err.message);
-    res.status(500).json({ message: 'Bulk delete failed.' });
+    res.status(500).json({ message: 'डेटा डिलीट करने में त्रुटि आई: ' + err.message });
+  }
+});
+
+// Explicit Ward & Ward Data Deletion endpoint
+router.delete('/wards', verifyToken, isAdmin, async (req, res) => {
+  const orgId = typeof req.query.organizationId === 'string' ? req.query.organizationId.trim() : '';
+  const wardNo = typeof req.query.wardNo === 'string' ? req.query.wardNo.trim() : '';
+
+  if (!orgId || !wardNo) {
+    return res.status(400).json({ message: 'क्लाइंट (organizationId) और वार्ड नंबर आवश्यक हैं।' });
+  }
+
+  try {
+    const cleanTarget = String(wardNo).trim();
+    const cleanRegex = cleanTarget.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // 1. Delete all voters in this ward
+    const delResult = await Voter.deleteMany({
+      organizationId: orgId,
+      wardNo: { $regex: new RegExp(`^\\s*(?:वार्ड\\s*)?${cleanRegex}\\s*$`, 'i') }
+    });
+
+    // 2. Remove ward from organization definition
+    const org = await Organization.findById(orgId);
+    if (org) {
+      const filterFn = (w) => {
+        const str = String(w).trim();
+        return str !== cleanTarget && str !== `वार्ड ${cleanTarget}` && str.replace(/^वार्ड\s*/, '') !== cleanTarget.replace(/^वार्ड\s*/, '');
+      };
+      const updatedAllowed = (Array.isArray(org.allowedWards) ? org.allowedWards : []).filter(filterFn);
+      const updatedWards = (Array.isArray(org.wards) ? org.wards : []).filter(filterFn);
+      
+      const slipConfig = org.slipConfig || {};
+      if (slipConfig.wardPollingStations && typeof slipConfig.wardPollingStations === 'object') {
+        delete slipConfig.wardPollingStations[cleanTarget];
+        delete slipConfig.wardPollingStations[`वार्ड ${cleanTarget}`];
+      }
+
+      await Organization.updateOne(
+        { _id: orgId },
+        { 
+          $set: { 
+            allowedWards: updatedAllowed,
+            wards: updatedWards,
+            slipConfig: slipConfig
+          } 
+        }
+      );
+    }
+
+    cache.flushAll();
+    res.json({
+      success: true,
+      message: `वार्ड "${cleanTarget}" और उसके सभी ${delResult.deletedCount} रिकॉर्ड्स संगठन से सफलतापूर्वक हटा दिए गए।`,
+      deletedCount: delResult.deletedCount,
+      wardNo: cleanTarget
+    });
+  } catch (err) {
+    console.error('Ward delete failed:', err);
+    res.status(500).json({ message: 'वार्ड डिलीट करने में त्रुटि आई: ' + err.message });
   }
 });
 
