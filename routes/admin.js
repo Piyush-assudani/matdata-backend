@@ -144,18 +144,6 @@ router.post('/organizations', verifyToken, isAdmin, async (req, res) => {
   const isWpEnabled = typeof req.body.whatsappEnabled === 'boolean' ? req.body.whatsappEnabled : true;
   const slipConfig = req.body.slipConfig && typeof req.body.slipConfig === 'object' ? req.body.slipConfig : {};
 
-  let session = null;
-  let inTransaction = false;
-  try {
-    session = await mongoose.startSession();
-    session.startTransaction();
-    inTransaction = true;
-  } catch {
-    session = null;
-    inTransaction = false;
-  }
-
-  try {
     const passwordHash = await bcrypt.hash(password, 10);
     const orgPayload = {
       _id: id,
@@ -183,18 +171,13 @@ router.post('/organizations', verifyToken, isAdmin, async (req, res) => {
       organizationId: id,
     };
 
-    if (inTransaction && session) {
-      await Organization.create([orgPayload], { session });
-      await User.create([userPayload], { session });
-      await session.commitTransaction();
-    } else {
-      await Organization.create(orgPayload);
-      try {
-        await User.create(userPayload);
-      } catch (userErr) {
-        await Organization.deleteOne({ _id: id });
-        throw userErr;
-      }
+    // Resilient creation: works seamlessly on replica sets, standalone, Atlas and in-memory DBs
+    await Organization.create(orgPayload);
+    try {
+      await User.create(userPayload);
+    } catch (userErr) {
+      await Organization.deleteOne({ _id: id }).catch(() => {});
+      throw userErr;
     }
 
     res.status(201).json({
@@ -214,18 +197,11 @@ router.post('/organizations', verifyToken, isAdmin, async (req, res) => {
       },
     });
   } catch (err) {
-    if (inTransaction && session) {
-      try { await session.abortTransaction(); } catch { /* ignore */ }
-    }
     if (err.code === 11000) {
       return res.status(409).json({ message: `इस एडमिन ईमेल (${sanitizedEmail}) पर पहले से खाता मौजूद है।` });
     }
     console.error('Organization creation failed:', err.message);
     res.status(500).json({ message: `क्लाइंट खाता नहीं बन सका: ${err.message}` });
-  } finally {
-    if (session) {
-      try { session.endSession(); } catch { /* ignore */ }
-    }
   }
 });
 
