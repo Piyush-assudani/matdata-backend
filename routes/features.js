@@ -105,51 +105,38 @@ router.get('/war-room', requireModule('warroom'), async (req, res) => {
 router.get('/dashboard', async (req, res) => {
   try {
     const match = addVoterAccess(req);
-    const org = await Organization.findById(req.user.organizationId).lean();
-    const enabledModules = org?.enabledModules || [];
 
-    const stats = {};
-    const moduleQueries = [];
+    const [aggregateResult, distinctWards, dispatchesCount, migrantCount] = await Promise.all([
+      Voter.aggregate([
+        { $match: match },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            voted: { $sum: { $cond: ["$voted", 1, 0] } }
+          }
+        }
+      ]),
+      Voter.distinct('wardNo', match),
+      SlipDispatch.countDocuments(match.organizationId ? { organizationId: match.organizationId } : {}),
+      Voter.countDocuments({ ...match, isMigrant: true })
+    ]);
 
-    if (enabledModules.includes('poll-desk')) {
-      moduleQueries.push(
-        Voter.aggregate([
-          { $match: match },
-          { $group: {
-              _id: null,
-              total: { $sum: 1 },
-              voted: { $sum: { $cond: ["$voted", 1, 0] } }
-          }}
-        ]).then(result => {
-          stats.votedCount = result[0]?.voted || 0;
-          stats.totalVoters = result[0]?.total || 0;
-        })
-      );
-    }
-    if (enabledModules.includes('warroom')) {
-      moduleQueries.push(
-        Voter.aggregate([
-          { $match: match },
-          { $group: { _id: "$supportStatus", count: { $sum: 1 } } }
-        ]).then(result => {
-          stats.support = { core: 0, swing: 0, opposition: 0, unmarked: 0 };
-          result.forEach(row => {
-            if (['core', 'swing', 'opposition', 'unmarked'].includes(row._id)) {
-              stats.support[row._id] += row.count;
-            }
-          });
-        })
-      );
-    }
-    if (enabledModules.includes('migrants')) {
-      moduleQueries.push(
-        Voter.countDocuments({ ...match, isMigrant: true }).then(count => {
-          stats.migrantCount = count;
-        })
-      );
-    }
+    const totalVoters = aggregateResult[0]?.total || 0;
+    const votedCount = aggregateResult[0]?.voted || 0;
+    const cleanWards = (distinctWards || []).filter(w => w !== null && w !== undefined && String(w).trim() !== '');
+    const wardCount = cleanWards.length;
+    const turnoutPercent = totalVoters > 0 ? Number(((votedCount / totalVoters) * 100).toFixed(1)) : 0;
 
-    await Promise.all(moduleQueries);
+    const stats = {
+      totalVoters,
+      votedCount,
+      turnoutPercent,
+      wardCount,
+      dispatchesCount,
+      migrantCount
+    };
+
     res.json(stats);
   } catch (err) {
     console.error('Dashboard data failed:', err.message);
