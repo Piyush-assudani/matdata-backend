@@ -743,12 +743,15 @@ def extract_single_pdf(pdf_path, default_ward=None, default_part=None, include_d
                             elif f != '/9' and ' ' in ''.join(chr(c) for c in b): rel_hashes.append('SPACE')
 
                     # House No line
-                    elif sy - 42.5 <= y <= sy - 37.0 and f != '/9':
-                        if txt.isdigit():
-                            house_no = txt
+                    elif sy - 48.5 <= y <= sy - 32.0 and f != '/9':
+                        c_cand = re.sub(r'^[ :ः\.\-]+', '', txt).strip()
+                        c_cand = re.sub(r'^(?:मकान|संख्या|मकरन|सपखजर|सपखसर|गृह|house|no)[:ः\.\-\s]*', '', c_cand, flags=re.I).strip()
+                        c_cand = re.sub(r'[,:ः\.\s]+$', '', c_cand).strip()
+                        if c_cand and any(ch.isdigit() for ch in c_cand) and not any(k in c_cand for k in ['Photo', 'EPIC', 'RJ/', 'VOTER']):
+                            house_no = c_cand
 
                     # Age & Gender line
-                    elif sy - 56.0 <= y <= sy - 50.0:
+                    elif sy - 58.0 <= y <= sy - 49.0:
                         if f != '/9' and txt.isdigit():
                             p_age = int(txt)
                             if 18 <= p_age <= 125:
