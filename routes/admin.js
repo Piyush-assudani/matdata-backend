@@ -645,11 +645,18 @@ router.delete('/organizations/:id', verifyToken, isAdmin, async (req, res) => {
     // Sequential cascade deletion (avoids MongoDB transaction concurrency/replica set locks)
     const voterRes = await Voter.deleteMany({ organizationId: orgId });
     const dispRes = await SlipDispatch.deleteMany({ organizationId: orgId });
-    const userRes = await User.deleteMany({ organizationId: orgId });
+    // Protect system admins: only delete tenant-specific users, never global admins
+    const userRes = await User.deleteMany({ organizationId: orgId, role: { $ne: 'admin' } });
     const orgRes = await Organization.deleteOne({ _id: orgId });
 
     if (orgRes.deletedCount === 0) {
       return res.status(404).json({ message: 'Organization not found.' });
+    }
+
+    // Reassign any global admins to an existing organization so they are never orphaned
+    const fallbackOrg = await Organization.findOne({ _id: { $ne: orgId } });
+    if (fallbackOrg) {
+      await User.updateMany({ organizationId: orgId, role: 'admin' }, { organizationId: fallbackOrg._id });
     }
 
     // Flush cache entries for this organization

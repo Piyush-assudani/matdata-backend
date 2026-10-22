@@ -18,11 +18,11 @@ const ensureSchema = async () => {
       Lead.init(),
     ]).catch((idxErr) => console.warn('Background index sync notice:', idxErr.message));
 
-    // 1. Ensure Neutral, Professional Election Organization exists
-    const defaultOrgId = 'org_demo_election_2025';
-    let org = await Organization.findById(defaultOrgId);
-    if (!org) {
-      org = await Organization.create({
+    // 1. Determine default organization (only create starter org if DB is completely empty)
+    let defaultOrgId = 'org_demo_election_2025';
+    const existingOrgCount = await Organization.countDocuments();
+    if (existingOrgCount === 0) {
+      const org = await Organization.create({
         _id: defaultOrgId,
         name: 'ग्राम पंचायत ओसियां (चुनाव क्षेत्र)',
         district: 'जोधपुर',
@@ -35,13 +35,11 @@ const ensureSchema = async () => {
         enabledModules: ['voters', 'poll-desk', 'turnout', 'warroom', 'history', 'community', 'workers', 'migrants', 'accounts', 'admin'],
         isActive: true,
       });
-      console.log('✅ Default Election Organization initialized:', org.name);
+      console.log('✅ Starter Election Organization initialized:', org.name);
     } else {
-      // Ensure panchayats array is populated
-      if (!org.panchayats || org.panchayats.length === 0) {
-        org.panchayats = ['ओसियां', 'तिवरी', 'बावड़ी', 'मथानिया'];
-        org.allowedPanchayats = ['ओसियां', 'तिवरी', 'बावड़ी', 'मथानिया'];
-        await org.save();
+      const existingOrg = await Organization.findById(defaultOrgId) || await Organization.findOne();
+      if (existingOrg) {
+        defaultOrgId = existingOrg._id;
       }
     }
 
@@ -103,7 +101,7 @@ const ensureSchema = async () => {
       console.log('✅ Second Admin updated: ID: Piyushassudani');
     }
 
-    // Default admin fallback
+    // 4. Default admin fallback
     const adminEmail = (process.env.BOOTSTRAP_ADMIN_EMAIL || 'admin@matdataportal.com').trim().toLowerCase();
     const adminPassword = process.env.BOOTSTRAP_ADMIN_PASSWORD || 'admin123456';
     let defaultAdminUser = await User.findOne({ email: adminEmail });
@@ -121,61 +119,7 @@ const ensureSchema = async () => {
       });
     }
 
-    // 4. Ensure Dummy Client (Candidate/Organization) exists
-    const clientOrgId = 'org_client_demo';
-    let clientOrg = await Organization.findById(clientOrgId);
-    if (!clientOrg) {
-      clientOrg = await Organization.create({
-        _id: clientOrgId,
-        name: 'विधानसभा क्षेत्र 14 (प्रत्याशी वॉर-रूम डेमो)',
-        district: 'जयपुर',
-        ulbPanchayatSamiti: 'विधानसभा 14',
-        ulbWardGramPanchayat: 'वार्ड 1-10',
-        wards: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
-        panchayats: ['वार्ड 1', 'वार्ड 2', 'वार्ड 3', 'वार्ड 4', 'वार्ड 5', 'वार्ड 6', 'वार्ड 7', 'वार्ड 8', 'वार्ड 9', 'वार्ड 10'],
-        allowedWards: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
-        allowedPanchayats: ['वार्ड 1', 'वार्ड 2', 'वार्ड 3', 'वार्ड 4', 'वार्ड 5', 'वार्ड 6', 'वार्ड 7', 'वार्ड 8', 'वार्ड 9', 'वार्ड 10'],
-        enabledModules: ['voters', 'slips', 'poll-desk', 'turnout', 'warroom', 'history', 'community', 'workers', 'migrants', 'accounts', 'admin'],
-        isActive: true,
-        whatsappEnabled: true,
-        whatsappCredits: 5000,
-        whatsappUsed: 120,
-      });
-      console.log('✅ Dummy Client Organization created:', clientOrg.name);
-    }
-
-    // 5. Ensure Client User Account (user@vijaysetu.com / admin123)
-    const clientPassHash = await bcrypt.hash('admin123', 10);
-    const clientEmails = ['user@vijaysetu.com', 'user@matdataportal.com'];
-    for (const cEmail of clientEmails) {
-      let clientUser = await User.findOne({ email: new RegExp(`^${cEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') });
-      if (!clientUser) {
-        clientUser = await User.create({
-          _id: `user_client_${cEmail.split('@')[0]}_${cEmail.split('@')[1].replace(/[^a-zA-Z0-9]/g, '_')}`,
-          email: cEmail,
-          username: cEmail,
-          passwordHash: clientPassHash,
-          initialPassword: 'admin123',
-          fullName: 'प्रत्याशी (क्लाइंट वॉर-रूम)',
-          phone: '9413879444',
-          role: 'tenant_admin',
-          organizationId: clientOrgId,
-          modules: ['voters', 'slips', 'poll-desk', 'turnout', 'warroom', 'history', 'community', 'workers', 'migrants', 'accounts'],
-          isActive: true,
-        });
-        console.log(`✅ Client Account created: ${cEmail} (Password: admin123)`);
-      } else {
-        clientUser.passwordHash = clientPassHash;
-        clientUser.initialPassword = 'admin123';
-        clientUser.organizationId = clientOrgId;
-        clientUser.role = 'tenant_admin';
-        clientUser.isActive = true;
-        await clientUser.save();
-        console.log(`✅ Client Account updated: ${cEmail}`);
-      }
-    }
-
-    // 6. Automatic voter seeding removed: database respects manual uploads and deletions
+    // 5. Automatic dummy seeding disabled: respects manual client creation and deletion
   } catch (err) {
     console.error('Database initialization notice:', err.message);
   }

@@ -62,7 +62,14 @@ exports.login = async (req, res) => {
 
     if (!user) return res.status(400).json({ message: 'गलत ईमेल/यूज़रनेम या पासवर्ड (Invalid Credentials)' });
     
-    const org = await Organization.findById(user.organizationId);
+    let org = await Organization.findById(user.organizationId);
+    if (!org && user.role === 'admin') {
+      org = (await Organization.findOne({ isActive: true })) || (await Organization.findOne());
+      if (org) {
+        user.organizationId = org._id;
+        await user.save();
+      }
+    }
     if (!org) return res.status(403).json({ message: 'Organization record not found in database.' });
     
     if (user.isActive === false || org.isActive === false) {
