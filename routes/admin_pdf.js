@@ -159,7 +159,7 @@ router.post('/upload', verifyToken, isAdmin, (req, res, next) => {
     const organizationId = req.body.organizationId || "org_default";
     const uploadedBy = (req.body.uploadedBy || "").trim();
     const useOcr = req.body.useOcr === 'true' || req.body.useOcr === 'on' || req.body.useOcr === true;
-    const withPhotos = req.body.withPhotos === 'true' || req.body.withPhotos === 'on' || req.body.withPhotos === true;
+    const withPhotos = req.body.withPhotos !== 'false' && req.body.withPhotos !== false;
     const globalWard = (req.body.wardNo || "").trim();
     const globalPanchayat = (req.body.panchayat || "").trim();
     const globalBooth = (req.body.boothNo || "").trim();
@@ -249,8 +249,8 @@ router.post('/upload', verifyToken, isAdmin, (req, res, next) => {
 
       const jobId = crypto.randomUUID();
       const listDescription = globalDesc || (pdfFiles.length > 1 ? file.originalname : (wardNo ? `वार्ड ${wardNo} मतदाता सूची` : ''));
-      // Auto-detect withPhotos if filename contains WithPhoto/with_photo
-      const fileWithPhotos = withPhotos || /with[_\-\s]?photo/i.test(file.originalname);
+      // Always extract photos by default unless explicitly disabled by user
+      const fileWithPhotos = withPhotos;
 
       uploadJobs.set(jobId, {
         id: jobId,

@@ -115,7 +115,7 @@ const ExcelJS = require('exceljs');
       if (!fs.existsSync(excelDir)) fs.mkdirSync(excelDir, { recursive: true });
       targetExcelPath = path.join(excelDir, excelFilename);
 
-      const photosDir = withPhotos ? path.join(__dirname, '../uploads/photos', jobId || `job_${Date.now()}`) : null;
+      const photosDir = withPhotos !== false ? path.join(__dirname, '../uploads/photos', jobId || `job_${Date.now()}`) : null;
       if (photosDir && !fs.existsSync(photosDir)) fs.mkdirSync(photosDir, { recursive: true });
       const photoUrlMap = new Map();
 
@@ -123,8 +123,8 @@ const ExcelJS = require('exceljs');
         const pyResult = await runPythonPdfToExcel(filePath, targetExcelPath, wardNo || defaultWardNo, boothNo || '', photosDir);
         console.log(`[pdfWorker] Python engine finished successfully:`, pyResult);
 
-        // Upload extracted photos to Cloudinary if withPhotos mode is enabled
-        if (withPhotos && photosDir && fs.existsSync(photosDir)) {
+        // Upload extracted photos to Cloudinary automatically
+        if (withPhotos !== false && photosDir && fs.existsSync(photosDir)) {
           const manifestPath = path.join(photosDir, 'photos_manifest.json');
           if (fs.existsSync(manifestPath)) {
             try {
