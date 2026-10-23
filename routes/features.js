@@ -148,7 +148,9 @@ router.get('/migrants', requireModule('migrants'), async (req, res) => {
   try {
     const page = boundedNumber(req.query.page, 1, 1000);
     const pageSize = boundedNumber(req.query.pageSize, 100, 250);
-    
+    const votedStatus = typeof req.query.votedStatus === 'string' ? req.query.votedStatus.trim().toLowerCase() : 'all';
+    const isExport = req.query.export === 'excel' || req.query.export === 'true';
+
     const query = addVoterAccess(req);
     query.isMigrant = true;
 
@@ -161,19 +163,106 @@ router.get('/migrants', requireModule('migrants'), async (req, res) => {
         { nameHi: searchRegex },
         { nameEn: searchRegex },
         { epic: searchRegex },
+        { migrantLocation: searchRegex },
+        { mobileNo: searchRegex },
       ];
     }
 
-    const count = await Voter.countDocuments(query);
-    const voters = await Voter.find(query)
-      .sort({ wardNo: 1, partNo: 1, serialNo: 1 })
-      .skip((page - 1) * pageSize)
-      .limit(pageSize)
-      .lean();
+    // Voting status filter
+    if (votedStatus === 'voted') {
+      query.voted = true;
+    } else if (votedStatus === 'pending') {
+      query.$and = query.$and || [];
+      query.$and.push({
+        $or: [{ voted: false }, { voted: { $exists: false } }, { voted: null }]
+      });
+    }
 
-    res.json(req.query.page || req.query.pageSize
-      ? { data: voters.map(formatVoter), page, pageSize, total: count }
-      : voters.map(formatVoter));
+    // Base match query for overall metrics (independent of active filter)
+    const metricsMatch = addVoterAccess(req);
+    metricsMatch.isMigrant = true;
+    if (typeof req.query.ward === 'string' && req.query.ward.trim()) {
+      metricsMatch.wardNo = new RegExp(req.query.ward.trim(), 'i');
+    }
+
+    const [totalMigrants, votedMigrants, famAgg, voters, filteredCount] = await Promise.all([
+      Voter.countDocuments(metricsMatch),
+      Voter.countDocuments({ ...metricsMatch, voted: true }),
+      Voter.aggregate([
+        { $match: metricsMatch },
+        {
+          $group: {
+            _id: {
+              $cond: [
+                { $and: [{ $ifNull: ["$familyId", false] }, { $ne: ["$familyId", ""] }] },
+                "$familyId",
+                { $concat: [{ $ifNull: ["$wardNo", ""] }, "-", { $ifNull: ["$partNo", ""] }, "-", { $ifNull: ["$houseNo", ""] }] }
+              ]
+            }
+          }
+        }
+      ]),
+      isExport
+        ? Voter.find(query).sort({ wardNo: 1, partNo: 1, serialNo: 1 }).lean()
+        : Voter.find(query)
+            .sort({ wardNo: 1, partNo: 1, serialNo: 1 })
+            .skip((page - 1) * pageSize)
+            .limit(pageSize)
+            .lean(),
+      Voter.countDocuments(query)
+    ]);
+
+    const metrics = {
+      total: totalMigrants,
+      voted: votedMigrants,
+      pending: totalMigrants - votedMigrants,
+      families: famAgg.length,
+      turnout: totalMigrants > 0 ? Number(((votedMigrants / totalMigrants) * 100).toFixed(1)) : 0,
+    };
+
+    if (isExport) {
+      const workbook = createWorkbook();
+      const headers = [
+        'क्र.सं.',
+        'मतदाता का नाम',
+        'संबंधी का नाम',
+        'संबंध',
+        'लिंग',
+        'आयु',
+        'वार्ड नं.',
+        'भाग नं.',
+        'मकान नं.',
+        'पहचान पत्र (EPIC)',
+        'मोबाइल नंबर',
+        'वर्तमान स्थान (प्रवासी)',
+        'मतदान स्थिति'
+      ];
+      const rows = voters.map((v, idx) => [
+        idx + 1,
+        v.nameHi || v.nameEn || '',
+        v.relativeNameHi || v.relativeNameEn || '',
+        v.relationType || '',
+        v.gender || '',
+        v.age || '',
+        v.wardNo || '',
+        v.partNo || '',
+        v.houseNo || '',
+        v.epic || '',
+        v.mobileNo || '',
+        v.migrantLocation || 'दर्ज नहीं',
+        v.voted ? 'मतदान दर्ज' : 'मतदान बाकी'
+      ]);
+      addSheet(workbook, 'Migrant_Voters', headers, rows);
+      return sendWorkbook(res, `Migrant_Voters_${Date.now()}.xlsx`, workbook);
+    }
+
+    res.json({
+      data: voters.map(formatVoter),
+      metrics,
+      page,
+      pageSize,
+      total: filteredCount,
+    });
   } catch (err) {
     console.error('Migrant search failed:', err.message);
     res.status(500).json({ message: 'Migrant records could not be loaded.' });
@@ -215,16 +304,30 @@ router.get('/caste-breakdown', requireModule('community', 'voters'), async (req,
       matchQuery.wardNo = new RegExp(req.query.ward.trim(), 'i');
     }
 
-    // 3. Aggregate counts grouped by caste and voted status
+    // 3. Aggregate counts grouped by caste and voted status, including family keys
     const agg = await Voter.aggregate([
       { $match: matchQuery },
       {
+        $project: {
+          caste: { $trim: { input: { $ifNull: ["$caste", ""] } } },
+          voted: { $cond: ["$voted", true, false] },
+          famKey: {
+            $cond: [
+              { $and: [{ $ifNull: ["$familyId", false] }, { $ne: ["$familyId", ""] }] },
+              "$familyId",
+              { $concat: [{ $ifNull: ["$wardNo", ""] }, "-", { $ifNull: ["$partNo", ""] }, "-", { $ifNull: ["$houseNo", ""] }] }
+            ]
+          }
+        }
+      },
+      {
         $group: {
           _id: {
-            caste: { $trim: { input: { $ifNull: ["$caste", ""] } } },
-            voted: { $cond: ["$voted", true, false] }
+            caste: "$caste",
+            voted: "$voted"
           },
-          count: { $sum: 1 }
+          count: { $sum: 1 },
+          famKeys: { $addToSet: "$famKey" }
         }
       }
     ]);
@@ -239,10 +342,12 @@ router.get('/caste-breakdown', requireModule('community', 'voters'), async (req,
     const combinedCastes = Array.from(new Set([...configuredCastes, ...validDbCastes]));
     const configuredSet = new Set(combinedCastes.map((c) => c.toLowerCase()));
 
-    // Map aggregated counts
+    // Map aggregated counts and family sets
     const casteCountMap = new Map();
     let otherVoted = 0;
     let otherPending = 0;
+    const otherFamSet = new Set();
+    const globalFamSet = new Set();
     let totalAllVoters = 0;
     let totalAllVoted = 0;
 
@@ -250,31 +355,36 @@ router.get('/caste-breakdown', requireModule('community', 'voters'), async (req,
       const rawCaste = (item._id?.caste || '').trim();
       const isVoted = Boolean(item._id?.voted);
       const cnt = item.count || 0;
+      const fKeys = Array.isArray(item.famKeys) ? item.famKeys : [];
       totalAllVoters += cnt;
       if (isVoted) totalAllVoted += cnt;
+      fKeys.forEach((k) => globalFamSet.add(k));
 
       if (!rawCaste || rawCaste === 'अन्य' || rawCaste.toLowerCase() === 'other' || !configuredSet.has(rawCaste.toLowerCase())) {
         if (isVoted) otherVoted += cnt;
         else otherPending += cnt;
+        fKeys.forEach((k) => otherFamSet.add(k));
       } else {
         const lowerKey = rawCaste.toLowerCase();
         if (!casteCountMap.has(lowerKey)) {
-          casteCountMap.set(lowerKey, { voted: 0, pending: 0 });
+          casteCountMap.set(lowerKey, { voted: 0, pending: 0, famSet: new Set() });
         }
         const entry = casteCountMap.get(lowerKey);
         if (isVoted) entry.voted += cnt;
         else entry.pending += cnt;
+        fKeys.forEach((k) => entry.famSet.add(k));
       }
     }
 
-    // Build the caste cards list
+    // Build the caste cards list with families count
     const castes = combinedCastes.map((name) => {
-      const entry = casteCountMap.get(name.toLowerCase()) || { voted: 0, pending: 0 };
+      const entry = casteCountMap.get(name.toLowerCase()) || { voted: 0, pending: 0, famSet: new Set() };
       const total = entry.voted + entry.pending;
       const turnout = total > 0 ? Number(((entry.voted / total) * 100).toFixed(1)) : 0;
       return {
         name,
         total,
+        families: entry.famSet.size,
         voted: entry.voted,
         pending: entry.pending,
         turnout,
@@ -289,6 +399,7 @@ router.get('/caste-breakdown', requireModule('community', 'voters'), async (req,
     const other = {
       name: 'अन्य',
       total: otherTotal,
+      families: otherFamSet.size,
       voted: otherVoted,
       pending: otherPending,
       turnout: otherTurnout,
@@ -301,6 +412,7 @@ router.get('/caste-breakdown', requireModule('community', 'voters'), async (req,
       summary: {
         totalCastes: castes.length + (otherTotal > 0 ? 1 : 0),
         configuredCastesCount: castes.length,
+        totalFamilies: globalFamSet.size,
         totalVoters: totalAllVoters,
         totalVoted: totalAllVoted,
         totalPending: totalAllPending,

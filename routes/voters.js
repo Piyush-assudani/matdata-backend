@@ -718,6 +718,7 @@ router.put('/:id', verifyToken, (req, res, next) => {
       occupation: 'occupation',
       panchayat: 'panchayat',
       panchayatHi: 'panchayatHi',
+      voted: 'voted',
     };
     
     const updates = {};
