@@ -35,21 +35,29 @@ const boundedInteger = (value, fallback, maximum) => {
 };
 
 const buildWardFilterCondition = (ward) => {
-  if (typeof ward !== 'string' || !ward.trim()) return null;
-  const rawWard = ward.trim();
-  const cleanWard = rawWard.replace(/^(वार्ड|Ward)\s*/i, '').trim();
-  const escaped = cleanWard.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const wardRegex = new RegExp(`^(\\s*(वार्ड|Ward)\\s*)?0*${escaped}\\s*$`, 'i');
-  const wardNum = Number.parseInt(cleanWard, 10);
-  if (!Number.isNaN(wardNum)) {
-    return {
-      $or: [
-        { wardNo: wardRegex },
-        { wardNo: wardNum }
-      ]
-    };
+  if (!ward) return null;
+  const wardList = Array.isArray(ward)
+    ? ward
+    : typeof ward === 'string'
+      ? ward.split(',').map((w) => w.trim()).filter(Boolean)
+      : [];
+  if (wardList.length === 0 || wardList.includes('all')) return null;
+
+  const conditions = [];
+  for (const rawWard of wardList) {
+    const cleanWard = String(rawWard).trim().replace(/^(वार्ड|Ward)\s*/i, '').trim();
+    if (!cleanWard) continue;
+    const escaped = cleanWard.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const wardRegex = new RegExp(`^(\\s*(वार्ड|Ward)\\s*)?0*${escaped}\\s*$`, 'i');
+    const wardNum = Number.parseInt(cleanWard, 10);
+    conditions.push({ wardNo: wardRegex });
+    if (!Number.isNaN(wardNum)) {
+      conditions.push({ wardNo: wardNum });
+    }
   }
-  return { wardNo: wardRegex };
+
+  if (conditions.length === 0) return null;
+  return { $or: conditions };
 };
 
 const applyWardFilter = (query, ward) => {
