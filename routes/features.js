@@ -2,7 +2,7 @@ const express = require('express');
 const { verifyToken, requireModule } = require('../middleware/authMiddleware');
 const { addVoterAccess, getEffectiveOrgId } = require('../lib/access');
 const { createWorkbook, addSheet, sendWorkbook } = require('../lib/xlsx');
-const { Voter, Organization, SlipDispatch } = require('../models/index');
+const { Voter, Organization, SlipDispatch, User, SystemSetting } = require('../models/index');
 const cache = require('../lib/cache');
 
 const router = express.Router();
@@ -180,71 +180,267 @@ router.get('/migrants', requireModule('migrants'), async (req, res) => {
   }
 });
 
-router.get('/community', requireModule('community'), async (req, res) => {
+// Caste Breakdown & Polling Tracker Endpoint
+router.get('/caste-breakdown', requireModule('community', 'voters'), async (req, res) => {
   try {
-    const searchString = typeof req.query.q === 'string' ? req.query.q.trim() : '';
-    const terms = searchString.split(',').map((term) => term.trim()).filter(Boolean);
-    if (!searchString || searchString.length > 500 || terms.length === 0 || terms.length > 12) {
-      return res.status(400).json({ message: 'Enter up to 12 community names to search.' });
-    }
-    const ward = typeof req.query.ward === 'string' ? req.query.ward.trim() : '';
-    const includeFamily = req.query.includeFamily !== 'false';
+    const orgId = getEffectiveOrgId(req);
+    const userId = req.user?.id;
 
-    const targetOrgId = getEffectiveOrgId(req) || 'org_default';
-    const cacheKey = `community_${targetOrgId}_w${ward || 'all'}_f${includeFamily}_q${encodeURIComponent(searchString)}`;
-    let finalVoters = cache.get(cacheKey);
-
-    if (!finalVoters) {
-      const matchQuery = addVoterAccess(req);
-      if (ward) {
-        matchQuery.wardNo = new RegExp(ward, 'i');
+    // 1. Fetch configured caste options for this client
+    let configuredCastes = [];
+    if (orgId) {
+      const orgDoc = await Organization.findById(orgId).select('casteOptions settings').lean();
+      if (orgDoc && Array.isArray(orgDoc.casteOptions) && orgDoc.casteOptions.length > 0) {
+        configuredCastes = orgDoc.casteOptions;
+      } else if (orgDoc && orgDoc.settings && Array.isArray(orgDoc.settings.casteOptions) && orgDoc.settings.casteOptions.length > 0) {
+        configuredCastes = orgDoc.settings.casteOptions;
       }
-      
-      const termsRegex = terms.map(t => new RegExp(t, 'i'));
-      const orConditions = [];
-      termsRegex.forEach(regex => {
-        orConditions.push({ caste: regex });
-        orConditions.push({ nameEn: regex });
-        orConditions.push({ nameHi: regex });
-        orConditions.push({ relativeNameEn: regex });
-        orConditions.push({ relativeNameHi: regex });
-      });
-      
-      matchQuery.$or = orConditions;
+    }
+    if (configuredCastes.length === 0 && userId) {
+      const userDoc = await User.findById(userId).select('casteOptions').lean();
+      if (userDoc && Array.isArray(userDoc.casteOptions) && userDoc.casteOptions.length > 0) {
+        configuredCastes = userDoc.casteOptions;
+      }
+    }
+    if (configuredCastes.length === 0) {
+      const globalSetting = await SystemSetting.findById('caste_options').lean();
+      if (globalSetting && Array.isArray(globalSetting.value) && globalSetting.value.length > 0) {
+        configuredCastes = globalSetting.value;
+      }
+    }
 
-      // First find matched voters
-      const matchedVoters = await Voter.find(matchQuery).lean();
-      
-      finalVoters = matchedVoters;
-      if (includeFamily) {
-        const familyIds = [...new Set(matchedVoters.map(v => v.familyId).filter(Boolean))];
-        if (familyIds.length > 0) {
-          const accessQuery = addVoterAccess(req);
-          accessQuery.familyId = { $in: familyIds };
-          const familyVoters = await Voter.find(accessQuery).lean();
-          
-          // Merge without duplicates
-          const voterMap = new Map();
-          familyVoters.forEach(v => voterMap.set(v._id.toString(), v));
-          matchedVoters.forEach(v => voterMap.set(v._id.toString(), v));
-          finalVoters = Array.from(voterMap.values());
+    // 2. Build match query for voters of this client
+    const matchQuery = addVoterAccess(req);
+    if (typeof req.query.ward === 'string' && req.query.ward.trim()) {
+      matchQuery.wardNo = new RegExp(req.query.ward.trim(), 'i');
+    }
+
+    // 3. Aggregate counts grouped by caste and voted status
+    const agg = await Voter.aggregate([
+      { $match: matchQuery },
+      {
+        $group: {
+          _id: {
+            caste: { $trim: { input: { $ifNull: ["$caste", ""] } } },
+            voted: { $cond: ["$voted", true, false] }
+          },
+          count: { $sum: 1 }
         }
       }
-      
-      // Sort
-      finalVoters.sort((a, b) => {
-        if (a.wardNo !== b.wardNo) return (a.wardNo || '').localeCompare(b.wardNo || '');
-        if (a.partNo !== b.partNo) return (a.partNo || '').localeCompare(b.partNo || '');
-        return (a.serialNo || 0) - (b.serialNo || 0);
-      });
+    ]);
 
-      cache.set(cacheKey, finalVoters, 180);
+    // Also get distinct non-empty castes present in DB for this client
+    const dbCastes = await Voter.distinct('caste', matchQuery);
+    const validDbCastes = dbCastes
+      .filter((c) => typeof c === 'string' && c.trim() && c.trim() !== 'अन्य' && c.trim() !== 'Other' && c.trim() !== 'unknown')
+      .map((c) => c.trim());
+
+    // Merge configured + valid DB castes into an ordered unique list
+    const combinedCastes = Array.from(new Set([...configuredCastes, ...validDbCastes]));
+    const configuredSet = new Set(combinedCastes.map((c) => c.toLowerCase()));
+
+    // Map aggregated counts
+    const casteCountMap = new Map();
+    let otherVoted = 0;
+    let otherPending = 0;
+    let totalAllVoters = 0;
+    let totalAllVoted = 0;
+
+    for (const item of agg) {
+      const rawCaste = (item._id?.caste || '').trim();
+      const isVoted = Boolean(item._id?.voted);
+      const cnt = item.count || 0;
+      totalAllVoters += cnt;
+      if (isVoted) totalAllVoted += cnt;
+
+      if (!rawCaste || rawCaste === 'अन्य' || rawCaste.toLowerCase() === 'other' || !configuredSet.has(rawCaste.toLowerCase())) {
+        if (isVoted) otherVoted += cnt;
+        else otherPending += cnt;
+      } else {
+        const lowerKey = rawCaste.toLowerCase();
+        if (!casteCountMap.has(lowerKey)) {
+          casteCountMap.set(lowerKey, { voted: 0, pending: 0 });
+        }
+        const entry = casteCountMap.get(lowerKey);
+        if (isVoted) entry.voted += cnt;
+        else entry.pending += cnt;
+      }
+    }
+
+    // Build the caste cards list
+    const castes = combinedCastes.map((name) => {
+      const entry = casteCountMap.get(name.toLowerCase()) || { voted: 0, pending: 0 };
+      const total = entry.voted + entry.pending;
+      const turnout = total > 0 ? Number(((entry.voted / total) * 100).toFixed(1)) : 0;
+      return {
+        name,
+        total,
+        voted: entry.voted,
+        pending: entry.pending,
+        turnout,
+      };
+    });
+
+    // Sort castes by total voters descending so highest populated castes appear first
+    castes.sort((a, b) => b.total - a.total);
+
+    const otherTotal = otherVoted + otherPending;
+    const otherTurnout = otherTotal > 0 ? Number(((otherVoted / otherTotal) * 100).toFixed(1)) : 0;
+    const other = {
+      name: 'अन्य',
+      total: otherTotal,
+      voted: otherVoted,
+      pending: otherPending,
+      turnout: otherTurnout,
+    };
+
+    const totalAllPending = totalAllVoters - totalAllVoted;
+    const overallTurnout = totalAllVoters > 0 ? Number(((totalAllVoted / totalAllVoters) * 100).toFixed(1)) : 0;
+
+    res.json({
+      summary: {
+        totalCastes: castes.length + (otherTotal > 0 ? 1 : 0),
+        configuredCastesCount: castes.length,
+        totalVoters: totalAllVoters,
+        totalVoted: totalAllVoted,
+        totalPending: totalAllPending,
+        overallTurnout,
+      },
+      castes,
+      other,
+    });
+  } catch (err) {
+    console.error('Caste breakdown aggregation failed:', err.message);
+    res.status(500).json({ message: 'जातिगत समीकरण आंकड़े लोड नहीं हो सके।' });
+  }
+});
+
+router.get('/community', requireModule('community'), async (req, res) => {
+  try {
+    const casteParam = typeof req.query.caste === 'string' ? req.query.caste.trim() : '';
+    const votedStatus = typeof req.query.votedStatus === 'string' ? req.query.votedStatus.trim().toLowerCase() : 'all';
+    const searchString = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+    const ward = typeof req.query.ward === 'string' ? req.query.ward.trim() : '';
+    const includeFamily = req.query.includeFamily !== 'false';
+    const isExport = req.query.export === 'excel' || req.query.export === 'true';
+
+    const matchQuery = addVoterAccess(req);
+
+    if (ward) {
+      matchQuery.wardNo = new RegExp(escapeRegex(ward), 'i');
+    }
+
+    // 1. Caste filter
+    if (casteParam) {
+      if (casteParam === '__OTHER__' || casteParam === 'अन्य' || casteParam.toLowerCase() === 'other') {
+        const orgId = getEffectiveOrgId(req);
+        let configured = [];
+        if (orgId) {
+          const org = await Organization.findById(orgId).select('casteOptions settings').lean();
+          if (org?.casteOptions?.length) configured = org.casteOptions;
+          else if (org?.settings?.casteOptions?.length) configured = org.settings.casteOptions;
+        }
+        matchQuery.$or = [
+          { caste: { $in: ['', null, 'अन्य', 'Other', 'unknown'] } },
+          { caste: { $exists: false } },
+          ...(configured.length > 0 ? [{ caste: { $nin: configured } }] : [])
+        ];
+      } else {
+        matchQuery.caste = new RegExp('^' + escapeRegex(casteParam) + '$', 'i');
+      }
+    } else if (searchString) {
+      const terms = searchString.split(',').map((t) => t.trim()).filter(Boolean);
+      if (terms.length > 0) {
+        const orConditions = [];
+        terms.forEach((t) => {
+          const rx = new RegExp(escapeRegex(t), 'i');
+          orConditions.push({ caste: rx });
+          orConditions.push({ nameEn: rx });
+          orConditions.push({ nameHi: rx });
+          orConditions.push({ relativeNameEn: rx });
+          orConditions.push({ relativeNameHi: rx });
+        });
+        matchQuery.$or = orConditions;
+      }
+    }
+
+    // 2. Voted status filter
+    if (votedStatus === 'voted') {
+      matchQuery.voted = true;
+    } else if (votedStatus === 'pending') {
+      matchQuery.$and = matchQuery.$and || [];
+      matchQuery.$and.push({
+        $or: [{ voted: false }, { voted: { $exists: false } }, { voted: null }]
+      });
+    }
+
+    let finalVoters = await Voter.find(matchQuery).lean();
+
+    // Include family if requested and not restricted to a specific caste or votedStatus
+    if (includeFamily && finalVoters.length > 0 && !casteParam && votedStatus === 'all' && searchString) {
+      const familyIds = [...new Set(finalVoters.map((v) => v.familyId).filter(Boolean))];
+      if (familyIds.length > 0) {
+        const accessQuery = addVoterAccess(req);
+        accessQuery.familyId = { $in: familyIds };
+        const familyVoters = await Voter.find(accessQuery).lean();
+        const voterMap = new Map();
+        familyVoters.forEach((v) => voterMap.set(v._id.toString(), v));
+        finalVoters.forEach((v) => voterMap.set(v._id.toString(), v));
+        finalVoters = Array.from(voterMap.values());
+      }
+    }
+
+    // Sort by ward, part, serial
+    finalVoters.sort((a, b) => {
+      if (a.wardNo !== b.wardNo) return (a.wardNo || '').localeCompare(b.wardNo || '');
+      if (a.partNo !== b.partNo) return (a.partNo || '').localeCompare(b.partNo || '');
+      return (a.serialNo || 0) - (b.serialNo || 0);
+    });
+
+    // 3. Excel Export
+    if (isExport) {
+      const workbook = createWorkbook();
+      const headers = [
+        'क्र.सं.',
+        'मतदाता का नाम',
+        'संबंधी का नाम',
+        'संबंध',
+        'लिंग',
+        'आयु',
+        'वार्ड नं.',
+        'भाग नं.',
+        'मकान नं.',
+        'पहचान पत्र (EPIC)',
+        'मोबाइल नंबर',
+        'जाति',
+        'मतदान स्थिति'
+      ];
+      const rows = finalVoters.map((v, idx) => [
+        idx + 1,
+        v.nameHi || v.nameEn || '',
+        v.relativeNameHi || v.relativeNameEn || '',
+        v.relationType || '',
+        v.gender || '',
+        v.age || '',
+        v.wardNo || '',
+        v.partNo || '',
+        v.houseNo || '',
+        v.epic || '',
+        v.mobileNo || '',
+        v.caste || 'अन्य',
+        v.voted ? 'मतदान दर्ज' : 'मतदान बाकी'
+      ]);
+      addSheet(workbook, 'Caste_Voters', headers, rows);
+      const filename = `Caste_Voters_${casteParam || 'Report'}_${Date.now()}.xlsx`;
+      return sendWorkbook(res, filename, workbook);
     }
 
     const page = boundedNumber(req.query.page, 1, 1000);
-    const pageSize = boundedNumber(req.query.pageSize, 100, 250);
-    
-    const paginated = finalVoters.slice((page - 1) * pageSize, page * pageSize);
+    const pageSize = boundedNumber(req.query.pageSize, 100, 500);
+
+    const paginated = req.query.page || req.query.pageSize
+      ? finalVoters.slice((page - 1) * pageSize, page * pageSize)
+      : finalVoters;
 
     res.json(req.query.page || req.query.pageSize
       ? { data: paginated.map(formatVoter), page, pageSize, total: finalVoters.length }

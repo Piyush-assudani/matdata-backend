@@ -78,50 +78,54 @@ def krutidev_to_unicode(text: str) -> str:
     """
     Convert Kruti Dev 010 / DevLys 010 encoded text to Unicode Devanagari.
     
-    Implements the complete 3-pass algorithm:
-    1. Chhoti-i (ि) matra reordering (pre-base → post-base)
-    2. Reph (र्) positioning 
-    3. Full character substitution via 250+ item mapping table
+    Perfected 4-stage algorithm:
+    1. Pre-process known Kruti compound ligatures (f=k -> त्रि, =kk -> त्रा)
+    2. Tokenize 'f' (chhoti-i) and 'Z' (reph) using isolated markers
+    3. Complete 250+ character substitution table
+    4. Cluster-aware Devanagari reordering for chhoti-i (ि) and reph (र्)
     """
     if not text or not text.strip():
         return ""
 
-    modified = text
+    s = text
 
-    # ── Pass 1: Chhoti-i matra ('f') reordering ──
-    # In Kruti Dev, 'f' represents 'ि' and is typed BEFORE the consonant.
-    # In Unicode, 'ि' must come AFTER the consonant.
-    # We search from right to left (rfind) to avoid cascading shifts.
-    modified = "  " + modified + "  "
-    pos = modified.rfind("f")
-    while pos != -1:
-        # Swap 'f' with the character immediately after it
-        modified = modified[:pos] + modified[pos + 1] + modified[pos] + modified[pos + 2:]
-        pos = modified.rfind("f", 0, pos - 1)
-    modified = modified.replace("f", "ि")
-    modified = modified.strip()
+    # Step 1: Pre-process known Kruti compound ligatures
+    s = s.replace("f=k", "\u0924\u094d\u0930\u093f")  # त्रि
+    s = s.replace("=kk", "\u0924\u094d\u0930\u093e")  # त्रा
 
-    # ── Pass 2: Reph (half-R / 'Z') positioning ──
-    # In Kruti Dev, 'Z' represents 'र्' placed after the consonant+matra cluster.
-    # In Unicode, 'र्' (reph) comes before the consonant it sits on.
-    modified = "  " + modified + "  "
-    pos = modified.find("Z")
-    while pos != -1:
-        modified = modified.replace("Z", "", 1)
-        if pos - 1 >= 0 and modified[pos - 1] in MATRA_SET:
-            modified = modified[:pos - 2] + "j~" + modified[pos - 2:]
-        else:
-            modified = modified[:pos - 1] + "j~" + modified[pos - 1:]
-        pos = modified.find("Z")
-    modified = modified.strip()
+    # Step 2: Tokenize 'f' (chhoti-i) and 'Z' (reph) using isolated markers
+    s = s.replace("f", "\uFFF0")
+    s = s.replace("Z", "\uFFF1")
 
-    # ── Pass 3: Character substitution ──
-    # Apply the complete mapping table (array_one → array_two)
+    # Step 3: Full character substitution
     for i in range(len(KRUTI_ARRAY_ONE)):
-        if KRUTI_ARRAY_ONE[i] in modified:
-            modified = modified.replace(KRUTI_ARRAY_ONE[i], KRUTI_ARRAY_TWO[i])
+        k = KRUTI_ARRAY_ONE[i]
+        if k in ("f=k", "=kk", "Z"):
+            continue
+        if k in s:
+            s = s.replace(k, KRUTI_ARRAY_TWO[i])
 
-    return modified.strip()
+    # Step 4: Reorder Chhoti-i (ि)
+    # Move \uFFF0 after the entire Devanagari consonant cluster
+    CONSONANT = r'[\u0915-\u0939\u0958-\u095F]\u093C?'
+    CLUSTER = r'(?:' + CONSONANT + r'\u094D)*' + CONSONANT
+    re_chhoti_i = re.compile(r'\uFFF0(' + CLUSTER + ')')
+    s = re_chhoti_i.sub(r'\g<1>' + '\u093F', s)
+    s = s.replace("\uFFF0", "\u093F")
+
+    # Step 5: Reorder Reph (र्)
+    # Move \uFFF1 before the base consonant cluster of the syllable
+    MATRAS_AND_SIGNS = r'[\u093E-\u094C\u0901-\u0903\u094D]*'
+    REPH_CLUSTER = r'(' + CLUSTER + MATRAS_AND_SIGNS + r')\uFFF1'
+    re_reph = re.compile(REPH_CLUSTER)
+    s = re_reph.sub('\u0930\u094D' + r'\g<1>', s)
+    s = s.replace("\uFFF1", "\u0930\u094D")
+
+    # Clean double matras if any
+    s = re.sub(r'ि+', 'ि', s)
+    s = re.sub(r'ी+', 'ी', s)
+
+    return s.strip()
 
 
 # =============================================================================
