@@ -985,6 +985,16 @@ router.post('/bulk-delete', verifyToken, async (req, res) => {
     const query = addVoterAccess(req);
     query._id = { $in: ids };
 
+    // Clean Cloudinary images for deleted voters
+    try {
+      const { deleteVoterPhotos } = require('../lib/cloudinaryService');
+      const votersWithPhotos = await Voter.find(query, { photoUrl: 1 }).lean();
+      const urls = votersWithPhotos.map(v => v.photoUrl).filter(Boolean);
+      if (urls.length > 0) deleteVoterPhotos(urls).catch(e => console.warn('[voters] Cloudinary bulk delete error:', e.message));
+    } catch (cErr) {
+      console.warn('[voters] Cloudinary bulk delete error:', cErr.message);
+    }
+
     const result = await Voter.deleteMany(query);
 
     // Invalidate Cache for this organization

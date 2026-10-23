@@ -334,6 +334,16 @@ router.post('/upload', verifyToken, isAdmin, (req, res, next) => {
                     serialNo: { $nin: Array.from(serials) }
                   };
                   if (pNo) cleanupFilter.partNo = pNo;
+                  try {
+                    const staleWithPhotos = await Voter.find(cleanupFilter, { photoUrl: 1 }).lean();
+                    const urls = staleWithPhotos.map(v => v.photoUrl).filter(Boolean);
+                    if (urls.length > 0) {
+                      const { deleteVoterPhotos } = require('../lib/cloudinaryService');
+                      deleteVoterPhotos(urls).catch(e => console.warn('[admin_pdf] Cloudinary stale photo cleanup error:', e.message));
+                    }
+                  } catch (photoErr) {
+                    console.warn('[admin_pdf] Cloudinary photo check failed:', photoErr.message);
+                  }
                   const delRes = await Voter.deleteMany(cleanupFilter);
                   if (delRes.deletedCount > 0) {
                     console.log(`[admin_pdf] Synchronized Ward ${wNo}: Removed ${delRes.deletedCount} stale records.`);

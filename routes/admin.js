@@ -642,6 +642,10 @@ router.delete('/organizations/:id', verifyToken, isAdmin, async (req, res) => {
   try {
     const { SlipDispatch } = require('../models/index');
 
+    // Clean all voter photos from Cloudinary for this organization
+    const { deleteOrganizationPhotos, deleteVoterPhotos } = require('../lib/cloudinaryService');
+    deleteOrganizationPhotos(orgId).catch(err => console.warn('[admin] Cloudinary org photos cleanup failed:', err.message));
+
     // Sequential cascade deletion (avoids MongoDB transaction concurrency/replica set locks)
     const voterRes = await Voter.deleteMany({ organizationId: orgId });
     const dispRes = await SlipDispatch.deleteMany({ organizationId: orgId });
@@ -859,6 +863,20 @@ router.delete('/master-data', verifyToken, isAdmin, async (req, res) => {
   }
 
   try {
+    // Clean Cloudinary images for deleted voters
+    try {
+      const { deleteOrganizationPhotos, deleteVoterPhotos } = require('../lib/cloudinaryService');
+      if (wardNo) {
+        const votersWithPhotos = await Voter.find(query, { photoUrl: 1 }).lean();
+        const urls = votersWithPhotos.map(v => v.photoUrl).filter(Boolean);
+        if (urls.length > 0) deleteVoterPhotos(urls).catch(e => console.warn('[admin] Cloudinary delete failed:', e.message));
+      } else {
+        deleteOrganizationPhotos(orgId).catch(e => console.warn('[admin] Cloudinary delete failed:', e.message));
+      }
+    } catch (photoErr) {
+      console.warn('[admin] Cloudinary deletion error on master-data delete:', photoErr.message);
+    }
+
     const result = await Voter.deleteMany(query);
 
     // 🚀 REMOVE WARD FROM ORGANIZATION LIST WHEN WARD DATA IS DELETED:
@@ -931,7 +949,21 @@ router.delete('/wards', verifyToken, isAdmin, async (req, res) => {
     const cleanTarget = String(wardNo).trim();
     const cleanRegex = cleanTarget.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-    // 1. Delete all voters in this ward
+    // 1. Delete all voter photos in this ward from Cloudinary
+    try {
+      const { deleteVoterPhotos } = require('../lib/cloudinaryService');
+      const votersWithPhotos = await Voter.find({
+        organizationId: orgId,
+        wardNo: { $regex: new RegExp(`^\\s*(?:वार्ड\\s*)?${cleanRegex}\\s*$`, 'i') },
+        photoUrl: { $exists: true, $ne: '' }
+      }, { photoUrl: 1 }).lean();
+      const urls = votersWithPhotos.map(v => v.photoUrl).filter(Boolean);
+      if (urls.length > 0) deleteVoterPhotos(urls).catch(e => console.warn('[admin] Cloudinary ward photo cleanup failed:', e.message));
+    } catch (cErr) {
+      console.warn('[admin] Cloudinary ward photo cleanup failed:', cErr.message);
+    }
+
+    // 2. Delete all voters in this ward
     const delResult = await Voter.deleteMany({
       organizationId: orgId,
       wardNo: { $regex: new RegExp(`^\\s*(?:वार्ड\\s*)?${cleanRegex}\\s*$`, 'i') }
@@ -1698,6 +1730,9 @@ router.put('/demo-users/:id/toggle-suspend', verifyToken, isAdmin, async (req, r
 router.delete('/demo-users/:id', verifyToken, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
+    const { deleteOrganizationPhotos } = require('../lib/cloudinaryService');
+    deleteOrganizationPhotos(id).catch(e => console.warn('[admin] Cloudinary demo cleanup failed:', e.message));
+
     await Organization.deleteOne({ _id: id });
     await User.deleteMany({ organizationId: id });
     await Voter.deleteMany({ organizationId: id });
