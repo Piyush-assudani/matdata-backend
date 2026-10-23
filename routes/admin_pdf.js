@@ -299,6 +299,37 @@ router.post('/upload', verifyToken, isAdmin, (req, res, next) => {
           
           try {
             if (operations && operations.length > 0) {
+              // Preserve existing photos if current upload did not extract photos
+              try {
+                const missingPhotoOps = operations.filter(op => !op.updateOne?.update?.$set?.photoUrl);
+                if (missingPhotoOps.length > 0) {
+                  const existingVoters = await Voter.find({
+                    organizationId,
+                    photoUrl: { $exists: true, $ne: '' }
+                  }, { serialNo: 1, epic: 1, photoUrl: 1, wardNo: 1 }).lean();
+
+                  const photoMapBySerial = new Map();
+                  const photoMapByEpic = new Map();
+                  for (const ev of existingVoters) {
+                    if (ev.serialNo) photoMapBySerial.set(`${ev.wardNo}_${ev.serialNo}`, ev.photoUrl);
+                    if (ev.epic) photoMapByEpic.set(ev.epic, ev.photoUrl);
+                  }
+
+                  for (const op of missingPhotoOps) {
+                    const f = op.updateOne?.filter;
+                    const s = op.updateOne?.update?.$set;
+                    if (f && s) {
+                      const existingUrl = photoMapBySerial.get(`${f.wardNo}_${f.serialNo}`) || (s.epic ? photoMapByEpic.get(s.epic) : null);
+                      if (existingUrl) {
+                        s.photoUrl = existingUrl;
+                      }
+                    }
+                  }
+                }
+              } catch (photoPreserveErr) {
+                console.warn('[admin_pdf] Photo preservation check error:', photoPreserveErr.message);
+              }
+
               const CHUNK_SIZE = 2500;
               let processed = 0;
               for (let i = 0; i < operations.length; i += CHUNK_SIZE) {
