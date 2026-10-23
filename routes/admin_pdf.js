@@ -249,6 +249,8 @@ router.post('/upload', verifyToken, isAdmin, (req, res, next) => {
 
       const jobId = crypto.randomUUID();
       const listDescription = globalDesc || (pdfFiles.length > 1 ? file.originalname : (wardNo ? `वार्ड ${wardNo} मतदाता सूची` : ''));
+      // Auto-detect withPhotos if filename contains WithPhoto/with_photo
+      const fileWithPhotos = withPhotos || /with[_\-\s]?photo/i.test(file.originalname);
 
       uploadJobs.set(jobId, {
         id: jobId,
@@ -258,16 +260,16 @@ router.post('/upload', verifyToken, isAdmin, (req, res, next) => {
         panchayat: globalPanchayat,
         boothNo: boothNo,
         uploadedBy: uploadedBy,
-        withPhotos: withPhotos,
+        withPhotos: fileWithPhotos,
         listDescription: listDescription,
         status: 'processing',
         progress: 5,
-        stageMessage: '📄 PDF फ़ाइल प्राप्त हुई, प्रक्रिया शुरू...',
+        stageMessage: fileWithPhotos ? '📄 PDF प्राप्त हुई (फोटो मोड चालू)...' : '📄 PDF फ़ाइल प्राप्त हुई, प्रक्रिया शुरू...',
         extractedCount: 0,
         uploadedAt: new Date().toISOString()
       });
 
-      createdJobs.push({ jobId, filename: file.originalname, wardNo, panchayat: globalPanchayat, withPhotos });
+      createdJobs.push({ jobId, filename: file.originalname, wardNo, panchayat: globalPanchayat, withPhotos: fileWithPhotos });
 
       // Start worker thread
       const worker = new Worker(path.join(__dirname, '../workers/pdfWorker.js'), {
@@ -275,7 +277,7 @@ router.post('/upload', verifyToken, isAdmin, (req, res, next) => {
           filePath,
           organizationId,
           useOcr,
-          withPhotos,
+          withPhotos: fileWithPhotos,
           jobId,
           wardNo,
           boothNo,
