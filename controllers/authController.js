@@ -90,11 +90,14 @@ exports.login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: 'Invalid Credentials' });
 
     // Generate token
+    const orgModules = org.enabledModules && org.enabledModules.length > 0 ? org.enabledModules : null;
     const enabledModules = user.role === 'admin'
       ? []
       : user.role === 'tenant_admin'
-        ? (org.enabledModules || [])
-        : (user.modules || []).filter((module) => (org.enabledModules || []).includes(module));
+        ? (orgModules || [])
+        : orgModules
+          ? (user.modules || []).filter((module) => orgModules.includes(module))
+          : (user.modules || []);
         
     const payload = {
       user: {

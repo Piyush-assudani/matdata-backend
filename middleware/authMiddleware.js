@@ -41,11 +41,14 @@ exports.verifyToken = async (req, res, next) => {
       });
     }
 
+    const orgModules = organization.enabledModules && organization.enabledModules.length > 0 ? organization.enabledModules : null;
     const enabledModules = user.role === 'admin'
       ? []
       : user.role === 'tenant_admin'
-        ? (organization.enabledModules || [])
-        : (user.modules || []).filter((module) => (organization.enabledModules || []).includes(module));
+        ? (orgModules || [])
+        : orgModules
+          ? (user.modules || []).filter((module) => orgModules.includes(module))
+          : (user.modules || []);
     req.user = {
       id: user._id,
       role: user.role,
