@@ -18,7 +18,7 @@ const formatVoter = (row) => ({
   relationType: row.relationType,
   age: row.age,
   gender: row.gender,
-  houseNo: row.houseNo,
+  houseNo: row.houseNo ? String(row.houseNo).replace(/^0+(\d+)/, '$1') : '',
   wardNo: row.wardNo,
   partNo: row.partNo,
   serialNo: row.serialNo,

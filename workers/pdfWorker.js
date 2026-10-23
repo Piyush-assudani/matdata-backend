@@ -391,7 +391,7 @@ const ExcelJS = require('exceljs');
           relativeNameHi: voter.relativeNameHi,
           relativeNameEn: voter.relativeNameHi || '', // Pure Hindi data only
           relationType: voter.relationType,
-          houseNo: voter.houseNo,
+          houseNo: cleanHouseNo(voter.houseNo),
           age: voter.age,
           gender: voter.gender,
           status: voterStatus,

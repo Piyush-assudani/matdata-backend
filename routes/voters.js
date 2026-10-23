@@ -619,6 +619,7 @@ router.get('/', verifyToken, requireModule('voters', 'community', 'workers', 'mi
 
     const formattedVoters = voters.map((v) => ({
       ...v,
+      houseNo: v.houseNo ? String(v.houseNo).replace(/^0+(\d+)/, '$1') : '',
       phone: v.mobileNo || v.phone || '',
       mobileNo: v.mobileNo || v.phone || '',
     }));
