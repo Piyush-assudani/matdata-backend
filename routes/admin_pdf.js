@@ -8,6 +8,7 @@ const crypto = require('crypto');
 const cron = require('node-cron');
 const { Voter } = require('../models');
 const { fixCorruptedHindi } = require('../lib/hindiDictionary');
+const { safeRegex } = require('../lib/regexUtils');
 const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
 
 const uploadDir = path.join(__dirname, '../uploads');
@@ -158,6 +159,7 @@ router.post('/upload', verifyToken, isAdmin, (req, res, next) => {
     const organizationId = req.body.organizationId || "org_default";
     const uploadedBy = (req.body.uploadedBy || "").trim();
     const useOcr = req.body.useOcr === 'true' || req.body.useOcr === 'on' || req.body.useOcr === true;
+    const withPhotos = req.body.withPhotos === 'true' || req.body.withPhotos === 'on' || req.body.withPhotos === true;
     const globalWard = (req.body.wardNo || "").trim();
     const globalPanchayat = (req.body.panchayat || "").trim();
     const globalBooth = (req.body.boothNo || "").trim();
@@ -256,6 +258,7 @@ router.post('/upload', verifyToken, isAdmin, (req, res, next) => {
         panchayat: globalPanchayat,
         boothNo: boothNo,
         uploadedBy: uploadedBy,
+        withPhotos: withPhotos,
         listDescription: listDescription,
         status: 'processing',
         progress: 5,
@@ -264,7 +267,7 @@ router.post('/upload', verifyToken, isAdmin, (req, res, next) => {
         uploadedAt: new Date().toISOString()
       });
 
-      createdJobs.push({ jobId, filename: file.originalname, wardNo, panchayat: globalPanchayat });
+      createdJobs.push({ jobId, filename: file.originalname, wardNo, panchayat: globalPanchayat, withPhotos });
 
       // Start worker thread
       const worker = new Worker(path.join(__dirname, '../workers/pdfWorker.js'), {
@@ -272,6 +275,8 @@ router.post('/upload', verifyToken, isAdmin, (req, res, next) => {
           filePath,
           organizationId,
           useOcr,
+          withPhotos,
+          jobId,
           wardNo,
           boothNo,
           panchayat: globalPanchayat,
@@ -430,7 +435,8 @@ router.get('/unreadable-deleted', verifyToken, isAdmin, async (req, res) => {
       baseQuery.wardNo = String(ward).trim();
     }
     if (panchayat) {
-      baseQuery.panchayat = new RegExp(panchayat.trim(), 'i');
+      const panchayatRegex = safeRegex(panchayat);
+      if (panchayatRegex) baseQuery.panchayat = panchayatRegex;
     }
 
     let statusCondition = { $in: ['Deleted', 'Unreadable'] };

@@ -582,9 +582,19 @@ def parse_pdf_stream_tokens(stream_str):
             items.append((round(x, 1), round(y, 1), curr_font, b_list))
     return items
 
-def extract_single_pdf(pdf_path, default_ward=None, default_part=None, include_deleted=False):
+def extract_single_pdf(pdf_path, default_ward=None, default_part=None, include_deleted=False, photos_dir=None):
     reader = pypdf.PdfReader(pdf_path)
     bn = os.path.basename(pdf_path)
+
+    fitz_doc = None
+    if photos_dir:
+        try:
+            import fitz
+            os.makedirs(photos_dir, exist_ok=True)
+            fitz_doc = fitz.open(pdf_path)
+        except Exception as e:
+            print(f"[PhotoExtraction] Failed to init fitz: {e}")
+            fitz_doc = None
     
     # 1. Extract Ward from Filename or Cover
     ward_no = default_ward
@@ -656,6 +666,27 @@ def extract_single_pdf(pdf_path, default_ward=None, default_part=None, include_d
 
     # Pass 2: High-Precision Voter Card Extraction
     for p_idx in range(2, len(reader.pages) - 1):
+        candidate_photos = []
+        if fitz_doc and p_idx < len(fitz_doc):
+            try:
+                page_fitz = fitz_doc[p_idx]
+                img_infos = page_fitz.get_image_info(xrefs=True)
+                for info in img_infos:
+                    bbox = info.get('bbox', ())
+                    if len(bbox) == 4:
+                        x0, y0, x1, y1 = bbox
+                        w = x1 - x0
+                        h = y1 - y0
+                        if 30 <= w <= 85 and 40 <= h <= 95:
+                            candidate_photos.append({
+                                'xref': info['xref'],
+                                'cx': (x0 + x1) / 2.0,
+                                'cy': (y0 + y1) / 2.0,
+                                'bbox': bbox
+                            })
+            except Exception as e:
+                candidate_photos = []
+
         page = reader.pages[p_idx]
         res = page['/Resources'].get_object()
         if '/XObject' not in res:
@@ -778,6 +809,41 @@ def extract_single_pdf(pdf_path, default_ward=None, default_part=None, include_d
                 if not include_deleted and s_num in deletions_serials:
                     continue
 
+                # Match voter to photo if photos_dir is enabled
+                photo_filename = ""
+                if fitz_doc and candidate_photos:
+                    col = 1 if sx < 150 else (2 if sx < 320 else 3)
+                    expected_cx = 184.4 if col == 1 else (357.9 if col == 2 else 531.4)
+                    expected_cy = abs(sy) + 28.0
+                    best_img = None
+                    min_dist = float('inf')
+                    for c_img in candidate_photos:
+                        dx = abs(c_img['cx'] - expected_cx)
+                        dy = abs(c_img['cy'] - expected_cy)
+                        if dx <= 30.0 and dy <= 30.0:
+                            dist = (dx**2 + dy**2)**0.5
+                            if dist < min_dist:
+                                min_dist = dist
+                                best_img = c_img
+                    if best_img:
+                        try:
+                            pix = fitz.Pixmap(fitz_doc, best_img['xref'])
+                            if pix.n >= 5:
+                                pix = fitz.Pixmap(fitz.csRGB, pix)
+                            clean_s = re.sub(r'[^a-zA-Z0-9_\-]', '_', str(epic_no or f"VOTER_{ward_no}_{part_no}_{s_num}"))
+                            photo_filename = f"{clean_s}_{s_num}.webp"
+                            target_save_path = os.path.join(photos_dir, photo_filename)
+                            try:
+                                from PIL import Image
+                                import io
+                                pil_img = Image.open(io.BytesIO(pix.tobytes('png')))
+                                pil_img.save(target_save_path, 'WEBP', quality=85)
+                            except Exception:
+                                photo_filename = f"{clean_s}_{s_num}.png"
+                                pix.save(os.path.join(photos_dir, photo_filename))
+                        except Exception as pe:
+                            photo_filename = ""
+
                 voters_dict[s_num] = {
                     'क्रमांक': s_num,
                     'पहचान पत्र क्रमांक (EPIC No)': epic_no or f"VOTER_W{ward_no}_P{part_no}_{s_num}",
@@ -811,8 +877,27 @@ def extract_single_pdf(pdf_path, default_ward=None, default_part=None, include_d
                     'family_id': '',
                     'village_en': '',  # Pure Hindi Data Only
                     'village_hi': current_village_hi or '-',
-                    'status': status
+                    'status': status,
+                    'photo_file': photo_filename
                 }
+
+    if fitz_doc:
+        try:
+            if photos_dir:
+                manifest_items = [
+                    {
+                        'serial': v.get('serial'),
+                        'epic': v.get('epic'),
+                        'photo_file': v.get('photo_file', '')
+                    }
+                    for v in voters_dict.values()
+                    if v.get('photo_file')
+                ]
+                with open(os.path.join(photos_dir, 'photos_manifest.json'), 'w', encoding='utf-8') as f:
+                    json.dump(manifest_items, f, ensure_ascii=False, indent=2)
+            fitz_doc.close()
+        except Exception as fe:
+            print(f"[PhotoExtraction] Cleanup error: {fe}")
 
     if newly_learned_glyphs or newly_learned_words:
         save_learned_dictionary(newly_learned_glyphs, newly_learned_words)
@@ -1138,6 +1223,7 @@ if __name__ == "__main__":
     parser.add_argument("--ward", default=None, help="Override ward number")
     parser.add_argument("--part", "--booth", dest="part", default=None, help="Override part or booth number")
     parser.add_argument("--include-deleted", action="store_true", help="Include deleted (विलोपित) voters in export (default: False)")
+    parser.add_argument("--extract-photos-dir", default=None, help="Directory to save extracted voter photos")
     args = parser.parse_args()
 
     # Determine target input
@@ -1162,7 +1248,7 @@ if __name__ == "__main__":
             out_path = os.path.join(os.path.dirname(pdf_file), f"{stem}.xlsx")
 
         print(f"\nProcessing Single PDF: {bn} ...")
-        rows = extract_single_pdf(pdf_file, default_ward=args.ward, default_part=args.part, include_deleted=args.include_deleted)
+        rows = extract_single_pdf(pdf_file, default_ward=args.ward, default_part=args.part, include_deleted=args.include_deleted, photos_dir=args.extract_photos_dir)
         save_templated_voter_excel(rows, out_path, template_path=args.template)
         learned_g, learned_w = load_learned_dictionary()
         print(json.dumps({

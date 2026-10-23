@@ -56,7 +56,7 @@ function stripNameFromRelative(voterName, relName) {
 }
 
 async function processPdf() {
-  const { filePath, useOcr, organizationId, wardNo, boothNo, panchayat, uploadedBy } = workerData;
+  const { filePath, useOcr, organizationId, wardNo, boothNo, panchayat, uploadedBy, withPhotos, jobId } = workerData;
   let text = "";
 
   const updateProgress = (prog, stageMsg = 'प्रोसेसिंग जारी है...') => {
@@ -73,6 +73,7 @@ async function processPdf() {
     updateProgress(15, '🔍 हेडर और फॉन्ट संरचना का विश्लेषण...');
 
 const { runPythonPdfToExcel, isPythonAvailable } = require('../lib/pythonBridge');
+const { uploadVoterPhotosBatch } = require('../lib/cloudinaryService');
 const ExcelJS = require('exceljs');
 
     // Extract metadata from header, SEC encoded text, or filename
@@ -114,9 +115,58 @@ const ExcelJS = require('exceljs');
       if (!fs.existsSync(excelDir)) fs.mkdirSync(excelDir, { recursive: true });
       targetExcelPath = path.join(excelDir, excelFilename);
 
+      const photosDir = withPhotos ? path.join(__dirname, '../uploads/photos', jobId || `job_${Date.now()}`) : null;
+      if (photosDir && !fs.existsSync(photosDir)) fs.mkdirSync(photosDir, { recursive: true });
+      const photoUrlMap = new Map();
+
       try {
-        const pyResult = await runPythonPdfToExcel(filePath, targetExcelPath, wardNo || defaultWardNo, boothNo || '');
+        const pyResult = await runPythonPdfToExcel(filePath, targetExcelPath, wardNo || defaultWardNo, boothNo || '', photosDir);
         console.log(`[pdfWorker] Python engine finished successfully:`, pyResult);
+
+        // Upload extracted photos to Cloudinary if withPhotos mode is enabled
+        if (withPhotos && photosDir && fs.existsSync(photosDir)) {
+          const manifestPath = path.join(photosDir, 'photos_manifest.json');
+          if (fs.existsSync(manifestPath)) {
+            try {
+              const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+              const uploadItems = manifest
+                .filter(item => item.photo_file && fs.existsSync(path.join(photosDir, item.photo_file)))
+                .map(item => {
+                  const safeId = (item.epic || `voter_${item.serial}`).replace(/[^a-zA-Z0-9_\-]/g, '_');
+                  return {
+                    filePath: path.join(photosDir, item.photo_file),
+                    publicId: `${organizationId || 'org'}_w${wardNo || defaultWardNo}_s${item.serial}_${safeId}`,
+                    epic: item.epic,
+                    serial: item.serial
+                  };
+                });
+
+              if (uploadItems.length > 0) {
+                updateProgress(50, `📸 ${uploadItems.length} मतदाता फोटो क्लाउड (Cloudinary) में सुरक्षित किए जा रहे हैं...`);
+                const uploadedMap = await uploadVoterPhotosBatch(uploadItems, 15, (done, total) => {
+                  const prog = 50 + Math.floor((done / total) * 15);
+                  updateProgress(prog, `📸 फोटो क्लाउड में सुरक्षित हो रहे हैं (${done}/${total})...`);
+                });
+
+                uploadItems.forEach(item => {
+                  const url = uploadedMap.get(item.publicId);
+                  if (url) {
+                    if (item.epic) photoUrlMap.set(item.epic, url);
+                    if (item.serial) photoUrlMap.set(String(item.serial), url);
+                  }
+                });
+                console.log(`[pdfWorker] Successfully uploaded ${uploadedMap.size} photos to Cloudinary`);
+              }
+            } catch (pErr) {
+              console.warn('[pdfWorker] Photo upload warning:', pErr.message);
+            } finally {
+              try {
+                fs.rmSync(photosDir, { recursive: true, force: true });
+              } catch {}
+            }
+          }
+        }
+
         updateProgress(65, '📊 जनरेट की गई Excel तालिका से सत्यापित मतदाता डेटा लोड हो रहा है...');
         
         const workbook = new ExcelJS.Workbook();
@@ -246,7 +296,8 @@ const ExcelJS = require('exceljs');
               panchayatHi: String(rowPanchayat).trim(),
               partNo: String(rowBooth).trim(),
               villageName: villageHi || villageEn || '',
-              villageNameHi: villageHi || villageEn || ''
+              villageNameHi: villageHi || villageEn || '',
+              photoUrl: photoUrlMap.get(cleanEpic) || photoUrlMap.get(String(serialVal)) || ''
             });
           } else if (serialVal || (epic && epic !== '-' && epic.trim().length >= 4)) {
             // Unreadable / corrupted voter record - capture for review and manual editing
@@ -267,7 +318,8 @@ const ExcelJS = require('exceljs');
               panchayatHi: String(rowPanchayat).trim(),
               partNo: String(rowBooth).trim(),
               villageName: '',
-              villageNameHi: ''
+              villageNameHi: '',
+              photoUrl: photoUrlMap.get(epic) || photoUrlMap.get(String(serialVal)) || ''
             });
           }
         });
@@ -351,6 +403,7 @@ const ExcelJS = require('exceljs');
           villageNameHi: voter.villageNameHi || ''
         };
 
+        if (voter.photoUrl) updateFields.photoUrl = voter.photoUrl;
         if (uploadedBy) updateFields.assignedWorker = uploadedBy;
 
         // 🚀 STRICT WARD + PART + SERIAL ISOLATION:

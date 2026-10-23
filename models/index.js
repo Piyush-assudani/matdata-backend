@@ -93,6 +93,7 @@ const voterSchema = new mongoose.Schema({
   boothName: { type: String },
   organizationId: { type: String, required: true },
   familyId: { type: String },
+  photoUrl: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now }
 });
 

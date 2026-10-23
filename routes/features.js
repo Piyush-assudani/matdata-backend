@@ -31,6 +31,7 @@ const formatVoter = (row) => ({
   assignedWorker: row.assignedWorker,
   familyId: row.familyId,
   voted: row.voted,
+  photoUrl: row.photoUrl || '',
 });
 
 const boundedNumber = (value, fallback, maximum) => {
@@ -38,7 +39,7 @@ const boundedNumber = (value, fallback, maximum) => {
   return Number.isInteger(parsed) && parsed > 0 ? Math.min(parsed, maximum) : fallback;
 };
 
-const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const { escapeRegex, safeRegex } = require('../lib/regexUtils');
 
 router.use(verifyToken);
 
@@ -155,17 +156,20 @@ router.get('/migrants', requireModule('migrants'), async (req, res) => {
     query.isMigrant = true;
 
     if (typeof req.query.ward === 'string' && req.query.ward.trim()) {
-      query.wardNo = new RegExp(req.query.ward.trim(), 'i');
+      const wardRegex = safeRegex(req.query.ward);
+      if (wardRegex) query.wardNo = wardRegex;
     }
     if (typeof req.query.search === 'string' && req.query.search.trim()) {
-      const searchRegex = new RegExp(req.query.search.trim(), 'i');
-      query.$or = [
-        { nameHi: searchRegex },
-        { nameEn: searchRegex },
-        { epic: searchRegex },
-        { migrantLocation: searchRegex },
-        { mobileNo: searchRegex },
-      ];
+      const searchRegex = safeRegex(req.query.search);
+      if (searchRegex) {
+        query.$or = [
+          { nameHi: searchRegex },
+          { nameEn: searchRegex },
+          { epic: searchRegex },
+          { migrantLocation: searchRegex },
+          { mobileNo: searchRegex },
+        ];
+      }
     }
 
     // Voting status filter
@@ -182,7 +186,8 @@ router.get('/migrants', requireModule('migrants'), async (req, res) => {
     const metricsMatch = addVoterAccess(req);
     metricsMatch.isMigrant = true;
     if (typeof req.query.ward === 'string' && req.query.ward.trim()) {
-      metricsMatch.wardNo = new RegExp(req.query.ward.trim(), 'i');
+      const wardRegex = safeRegex(req.query.ward);
+      if (wardRegex) metricsMatch.wardNo = wardRegex;
     }
 
     const [totalMigrants, votedMigrants, famAgg, voters, filteredCount] = await Promise.all([
@@ -301,7 +306,8 @@ router.get('/caste-breakdown', requireModule('community', 'voters'), async (req,
     // 2. Build match query for voters of this client
     const matchQuery = addVoterAccess(req);
     if (typeof req.query.ward === 'string' && req.query.ward.trim()) {
-      matchQuery.wardNo = new RegExp(req.query.ward.trim(), 'i');
+      const wardRegex = safeRegex(req.query.ward);
+      if (wardRegex) matchQuery.wardNo = wardRegex;
     }
 
     // 3. Aggregate counts grouped by caste and voted status, including family keys
@@ -802,22 +808,25 @@ router.get('/export.xlsx', async (req, res) => {
         return res.status(400).json({ message: 'Enter up to 12 community names to export.' });
       }
       
-      const termsRegex = terms.map(t => new RegExp(t, 'i'));
+      const termsRegex = terms.map(t => safeRegex(t)).filter(Boolean);
       const orConditions = [];
       termsRegex.forEach(regex => {
         orConditions.push({ caste: regex }, { nameEn: regex }, { nameHi: regex }, { relativeNameEn: regex }, { relativeNameHi: regex });
       });
-      query.$or = orConditions;
+      if (orConditions.length) query.$or = orConditions;
     } else {
       const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
       if (search) {
-        const regex = new RegExp(search, 'i');
-        query.$or = [{ nameHi: regex }, { nameEn: regex }, { epic: regex }, { relativeNameHi: regex }, { relativeNameEn: regex }];
+        const regex = safeRegex(search);
+        if (regex) query.$or = [{ nameHi: regex }, { nameEn: regex }, { epic: regex }, { relativeNameHi: regex }, { relativeNameEn: regex }];
       }
     }
     
     const ward = typeof req.query.ward === 'string' ? req.query.ward.trim() : '';
-    if (ward) query.wardNo = new RegExp(ward, 'i');
+    if (ward) {
+      const wardRegex = safeRegex(ward);
+      if (wardRegex) query.wardNo = wardRegex;
+    }
 
     let voters = await Voter.find(query).sort({ wardNo: 1, partNo: 1, serialNo: 1 }).lean();
     if (dataset === 'community' && req.query.includeFamily !== 'false') {

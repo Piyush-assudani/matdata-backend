@@ -4,6 +4,7 @@ const cache = require('../lib/cache');
 const { formatVoter } = require('./features');
 const { verifyToken, requireModule } = require('../middleware/authMiddleware');
 const { addVoterAccess, getEffectiveOrgId } = require('../lib/access');
+const { escapeRegex, safeRegex } = require('../lib/regexUtils');
 const { Voter, User, Organization, SystemSetting } = require('../models/index');
 
 const DEFAULT_CASTES = [
@@ -407,17 +408,20 @@ router.get('/households', verifyToken, requireModule('voters', 'community'), asy
     applyWardFilter(query, ward);
     applyPanchayatFilter(query, panchayat);
     if (typeof part === 'string' && part.trim()) {
-      query.partNo = new RegExp(`^${part.trim().replace(/^(भाग|Part)\s*/i, '')}$`, 'i');
+      const cleanPart = part.trim().replace(/^(भाग|Part)\s*/i, '');
+      const partRegex = safeRegex(`^${cleanPart}$`);
+      if (partRegex) query.partNo = partRegex;
     }
     if (typeof search === 'string' && search.trim()) {
-      const q = search.trim();
-      const searchRegex = new RegExp(q, 'i');
-      query.$or = [
-        { houseNo: searchRegex },
-        { nameHi: searchRegex },
-        { nameEn: searchRegex },
-        { epic: searchRegex }
-      ];
+      const searchRegex = safeRegex(search);
+      if (searchRegex) {
+        query.$or = [
+          { houseNo: searchRegex },
+          { nameHi: searchRegex },
+          { nameEn: searchRegex },
+          { epic: searchRegex }
+        ];
+      }
     }
 
     const orgId = query.organizationId || req.user.organizationId || 'org_default';
@@ -460,7 +464,8 @@ router.get('/households', verifyToken, requireModule('voters', 'community'), asy
               surety: { $ifNull: ['$surety', ''] },
               supportStatus: { $ifNull: ['$supportStatus', 'unmarked'] },
               isMigrant: { $ifNull: ['$isMigrant', false] },
-              migrantLocation: { $ifNull: ['$migrantLocation', ''] }
+              migrantLocation: { $ifNull: ['$migrantLocation', ''] },
+              photoUrl: { $ifNull: ['$photoUrl', ''] }
             }
           }
         }
@@ -522,43 +527,61 @@ router.get('/', verifyToken, requireModule('voters', 'community', 'workers', 'mi
 
     if (typeof search === 'string' && search.trim()) {
       const trimmed = search.trim();
-      const searchRegex = new RegExp(trimmed, 'i');
-      query.$or = [
-        { nameHi: searchRegex },
-        { nameEn: searchRegex },
-        { epic: searchRegex },
-        { relativeNameHi: searchRegex },
-        { relativeNameEn: searchRegex },
-        { houseNo: trimmed },
-        { mobileNo: searchRegex }
-      ];
+      const searchRegex = safeRegex(trimmed);
+      if (searchRegex) {
+        query.$or = [
+          { nameHi: searchRegex },
+          { nameEn: searchRegex },
+          { epic: searchRegex },
+          { relativeNameHi: searchRegex },
+          { relativeNameEn: searchRegex },
+          { houseNo: trimmed },
+          { mobileNo: searchRegex }
+        ];
+      }
 
       const parsedSerial = Number.parseInt(trimmed, 10);
       if (!Number.isNaN(parsedSerial) && String(parsedSerial) === trimmed) {
+        if (!query.$or) query.$or = [];
         query.$or.push({ serialNo: parsedSerial });
       }
     }
     
     if (typeof relative === 'string' && relative.trim()) {
-      const relativeRegex = new RegExp(relative.trim(), 'i');
-      if (query.$or) {
-        query.$and = [{ $or: query.$or }, { $or: [{ relativeNameHi: relativeRegex }, { relativeNameEn: relativeRegex }] }];
-        delete query.$or;
-      } else {
-        query.$or = [{ relativeNameHi: relativeRegex }, { relativeNameEn: relativeRegex }];
+      const relativeRegex = safeRegex(relative);
+      if (relativeRegex) {
+        if (query.$or) {
+          query.$and = [{ $or: query.$or }, { $or: [{ relativeNameHi: relativeRegex }, { relativeNameEn: relativeRegex }] }];
+          delete query.$or;
+        } else {
+          query.$or = [{ relativeNameHi: relativeRegex }, { relativeNameEn: relativeRegex }];
+        }
       }
     }
     
     applyWardFilter(query, ward);
     applyPanchayatFilter(query, panchayat);
-    if (typeof part === 'string' && part.trim()) query.partNo = new RegExp(part.trim().replace(/^(भाग|Part)\s*/i, ''), 'i');
-    if (typeof house === 'string' && house.trim()) query.houseNo = new RegExp(house.trim(), 'i');
+    if (typeof part === 'string' && part.trim()) {
+      const cleanPart = part.trim().replace(/^(भाग|Part)\s*/i, '');
+      const partRegex = safeRegex(cleanPart);
+      if (partRegex) query.partNo = partRegex;
+    }
+    if (typeof house === 'string' && house.trim()) {
+      const houseRegex = safeRegex(house);
+      if (houseRegex) query.houseNo = houseRegex;
+    }
     if (isMigrant === 'true' || isMigrant === 'false') query.isMigrant = isMigrant === 'true';
     if (typeof supportStatus === 'string' && ['core', 'swing', 'opposition', 'unmarked'].includes(supportStatus)) {
       query.supportStatus = supportStatus;
     }
-    if (typeof caste === 'string' && caste.trim()) query.caste = new RegExp(caste.trim(), 'i');
-    if (typeof assignedWorker === 'string' && assignedWorker.trim()) query.assignedWorker = new RegExp(assignedWorker.trim(), 'i');
+    if (typeof caste === 'string' && caste.trim()) {
+      const casteRegex = safeRegex(caste);
+      if (casteRegex) query.caste = casteRegex;
+    }
+    if (typeof assignedWorker === 'string' && assignedWorker.trim()) {
+      const workerRegex = safeRegex(assignedWorker);
+      if (workerRegex) query.assignedWorker = workerRegex;
+    }
     if (typeof status === 'string' && status.trim()) {
       query.status = status.trim();
     }
@@ -569,7 +592,8 @@ router.get('/', verifyToken, requireModule('voters', 'community', 'workers', 'mi
       } else if (['स्त्री', 'महिला', 'Female', 'F', 'female'].includes(g)) {
         query.gender = { $in: ['स्त्री', 'महिला', 'Female', 'F', 'female'] };
       } else {
-        query.gender = new RegExp(g, 'i');
+        const genderRegex = safeRegex(g);
+        if (genderRegex) query.gender = genderRegex;
       }
     }
 
@@ -719,6 +743,7 @@ router.put('/:id', verifyToken, (req, res, next) => {
       panchayat: 'panchayat',
       panchayatHi: 'panchayatHi',
       voted: 'voted',
+      photoUrl: 'photoUrl',
     };
     
     const updates = {};
