@@ -63,6 +63,44 @@ function stripNameFromRelative(voterName, relName) {
   return rn;
 }
 
+router.get('/diagnose-photo-pipeline', verifyToken, isAdmin, async (_req, res) => {
+  const { execSync } = require('child_process');
+  const path = require('path');
+  const fs = require('fs');
+  const report = {};
+
+  // 1. Python check
+  try {
+    const pyCheck = execSync('python3 -c "import fitz, PIL, pypdf, openpyxl; print(\'ALL_DEPS_OK\')"', { encoding: 'utf-8', timeout: 10000 });
+    report.python = { ok: true, output: pyCheck.trim() };
+  } catch (pyErr) {
+    report.python = { ok: false, error: pyErr.message, stderr: pyErr.stderr?.toString() };
+    // Try installing automatically
+    try {
+      const pipInstall = execSync('python3 -m pip install PyMuPDF Pillow pypdf openpyxl --break-system-packages --no-warn-script-location', { encoding: 'utf-8', timeout: 60000 });
+      report.pipAutoInstall = { attempted: true, success: true, output: pipInstall.trim() };
+    } catch (pipErr) {
+      report.pipAutoInstall = { attempted: true, success: false, error: pipErr.message, stderr: pipErr.stderr?.toString() };
+    }
+  }
+
+  // 2. Cloudinary check
+  try {
+    const { uploadSinglePhoto } = require('../lib/cloudinaryService');
+    const cloudinary = require('cloudinary').v2;
+    const ping = await cloudinary.api.ping();
+    report.cloudinary = { ok: true, ping };
+  } catch (cldErr) {
+    report.cloudinary = { ok: false, error: cldErr.message };
+  }
+
+  // 3. Uploads directory check
+  const uploadDir = path.join(__dirname, '../uploads');
+  report.uploadsDirExists = fs.existsSync(uploadDir);
+
+  res.json(report);
+});
+
 router.get('/organizations', verifyToken, isAdmin, async (_req, res) => {
   try {
     const orgs = await Organization.find({ _id: { $ne: 'org_default' } }).sort({ createdAt: -1 }).lean();
