@@ -135,6 +135,31 @@ function normalizePhoneNumber(input) {
 }
 
 /**
+ * Deduplication tracker: tracks phone numbers dispatched in current campaign round
+ * Prevents spamming 10 identical messages if multiple family members share the same phone number.
+ */
+const recentPhoneDispatches = new Map();
+
+function checkAndRecordPhoneDispatch(orgId, phone) {
+  const key = `${orgId}_${phone}`;
+  const now = Date.now();
+  const DEDUP_WINDOW_MS = 10 * 60 * 1000; // 10 minutes round cooldown
+
+  if (recentPhoneDispatches.size > 20000) {
+    for (const [k, time] of recentPhoneDispatches.entries()) {
+      if (now - time > DEDUP_WINDOW_MS) recentPhoneDispatches.delete(k);
+    }
+  }
+
+  const lastSent = recentPhoneDispatches.get(key);
+  if (lastSent && (now - lastSent) < DEDUP_WINDOW_MS) {
+    return { alreadySent: true, lastSentAgoSec: Math.round((now - lastSent) / 1000) };
+  }
+  recentPhoneDispatches.set(key, now);
+  return { alreadySent: false };
+}
+
+/**
  * Helper to check and deduct 1 credit atomically from organization
  */
 async function verifyAndDeductCredit(orgId) {
@@ -352,6 +377,21 @@ router.post('/send-slip', verifyToken, requireModule('voters'), async (req, res)
     if (recipientPhone.length < 10) {
       await refundCredit(orgId);
       return res.status(400).json({ message: 'कृपया 10 अंकों का वैध मोबाइल नंबर दर्ज करें।' });
+    }
+
+    // Deduplication check: In a single round / 10m window, do not send 10 times to the same phone number
+    const forceSend = req.body.forceSend === true || req.body.force === true;
+    if (!forceSend) {
+      const dedup = checkAndRecordPhoneDispatch(orgId, recipientPhone);
+      if (dedup.alreadySent) {
+        await refundCredit(orgId);
+        return res.json({
+          success: true,
+          deduplicated: true,
+          message: `ℹ️ इस मोबाइल नंबर (${recipientPhone}) पर इसी राउंड में पहले ही संदेश भेजा जा चुका है (${dedup.lastSentAgoSec}s पूर्व)। डुप्लीकेट संदेश रोका गया व क्रेडिट सुरक्षित रहा।`,
+          recipientPhone
+        });
+      }
     }
 
     const query = addVoterAccess(req);
@@ -650,6 +690,21 @@ router.post('/send-manual', verifyToken, requireModule('voters'), async (req, re
     if (recipientPhone.length < 10) {
       await refundCredit(orgId);
       return res.status(400).json({ message: 'कृपया 10 अंकों का वैध मोबाइल नंबर दर्ज करें।' });
+    }
+
+    // Deduplication check: In a single round / 10m window, do not send 10 times to the same phone number
+    const forceSend = req.body.forceSend === true || req.body.force === true;
+    if (!forceSend) {
+      const dedup = checkAndRecordPhoneDispatch(orgId, recipientPhone);
+      if (dedup.alreadySent) {
+        await refundCredit(orgId);
+        return res.json({
+          success: true,
+          deduplicated: true,
+          message: `ℹ️ इस मोबाइल नंबर (${recipientPhone}) पर इसी राउंड में पहले ही संदेश भेजा जा चुका है (${dedup.lastSentAgoSec}s पूर्व)। डुप्लीकेट संदेश रोका गया व क्रेडिट सुरक्षित रहा।`,
+          recipientPhone
+        });
+      }
     }
 
     const query = addVoterAccess(req);

@@ -332,9 +332,17 @@ router.get('/wards-summary', verifyToken, requireModule('voters', 'community', '
     const cacheKey = `wards_summary_${orgId}_${req.user.id}`;
     const cached = cache.get(cacheKey);
     if (cached) return res.json(cached);
-    const rawWards = await Voter.aggregate([
-      { $match: query },
-      { $group: { _id: '$wardNo', count: { $sum: 1 } } }
+    const [rawWards, total, familyFacet] = await Promise.all([
+      Voter.aggregate([
+        { $match: query },
+        { $group: { _id: '$wardNo', count: { $sum: 1 } } }
+      ]),
+      Voter.countDocuments(query),
+      Voter.aggregate([
+        { $match: { ...query, houseNo: { $exists: true, $nin: ['', '-', '—'] } } },
+        { $group: { _id: { wardNo: '$wardNo', houseNo: '$houseNo' } } },
+        { $count: 'totalFamilies' }
+      ])
     ]);
     const wards = rawWards
       .filter((w) => w._id !== null && w._id !== undefined && String(w._id).trim() !== '')
@@ -344,8 +352,8 @@ router.get('/wards-summary', verifyToken, requireModule('voters', 'community', '
         if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
         return String(a._id).localeCompare(String(b._id));
       });
-    const total = await Voter.countDocuments(query);
-    const result = { wards, total };
+    const totalFamilies = familyFacet?.[0]?.totalFamilies || 0;
+    const result = { wards, total, totalFamilies };
     cache.set(cacheKey, result, 300);
     res.json(result);
   } catch (err) {
@@ -439,7 +447,12 @@ router.get('/households', verifyToken, requireModule('voters', 'community'), asy
               partNo: '$partNo',
               phone: { $ifNull: ['$mobileNo', '$phone'] },
               mobileNo: { $ifNull: ['$mobileNo', '$phone'] },
-              boothName: '$boothName'
+              boothName: '$boothName',
+              caste: { $ifNull: ['$caste', ''] },
+              surety: { $ifNull: ['$surety', ''] },
+              supportStatus: { $ifNull: ['$supportStatus', 'unmarked'] },
+              isMigrant: { $ifNull: ['$isMigrant', false] },
+              migrantLocation: { $ifNull: ['$migrantLocation', ''] }
             }
           }
         }
@@ -496,7 +509,7 @@ router.get('/households', verifyToken, requireModule('voters', 'community'), asy
 // Get all voters (with search & pagination)
 router.get('/', verifyToken, requireModule('voters', 'community', 'workers', 'migrants'), async (req, res) => {
   try {
-    const { search, relative, ward, panchayat, part, house, isMigrant, supportStatus, caste, assignedWorker, status } = req.query;
+    const { search, relative, ward, panchayat, part, house, isMigrant, supportStatus, caste, assignedWorker, status, gender } = req.query;
     const query = addVoterAccess(req);
 
     if (typeof search === 'string' && search.trim()) {
@@ -540,6 +553,16 @@ router.get('/', verifyToken, requireModule('voters', 'community', 'workers', 'mi
     if (typeof assignedWorker === 'string' && assignedWorker.trim()) query.assignedWorker = new RegExp(assignedWorker.trim(), 'i');
     if (typeof status === 'string' && status.trim()) {
       query.status = status.trim();
+    }
+    if (typeof gender === 'string' && gender.trim()) {
+      const g = gender.trim();
+      if (['पुरुष', 'Male', 'M', 'male'].includes(g)) {
+        query.gender = { $in: ['पुरुष', 'पुरूष', 'Male', 'M', 'male'] };
+      } else if (['स्त्री', 'महिला', 'Female', 'F', 'female'].includes(g)) {
+        query.gender = { $in: ['स्त्री', 'महिला', 'Female', 'F', 'female'] };
+      } else {
+        query.gender = new RegExp(g, 'i');
+      }
     }
 
     const isAll = req.query.all === 'true' || req.query.all === '1';
@@ -805,6 +828,109 @@ router.delete('/:id', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('Voter deletion failed:', err.message);
     res.status(500).json({ message: 'डेटा डिलीट करने में त्रुटि आई।' });
+  }
+});
+
+// BULK UPDATE voters (Tagging, Caste, Support, Migrant, Phone, Notes)
+router.post('/bulk-update', verifyToken, requireModule('voters', 'community'), async (req, res) => {
+  try {
+    const { ids, updates, houseNo, wardNo } = req.body;
+    if ((!Array.isArray(ids) || ids.length === 0) && !houseNo) {
+      return res.status(400).json({ message: 'अपडेट के लिए मतदाता IDs या परिवार मकान नंबर आवश्यक है।' });
+    }
+
+    const safeUpdates = {};
+    if (Object.hasOwn(updates || {}, 'caste')) safeUpdates.caste = String(updates.caste || '').trim();
+    if (Object.hasOwn(updates || {}, 'supportStatus')) {
+      const st = updates.supportStatus;
+      if (['core', 'swing', 'opposition', 'unmarked'].includes(st)) {
+        safeUpdates.supportStatus = st;
+        if (st === 'core') safeUpdates.surety = '100% पक्का';
+        else if (st === 'swing') safeUpdates.surety = '50-50';
+        else if (st === 'opposition') safeUpdates.surety = 'विरोधी';
+        else if (st === 'unmarked') safeUpdates.surety = 'सामान्य';
+      }
+    }
+    if (Object.hasOwn(updates || {}, 'surety')) {
+      safeUpdates.surety = String(updates.surety || '').trim();
+      if (safeUpdates.surety === '100% पक्का') safeUpdates.supportStatus = 'core';
+      else if (safeUpdates.surety === '50-50') safeUpdates.supportStatus = 'swing';
+      else if (safeUpdates.surety === 'विरोधी') safeUpdates.supportStatus = 'opposition';
+      else if (safeUpdates.surety === 'सामान्य') safeUpdates.supportStatus = 'unmarked';
+    }
+    if (Object.hasOwn(updates || {}, 'isMigrant')) {
+      safeUpdates.isMigrant = Boolean(updates.isMigrant);
+      if (updates.migrantLocation) safeUpdates.migrantLocation = String(updates.migrantLocation).trim();
+    }
+    if (Object.hasOwn(updates || {}, 'mobileNo') || Object.hasOwn(updates || {}, 'phone')) {
+      const ph = String(updates.mobileNo || updates.phone || '').trim().replace(/\D/g, '').slice(-10);
+      safeUpdates.mobileNo = ph;
+    }
+    if (Object.hasOwn(updates || {}, 'notes')) {
+      safeUpdates.notes = String(updates.notes || '').trim();
+    }
+
+    if (Object.keys(safeUpdates).length === 0) {
+      return res.status(400).json({ message: 'कोई वैध अपडेट फ़ील्ड नहीं दी गई।' });
+    }
+
+    const query = addVoterAccess(req);
+    if (Array.isArray(ids) && ids.length > 0) {
+      query._id = { $in: ids };
+    } else if (houseNo) {
+      const cleanH = String(houseNo).replace(/^#/, '').trim();
+      query.houseNo = { $in: [houseNo, cleanH, `#${cleanH}`] };
+      if (wardNo) applyWardFilter(query, wardNo);
+    }
+
+    const result = await Voter.updateMany(query, { $set: safeUpdates });
+
+    // Invalidate Cache for this organization
+    const orgKey = query.organizationId || req.user.organizationId || 'org_default';
+    cache.delPrefix(`voters_all_${orgKey}_`);
+    cache.delPrefix(`wards_summary_${orgKey}_`);
+    cache.delPrefix(`turnout_summary_${orgKey}_`);
+    cache.delPrefix(`households_${orgKey}_`);
+
+    res.json({
+      success: true,
+      message: `${result.modifiedCount} मतदाता सफलतापूर्वक अपडेट किए गए।`,
+      modifiedCount: result.modifiedCount
+    });
+  } catch (err) {
+    console.error('Bulk voter update failed:', err.message);
+    res.status(500).json({ message: 'मतदाता अपडेट करने में त्रुटि आई।' });
+  }
+});
+
+// Set Family Phone (assigns same mobile number to entire household)
+router.post('/family-phone', verifyToken, requireModule('voters', 'community'), async (req, res) => {
+  try {
+    const { houseNo, wardNo, phone } = req.body;
+    if (!houseNo) {
+      return res.status(400).json({ message: 'मकान संख्या आवश्यक है।' });
+    }
+    const cleanPhone = String(phone || '').trim().replace(/\D/g, '').slice(-10);
+    const query = addVoterAccess(req);
+    const cleanH = String(houseNo).replace(/^#/, '').trim();
+    query.houseNo = { $in: [houseNo, cleanH, `#${cleanH}`] };
+    if (wardNo) applyWardFilter(query, wardNo);
+
+    const result = await Voter.updateMany(query, { $set: { mobileNo: cleanPhone } });
+
+    const orgKey = query.organizationId || req.user.organizationId || 'org_default';
+    cache.delPrefix(`voters_all_${orgKey}_`);
+    cache.delPrefix(`households_${orgKey}_`);
+
+    res.json({
+      success: true,
+      message: `परिवार के सभी ${result.modifiedCount} सदस्यों के लिए मोबाइल नंबर सुरक्षित किया गया।`,
+      modifiedCount: result.modifiedCount,
+      phone: cleanPhone
+    });
+  } catch (err) {
+    console.error('Family phone update failed:', err.message);
+    res.status(500).json({ message: 'परिवार मोबाइल नंबर सहेजने में त्रुटि आई।' });
   }
 });
 

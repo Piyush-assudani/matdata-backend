@@ -823,10 +823,9 @@ def clean_relative_info(raw: str) -> Tuple[str, str]:
 def clean_house_no(raw: str) -> str:
     """
     Strict House Number extraction and normalization.
-    Rule 1: Only numerical values (0-9, ०-९) with optional separators ('/', '-').
-    Rule 2: English characters are strictly stripped ('engklish ka toh kuch aa hi nhi skta').
-    Rule 3: Only fixed Devanagari sub-division suffixes allowed: क, ख, ग, घ, ङ, च, छ ('12क', '15/ख', 'क-12').
-    Rule 4: Junk words ('मका', 'लि', 'नि लि', '. आईसीआईसीआई', etc.) are stripped or return '-' if no digits exist.
+    Rule 1: Supports numerical values (0-9, ०-९) with separators ('/', '-').
+    Rule 2: Preserves valid alphanumeric house identifiers (e.g., '12A', 'A-12', '12क', '15/ख', 'Flat 4').
+    Rule 3: Strips label words ('मकान', 'संख्या', 'गृह', 'म.नं.', 'म.सं.') and return '-' if no valid identifier exists.
     """
     if not raw:
         return "-"
@@ -835,28 +834,27 @@ def clean_house_no(raw: str) -> str:
         return "-"
 
     # Strip prefixes and labels
-    s = re.sub(r'^(?:मकान|संख्या|मकरन|सपखजर|गृह|आयु|उम्र|लिंग|पुरुष|पुरूष|स्त्री|महिला|नाम|पिता|पति|माता|ward|house|no|room|flat|ft|at|et|Fy|Ik|iad|है|हे|मिका|पु|Nha|AY)[:ः\.\-\s]*', '', s, flags=re.IGNORECASE)
-    s = re.sub(r'(?:मकान|संख्या|मकरन|सपखजर|गृह|आयु|उम्र|लिंग|ward|house|no)+', '', s, flags=re.IGNORECASE)
+    s = re.sub(r'^(?:मकान|संख्या|मकरन|सपखजर|सपखसर|गृह|आयु|उम्र|लिंग|पुरुष|पुरूष|स्त्री|महिला|नाम|पिता|पति|माता|ward|house|no|room|flat|ft|at|et|Fy|Ik|iad|है|हे|मिका|पु|Nha|AY)[:ः\.\-\s]*', '', s, flags=re.IGNORECASE)
+    s = re.sub(r'^(?:म\.?\s*सं\.?|म\.?\s*नं\.?|म\.?\s*क्र\.?|गृह\s*सं\.?)[:ः\.\-\s]*', '', s, flags=re.IGNORECASE)
+    s = re.sub(r'(?:मकान|संख्या|मकरन|सपखजर|सपखसर|गृह|आयु|उम्र|लिंग|ward|house|no)+', '', s, flags=re.IGNORECASE)
     
-    # Strictly strip all English letters
-    s = re.sub(r'[A-Za-z]+', '', s)
-    
-    # Strip punctuation except / and -
-    s = re.sub(r'[%*~_!?:;\'"‘’।॥«»°+={}\[\]()|<>^$&#@¥\.]+', ' ', s).strip()
+    # Strip unnecessary punctuation but keep /, -, alphanumeric
+    s = re.sub(r'[%*~_!?;\'"‘’।॥«»°+={}\[\]()|<>^$&#@¥]+', ' ', s).strip()
+    s = s.strip(':.- ')
 
-    # Prefix allowed pattern: e.g. "क-12" or "ख/4"
-    m_pre = re.search(r'([क-छ])\s*[\/\-]?\s*(\d+(?:[\/\-]\d+)*)', s)
+    # Prefix allowed pattern: e.g. "क-12" or "ख/4" or "A-12"
+    m_pre = re.search(r'([क-छA-Za-z])\s*[\/\-]?\s*(\d+(?:[\/\-]\d+)*)', s)
     if m_pre:
-        return f"{m_pre.group(1)}-{m_pre.group(2)}"
+        return f"{m_pre.group(1).upper()}-{m_pre.group(2)}"
 
-    # Core pattern: Digits with optional '/' or '-' and optional allowed Devanagari suffix [क-छ]
-    m_num = re.search(r'(\d+(?:[\/\-]\d+)*)(?:\s*([\/\-]?\s*[क-छ]))?', s)
+    # Core pattern: Digits with optional '/' or '-' and optional suffix [क-छA-Za-z]
+    m_num = re.search(r'(\d+(?:[\/\-]\d+)*)(?:\s*([\/\-]?\s*[क-छA-Za-z]))?', s)
     if m_num:
         digits_part = m_num.group(1)
-        suffix = (m_num.group(2) or '').replace(' ', '')
+        suffix = (m_num.group(2) or '').replace(' ', '').upper()
         return f"{digits_part}{suffix}"
 
-    # Preserve meaningful Hindi area/colony landmarks if present (e.g. बाईपास, माधव पैलेस, शारदानगर, आईसीआईसीआई बैंक)
+    # Preserve meaningful Hindi area/colony landmarks if present (e.g. बाईपास, माधव पैलेस)
     landmark = decode_sec_rajasthan(re.sub(r'[^\u0900-\u097F\s]', '', s)).strip()
     banned_landmarks = {'मकान', 'संख्या', 'गृह', 'आयु', 'उम्र', 'लिंग', 'पुरुष', 'स्त्री', 'नाम', 'पिता', 'पति', 'माता', 'फोटो', 'उपलब्ध'}
     if len(landmark) >= 3 and landmark not in banned_landmarks:
@@ -1292,11 +1290,30 @@ def ocr_single_page(args_tuple: Tuple[str, int]) -> Tuple[int, List[Dict[str, An
                     age_raw = words_text[i+1]
                 if i + 2 < len(words_text):
                     gender_raw = words_text[i+2]
-            if any(k in w for k in ['सपखसर', 'मकरन', 'संख्या', 'मकान']):
-                if i + 1 < len(words_text):
-                    h_str = words_text[i+1].strip()
-                    if h_str and not h_str.startswith('Photo') and not any(h_str.startswith(p) for p in ['XII', 'JCR', 'RJ', 'UP', 'DL', 'MP', 'GJ', 'HR']):
-                        house_no = clean_house_no(h_str)
+            if any(k in w for k in ['सपखसर', 'मकरन', 'मकान', 'गृह', 'संख्या']) and not house_no:
+                cand_tokens = []
+                for ahead in range(1, min(6, len(words_text) - i)):
+                    tk = words_text[i + ahead].strip()
+                    if not tk:
+                        continue
+                    if any(l in tk for l in ['आयु', 'आजच', 'उम्र', 'लिंग', 'Sex', 'Photo', 'RJ/', 'VOTER']):
+                        break
+                    if tk in ['संख्या', 'सपखसर', 'सपखजर', 'मकरन', 'मकान', 'गृह', 'नंबर', 'नं', 'नं.', 'सं', 'सं.', 'क्र', 'क्र.', ':', '-']:
+                        continue
+                    cand_tokens.append(tk)
+                    if any(ch.isdigit() for ch in tk) or any(ch in '०१२३४५६७८९' for ch in tk):
+                        if ahead + 1 < min(6, len(words_text) - i):
+                            next_tk = words_text[i + ahead + 1].strip()
+                            if next_tk in ['/', '-'] or (len(next_tk) <= 2 and next_tk in ['क', 'ख', 'ग', 'घ', 'A', 'B', 'C']):
+                                cand_tokens.append(next_tk)
+                                if ahead + 2 < min(6, len(words_text) - i) and next_tk in ['/', '-']:
+                                    cand_tokens.append(words_text[i + ahead + 2].strip())
+                        break
+                if cand_tokens:
+                    combined = ''.join(cand_tokens)
+                    res = clean_house_no(combined)
+                    if res and res != '-':
+                        house_no = res
 
         # 4. Relation type
         rel_type = 'पिता'
