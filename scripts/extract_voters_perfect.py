@@ -834,10 +834,18 @@ def extract_single_pdf(pdf_path, default_ward=None, default_part=None, include_d
                             photo_filename = f"{clean_s}_{s_num}.webp"
                             target_save_path = os.path.join(photos_dir, photo_filename)
                             try:
-                                from PIL import Image
+                                from PIL import Image, ImageEnhance
                                 import io
                                 pil_img = Image.open(io.BytesIO(pix.tobytes('png')))
-                                pil_img.save(target_save_path, 'WEBP', quality=85)
+                                # High-quality 2.5x upscale using Lanczos to avoid browser bilinear blur on small 43x60 stamps
+                                if pil_img.width < 100:
+                                    target_w = int(pil_img.width * 2.5)
+                                    target_h = int(pil_img.height * 2.5)
+                                    pil_img = pil_img.resize((target_w, target_h), Image.Resampling.LANCZOS)
+                                    # Subtle edge sharpening
+                                    enhancer = ImageEnhance.Sharpness(pil_img)
+                                    pil_img = enhancer.enhance(1.3)
+                                pil_img.save(target_save_path, 'WEBP', quality=95)
                             except Exception:
                                 photo_filename = f"{clean_s}_{s_num}.png"
                                 pix.save(os.path.join(photos_dir, photo_filename))
