@@ -311,15 +311,22 @@ router.post('/upload', verifyToken, isAdmin, (req, res, next) => {
                   const photoMapBySerial = new Map();
                   const photoMapByEpic = new Map();
                   for (const ev of existingVoters) {
-                    if (ev.serialNo) photoMapBySerial.set(`${ev.wardNo}_${ev.serialNo}`, ev.photoUrl);
-                    if (ev.epic) photoMapByEpic.set(ev.epic, ev.photoUrl);
+                    if (ev.serialNo) {
+                      photoMapBySerial.set(`${String(ev.wardNo || '').trim()}_${ev.serialNo}`, ev.photoUrl);
+                      photoMapBySerial.set(String(ev.serialNo), ev.photoUrl);
+                    }
+                    if (ev.epic) {
+                      photoMapByEpic.set(String(ev.epic).trim(), ev.photoUrl);
+                    }
                   }
 
                   for (const op of missingPhotoOps) {
                     const f = op.updateOne?.filter;
                     const s = op.updateOne?.update?.$set;
                     if (f && s) {
-                      const existingUrl = photoMapBySerial.get(`${f.wardNo}_${f.serialNo}`) || (s.epic ? photoMapByEpic.get(s.epic) : null);
+                      const existingUrl = photoMapBySerial.get(`${String(f.wardNo || '').trim()}_${f.serialNo}`)
+                        || photoMapBySerial.get(String(f.serialNo))
+                        || (s.epic ? photoMapByEpic.get(String(s.epic).trim()) : null);
                       if (existingUrl) {
                         s.photoUrl = existingUrl;
                       }
