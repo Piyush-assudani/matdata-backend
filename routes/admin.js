@@ -77,7 +77,7 @@ router.get('/diagnose-photo-pipeline', verifyToken, isAdmin, async (_req, res) =
     report.python = { ok: false, error: pyErr.message, stderr: pyErr.stderr?.toString() };
     // Try installing automatically
     try {
-      const pipInstall = execSync('python3 -m pip install PyMuPDF Pillow pypdf openpyxl --break-system-packages --no-warn-script-location', { encoding: 'utf-8', timeout: 60000 });
+      const pipInstall = execSync('python3 -m pip install --no-cache-dir --prefer-binary --break-system-packages PyMuPDF Pillow pypdf openpyxl --no-warn-script-location', { encoding: 'utf-8', timeout: 180000 });
       report.pipAutoInstall = { attempted: true, success: true, output: pipInstall.trim() };
     } catch (pipErr) {
       report.pipAutoInstall = { attempted: true, success: false, error: pipErr.message, stderr: pipErr.stderr?.toString() };
