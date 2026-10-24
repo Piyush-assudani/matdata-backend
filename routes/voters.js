@@ -348,8 +348,17 @@ router.get('/wards-summary', verifyToken, requireModule('voters', 'community', '
       ]),
       Voter.countDocuments(query),
       Voter.aggregate([
-        { $match: { ...query, houseNo: { $exists: true, $nin: ['', '-', '—'] } } },
-        { $group: { _id: { wardNo: '$wardNo', houseNo: '$houseNo' } } },
+        { $match: query },
+        {
+          $group: {
+            _id: {
+              houseNo: { $ifNull: ['$houseNo', '—'] },
+              wardNo: { $ifNull: ['$wardNo', ''] },
+              panchayat: { $ifNull: ['$panchayat', ''] },
+              partNo: { $ifNull: ['$partNo', ''] }
+            }
+          }
+        },
         { $count: 'totalFamilies' }
       ])
     ]);
