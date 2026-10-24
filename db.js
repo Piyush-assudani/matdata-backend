@@ -128,9 +128,10 @@ const ensureSchema = async () => {
 module.exports = {
   ensureSchema,
   connectDB: async () => {
-    const uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/matdataportal';
+    const uri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/matdataportal';
     try {
-      console.log('Connecting to MongoDB at:', uri);
+      const sanitizedUri = uri.replace(/\/\/([^:]+):([^@]+)@/, '//$1:****@');
+      console.log('Connecting to MongoDB at:', sanitizedUri);
       await mongoose.connect(uri, {
         serverSelectionTimeoutMS: 10000,
         maxPoolSize: 50,
