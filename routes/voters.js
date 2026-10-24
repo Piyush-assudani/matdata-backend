@@ -542,27 +542,63 @@ router.get('/', verifyToken, requireModule('voters', 'community', 'workers', 'mi
       const trimmed = search.trim().slice(0, 100);
       const searchRegex = safeRegex(trimmed);
       const latinDevRegex = latinToDevanagariRegex(trimmed);
+      const isExplicitVoterId = /^voter/i.test(trimmed);
+      const isAsciiWord = /^[a-z]+$/i.test(trimmed);
+
+      const orConditions = [];
+
+      // 1. Direct regex match on name fields
       if (searchRegex) {
-        query.$or = [
-          { nameHi: searchRegex },
-          { nameEn: searchRegex },
-          { epic: searchRegex },
-          { relativeNameHi: searchRegex },
-          { relativeNameEn: searchRegex },
-          { houseNo: trimmed },
-          { mobileNo: searchRegex }
-        ];
-        if (latinDevRegex) {
-          query.$or.push({ nameHi: latinDevRegex });
-          query.$or.push({ relativeNameHi: latinDevRegex });
+        orConditions.push({ nameHi: searchRegex });
+        orConditions.push({ nameEn: searchRegex });
+      }
+
+      // If input is English/Latin, match via phonetic Devanagari regex
+      if (latinDevRegex) {
+        if (trimmed.length <= 3 && isAsciiWord) {
+          // For short queries like "p", "bu", "ma", match start of name or start of any word in name
+          const prefixPattern = new RegExp('(^|\\s)(' + latinDevRegex.source + ')', 'i');
+          orConditions.push({ nameHi: prefixPattern });
+          orConditions.push({ nameEn: prefixPattern });
+        } else {
+          orConditions.push({ nameHi: latinDevRegex });
+          orConditions.push({ nameEn: latinDevRegex });
         }
       }
 
+      // 2. EPIC match: do NOT match internal fallback placeholder IDs (e.g. VOTER_W1_P5091_...)
+      if (isExplicitVoterId) {
+        orConditions.push({ epic: searchRegex });
+      } else if (trimmed.length < 3) {
+        // For 1-2 char queries, only match if a real EPIC number actually starts with it (e.g. "SSB", "RJ")
+        orConditions.push({
+          $and: [
+            { epic: new RegExp('^' + escapeRegex(trimmed), 'i') },
+            { epic: { $not: /^VOTER_/i } }
+          ]
+        });
+      } else {
+        // For 3+ char queries, match real EPIC containing it, but NEVER match fallback ^VOTER_ IDs
+        orConditions.push({
+          $and: [
+            { epic: searchRegex },
+            { epic: { $not: /^VOTER_/i } }
+          ]
+        });
+      }
+
+      // 3. Serial number match (exact integer)
       const parsedSerial = Number.parseInt(trimmed, 10);
       if (!Number.isNaN(parsedSerial) && String(parsedSerial) === trimmed) {
-        if (!query.$or) query.$or = [];
-        query.$or.push({ serialNo: parsedSerial });
+        orConditions.push({ serialNo: parsedSerial });
       }
+
+      // 4. Mobile number match (only if 3-10 digits)
+      if (/^\d{3,10}$/.test(trimmed) && searchRegex) {
+        orConditions.push({ mobileNo: searchRegex });
+      }
+
+      query.$or = orConditions;
     }
     
     if (typeof relative === 'string' && relative.trim()) {

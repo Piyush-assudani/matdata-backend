@@ -162,10 +162,14 @@ router.get('/migrants', requireModule('migrants'), async (req, res) => {
     if (typeof req.query.search === 'string' && req.query.search.trim()) {
       const searchRegex = safeRegex(req.query.search);
       if (searchRegex) {
+        const isExplicitVoter = /^voter/i.test(req.query.search.trim());
+        const epicCond = isExplicitVoter
+          ? { epic: searchRegex }
+          : { $and: [{ epic: searchRegex }, { epic: { $not: /^VOTER_/i } }] };
         query.$or = [
           { nameHi: searchRegex },
           { nameEn: searchRegex },
-          { epic: searchRegex },
+          epicCond,
           { migrantLocation: searchRegex },
           { mobileNo: searchRegex },
         ];
