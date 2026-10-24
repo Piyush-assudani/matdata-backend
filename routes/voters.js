@@ -4,7 +4,7 @@ const cache = require('../lib/cache');
 const { formatVoter } = require('./features');
 const { verifyToken, requireModule } = require('../middleware/authMiddleware');
 const { addVoterAccess, getEffectiveOrgId } = require('../lib/access');
-const { escapeRegex, safeRegex } = require('../lib/regexUtils');
+const { escapeRegex, safeRegex, latinToDevanagariRegex } = require('../lib/regexUtils');
 const { Voter, User, Organization, SystemSetting } = require('../models/index');
 
 const DEFAULT_CASTES = [
@@ -414,6 +414,7 @@ router.get('/households', verifyToken, requireModule('voters', 'community'), asy
     }
     if (typeof search === 'string' && search.trim()) {
       const searchRegex = safeRegex(search);
+      const latinDevRegex = latinToDevanagariRegex(search);
       if (searchRegex) {
         query.$or = [
           { houseNo: searchRegex },
@@ -421,6 +422,9 @@ router.get('/households', verifyToken, requireModule('voters', 'community'), asy
           { nameEn: searchRegex },
           { epic: searchRegex }
         ];
+        if (latinDevRegex) {
+          query.$or.push({ nameHi: latinDevRegex });
+        }
       }
     }
 
@@ -528,6 +532,7 @@ router.get('/', verifyToken, requireModule('voters', 'community', 'workers', 'mi
     if (typeof search === 'string' && search.trim()) {
       const trimmed = search.trim().slice(0, 100);
       const searchRegex = safeRegex(trimmed);
+      const latinDevRegex = latinToDevanagariRegex(trimmed);
       if (searchRegex) {
         query.$or = [
           { nameHi: searchRegex },
@@ -538,6 +543,10 @@ router.get('/', verifyToken, requireModule('voters', 'community', 'workers', 'mi
           { houseNo: trimmed },
           { mobileNo: searchRegex }
         ];
+        if (latinDevRegex) {
+          query.$or.push({ nameHi: latinDevRegex });
+          query.$or.push({ relativeNameHi: latinDevRegex });
+        }
       }
 
       const parsedSerial = Number.parseInt(trimmed, 10);
@@ -550,12 +559,17 @@ router.get('/', verifyToken, requireModule('voters', 'community', 'workers', 'mi
     if (typeof relative === 'string' && relative.trim()) {
       const relTrimmed = relative.trim().slice(0, 100);
       const relativeRegex = safeRegex(relTrimmed);
+      const relLatinDevRegex = latinToDevanagariRegex(relTrimmed);
       if (relativeRegex) {
+        const relConditions = [{ relativeNameHi: relativeRegex }, { relativeNameEn: relativeRegex }];
+        if (relLatinDevRegex) {
+          relConditions.push({ relativeNameHi: relLatinDevRegex });
+        }
         if (query.$or) {
-          query.$and = [{ $or: query.$or }, { $or: [{ relativeNameHi: relativeRegex }, { relativeNameEn: relativeRegex }] }];
+          query.$and = [{ $or: query.$or }, { $or: relConditions }];
           delete query.$or;
         } else {
-          query.$or = [{ relativeNameHi: relativeRegex }, { relativeNameEn: relativeRegex }];
+          query.$or = relConditions;
         }
       }
     }
