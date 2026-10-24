@@ -160,12 +160,14 @@ def surya_recognize_card(card_img: Image.Image) -> Dict[str, Any]:
                 if c:
                     rel_name = c
 
-            hm = re.search(r'(?:मकान|गृह)\s*(?:संख्या|नंबर|नं|क्रं)?\s*[:ः\-\s]*(.+)', t)
+            hm = re.search(r'(?:मकान|गृह|मकारन|मकरन|म\.?\s*सं\.?|म\.?\s*नं\.?|म०\s*सं०?|म०\s*नं०?|house|h\.no)\s*(?:संख्या|नंबर|नं|क्रं|सपखजर|सपखसर)?\s*[:ः\-\s]*(.+)', t, re.I)
             if hm and not house:
                 c = hm.group(1).strip()
-                c = re.sub(r'^(?:संख्या|नंबर|नं|क्रं)+[:ः\-\s]*', '', c).strip()
-                if c and c not in ['-', '०', ':', '']:
-                    house = clean_house_no(c)
+                c = re.sub(r'^(?:संख्या|नंबर|नं|क्रं|सपखजर|सपखसर)+[:ः\-\s]*', '', c).strip()
+                if c and c not in ['-', '०', '0', '00', ':', '']:
+                    cleaned_h = clean_house_no(c)
+                    if cleaned_h and cleaned_h != '-':
+                        house = cleaned_h
 
             am = re.search(r'आयु\s*[:ः\-\s]*(\d+)', t)
             if am and age is None:
@@ -232,10 +234,10 @@ def parse_full_card_tess(text: str) -> Dict[str, Any]:
             if c:
                 rel_name = c
 
-        hm = re.search(r'(?:मकान|गृह|मकारन)\s*(?:संख्या|नंबर|नं|क्रं|सपखजर)?\s*[:ः\-\s]*(.+)', l)
+        hm = re.search(r'(?:मकान|गृह|मकारन|मकरन|म\.?\s*सं\.?|म\.?\s*नं\.?|म०\s*सं०?|म०\s*नं०?|house|h\.no)\s*(?:संख्या|नंबर|नं|क्रं|सपखजर|सपखसर)?\s*[:ः\-\s]*(.+)', l, re.I)
         if hm and not house:
             c = clean_house_no(hm.group(1))
-            if c and c not in ['-', '०', ':', '']:
+            if c and c not in ['-', '०', '0', '00', ':', '']:
                 house = c
 
         am = re.search(r'(?:आयु|आयू|आजच|आय|उम्र)\s*[:ः\-\s]*(\d+)', l)
@@ -621,8 +623,18 @@ SEC_TYPO_MAP = {
     r'^परोहित\b': 'पुरोहित',
     r'^म॒केश\b': 'मुकेश',
     r'^तेज\s*प्रकास\b': 'तेज प्रकाश',
-    r'^ददुर्गाराम\b': 'दुर्गाराम',
-    r'^ज़गदीश\b': 'जगदीश'
+    r'^ज़गदीश\b': 'जगदीश',
+    r'^तिनेश\b': 'दिनेश',
+    r'^तुर्गा\b': 'दुर्गा',
+    r'^टुर्गा\b': 'दुर्गा',
+    r'^तेवी\b': 'देवी',
+    r'^तास\b': 'दास',
+    r'^ररकू\b|^रकू\b|^ररकु\b': 'रिंकू',
+    r'^तिलीप\b': 'दिलीप',
+    r'^टीपक\b': 'दीपक',
+    r'^टेवेन्द्र\b': 'देवेन्द्र',
+    r'^तशरथ\b': 'दशरथ',
+    r'^तामोदर\b': 'दामोदर'
 }
 
 ADMIN_WORDS_BLACKLIST = [
@@ -826,33 +838,49 @@ def clean_house_no(raw: str) -> str:
     Rule 1: Supports numerical values (0-9, ०-९) with separators ('/', '-').
     Rule 2: Preserves valid alphanumeric house identifiers (e.g., '12A', 'A-12', '12क', '15/ख', 'Flat 4').
     Rule 3: Strips label words ('मकान', 'संख्या', 'गृह', 'म.नं.', 'म.सं.') and return '-' if no valid identifier exists.
+    Rule 4: Never returns '0', '00', or empty. Leading zeros like '05' are normalized to '5'.
     """
     if not raw:
         return "-"
     s = normalize_numerals(str(raw).strip())
     if any(w in s.lower() for w in ['लागू नहीं', 'उपलब्ध नहीं', 'शून्य', 'nil', 'na', 'none', 'n/a']):
         return "-"
+    if re.match(r'^(?:0+|०+|—|-+|\.+)$', s):
+        return "-"
 
     # Strip prefixes and labels
     s = re.sub(r'^(?:मकान|संख्या|मकरन|सपखजर|सपखसर|गृह|आयु|उम्र|लिंग|पुरुष|पुरूष|स्त्री|महिला|नाम|पिता|पति|माता|ward|house|no|room|flat|ft|at|et|Fy|Ik|iad|है|हे|मिका|पु|Nha|AY)[:ः\.\-\s]*', '', s, flags=re.IGNORECASE)
-    s = re.sub(r'^(?:म\.?\s*सं\.?|म\.?\s*नं\.?|म\.?\s*क्र\.?|गृह\s*सं\.?)[:ः\.\-\s]*', '', s, flags=re.IGNORECASE)
+    s = re.sub(r'^(?:म\.?\s*सं\.?|म\.?\s*नं\.?|म\.?\s*क्र\.?|म०\s*सं०?|म०\s*नं०?|गृह\s*सं\.?|h\.?\s*no\.?)[:ः\.\-\s]*', '', s, flags=re.IGNORECASE)
     s = re.sub(r'(?:मकान|संख्या|मकरन|सपखजर|सपखसर|गृह|आयु|उम्र|लिंग|ward|house|no)+', '', s, flags=re.IGNORECASE)
     
     # Strip unnecessary punctuation but keep /, -, alphanumeric
     s = re.sub(r'[%*~_!?;\'"‘’।॥«»°+={}\[\]()|<>^$&#@¥]+', ' ', s).strip()
     s = s.strip(':.- ')
 
+    if not s or re.match(r'^(?:0+|०+|—|-+|\.+)$', s):
+        return "-"
+
     # Prefix allowed pattern: e.g. "क-12" or "ख/4" or "A-12"
     m_pre = re.search(r'([क-छA-Za-z])\s*[\/\-]?\s*(\d+(?:[\/\-]\d+)*)', s)
     if m_pre:
-        return f"{m_pre.group(1).upper()}-{m_pre.group(2)}"
+        dig = m_pre.group(2)
+        if re.match(r'^0+$', dig):
+            return "-"
+        dig = re.sub(r'^0+([1-9]\d*)', r'\1', dig)
+        return f"{m_pre.group(1).upper()}-{dig}"
 
-    # Core pattern: Digits with optional '/' or '-' and optional suffix [क-छA-Za-z]
-    m_num = re.search(r'(\d+(?:[\/\-]\d+)*)(?:\s*([\/\-]?\s*[क-छA-Za-z]))?', s)
+    # Core pattern: Digits with optional '/' or '-' and optional suffix [क-छ] or standalone single letter [A-Za-z]
+    m_num = re.search(r'(\d+(?:[\/\-]\d+)*)(?:\s*([\/\-]?\s*(?:[क-छ]|[A-Za-z](?![A-Za-z]))))?', s)
     if m_num:
         digits_part = m_num.group(1)
+        if re.match(r'^0+$', digits_part):
+            return "-"
+        # Strip leading zeroes on numbers: e.g. '05' -> '5', '012/1' -> '12/1'
+        parts = digits_part.split('/')
+        cleaned_parts = [re.sub(r'^0+([1-9]\d*)', r'\1', p) for p in parts]
+        cleaned_digits = '/'.join(cleaned_parts)
         suffix = (m_num.group(2) or '').replace(' ', '').upper()
-        return f"{digits_part}{suffix}"
+        return f"{cleaned_digits}{suffix}"
 
     # Preserve meaningful Hindi area/colony landmarks if present (e.g. बाईपास, माधव पैलेस)
     landmark = decode_sec_rajasthan(re.sub(r'[^\u0900-\u097F\s]', '', s)).strip()
@@ -1290,30 +1318,37 @@ def ocr_single_page(args_tuple: Tuple[str, int]) -> Tuple[int, List[Dict[str, An
                     age_raw = words_text[i+1]
                 if i + 2 < len(words_text):
                     gender_raw = words_text[i+2]
-            if any(k in w for k in ['सपखसर', 'मकरन', 'मकान', 'गृह', 'संख्या']) and not house_no:
-                cand_tokens = []
-                for ahead in range(1, min(6, len(words_text) - i)):
-                    tk = words_text[i + ahead].strip()
-                    if not tk:
-                        continue
-                    if any(l in tk for l in ['आयु', 'आजच', 'उम्र', 'लिंग', 'Sex', 'Photo', 'RJ/', 'VOTER']):
-                        break
-                    if tk in ['संख्या', 'सपखसर', 'सपखजर', 'मकरन', 'मकान', 'गृह', 'नंबर', 'नं', 'नं.', 'सं', 'सं.', 'क्र', 'क्र.', ':', '-']:
-                        continue
-                    cand_tokens.append(tk)
-                    if any(ch.isdigit() for ch in tk) or any(ch in '०१२३४५६७८९' for ch in tk):
-                        if ahead + 1 < min(6, len(words_text) - i):
-                            next_tk = words_text[i + ahead + 1].strip()
-                            if next_tk in ['/', '-'] or (len(next_tk) <= 2 and next_tk in ['क', 'ख', 'ग', 'घ', 'A', 'B', 'C']):
-                                cand_tokens.append(next_tk)
-                                if ahead + 2 < min(6, len(words_text) - i) and next_tk in ['/', '-']:
-                                    cand_tokens.append(words_text[i + ahead + 2].strip())
-                        break
-                if cand_tokens:
-                    combined = ''.join(cand_tokens)
-                    res = clean_house_no(combined)
-                    if res and res != '-':
-                        house_no = res
+            if any(k in w for k in ['सपखसर', 'मकरन', 'मकान', 'गृह', 'संख्या', 'म.सं', 'म.नं', 'म०', 'house', 'h.no']) and not house_no:
+                # Check if digits are attached inside w itself (e.g. 'मकान:15', 'मकरन12', 'म.सं.4')
+                w_num = re.sub(r'^(?:सपखसर|मकरन|मकान|गृह|संख्या|म\.?\s*सं\.?|म\.?\s*नं\.?|म०\s*सं०?|म०\s*नं०?|house|h\.no)[:ः\.\-\s]*', '', w, flags=re.I).strip()
+                if w_num and (any(ch.isdigit() for ch in w_num) or any(ch in '०१२३४५६७८९' for ch in w_num)):
+                    res_w = clean_house_no(w_num)
+                    if res_w and res_w not in ['-', '०', '0', '00']:
+                        house_no = res_w
+                if not house_no:
+                    cand_tokens = []
+                    for ahead in range(1, min(6, len(words_text) - i)):
+                        tk = words_text[i + ahead].strip()
+                        if not tk:
+                            continue
+                        if any(l in tk for l in ['आयु', 'आजच', 'उम्र', 'लिंग', 'Sex', 'Photo', 'RJ/', 'VOTER']):
+                            break
+                        if tk in ['संख्या', 'सपखसर', 'सपखजर', 'मकरन', 'मकान', 'गृह', 'नंबर', 'नं', 'नं.', 'सं', 'सं.', 'क्र', 'क्र.', ':', '-']:
+                            continue
+                        cand_tokens.append(tk)
+                        if any(ch.isdigit() for ch in tk) or any(ch in '०१२३४५६७८९' for ch in tk):
+                            if ahead + 1 < min(6, len(words_text) - i):
+                                next_tk = words_text[i + ahead + 1].strip()
+                                if next_tk in ['/', '-'] or (len(next_tk) <= 2 and next_tk in ['क', 'ख', 'ग', 'घ', 'A', 'B', 'C']):
+                                    cand_tokens.append(next_tk)
+                                    if ahead + 2 < min(6, len(words_text) - i) and next_tk in ['/', '-']:
+                                        cand_tokens.append(words_text[i + ahead + 2].strip())
+                            break
+                    if cand_tokens:
+                        combined = ''.join(cand_tokens)
+                        res = clean_house_no(combined)
+                        if res and res not in ['-', '०', '0', '00']:
+                            house_no = res
 
         # 4. Relation type
         rel_type = 'पिता'
@@ -1404,8 +1439,12 @@ def ocr_single_page(args_tuple: Tuple[str, int]) -> Tuple[int, List[Dict[str, An
                 pass
 
         # House No fallback
-        if not house_no or house_no in ['-', '०']:
-            house_no = tess_parsed['house'] or ''
+        if not house_no or house_no in ['-', '०', '0', '00']:
+            t_house = tess_parsed.get('house') or ''
+            if t_house and t_house not in ['-', '०', '0', '00']:
+                house_no = t_house
+            else:
+                house_no = '-'
 
         # Age and Gender fallbacks
         if not age_raw and tess_parsed['age']:
@@ -1810,14 +1849,15 @@ def process_pdf_to_excel(pdf_path: str, excel_path: str, ward_no: str = "", boot
                     if not age or age == "-":
                         age = ""
                         needs_review = True
-                    if not house or house == "-":
+                    if not house or house in ['-', '०', '0', '00']:
                         house = "-"
                         needs_review = True
             else:
                 # Rule F5: Active voter validation
                 if not age or age == "-" or (isinstance(age, int) and (age < 18 or age > 125)):
                     needs_review = True
-                if not house or house == "-":
+                if not house or house in ['-', '०', '0', '00']:
+                    house = "-"
                     needs_review = True
 
             # Rule F4: Stray characters in name

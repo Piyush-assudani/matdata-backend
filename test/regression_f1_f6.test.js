@@ -16,12 +16,18 @@ async function runRegressionSuite() {
   assert.equal(cleanHouseNo('क-12'), 'क-12', 'F3 failed: क-12 must be preserved');
   assert.equal(cleanHouseNo('4लि'), '4', 'F3 failed: 4लि attached noise must become 4');
   assert.equal(cleanHouseNo('2मका'), '2', 'F3 failed: 2मका attached noise must become 2');
-  assert.equal(cleanHouseNo('000ju'), '000', 'F3 failed: 000ju english must become 000');
+  assert.equal(cleanHouseNo('000ju'), '-', 'F3: 000ju must become -');
+  assert.equal(cleanHouseNo('0'), '-', 'F3: single 0 must become -');
+  assert.equal(cleanHouseNo('00'), '-', 'F3: double 00 must become -');
+  assert.equal(cleanHouseNo('05'), '5', 'F3: 05 must become 5');
+  assert.equal(cleanHouseNo('012A'), '12A', 'F3: 012A must become 12A');
   assert.equal(cleanHouseNo('2kh'), '2', 'F3 failed: english kh must be stripped');
   assert.equal(cleanHouseNo('मका'), '-', 'F3 failed: non-numeric मका must become -');
   assert.equal(cleanHouseNo('. आईसीआईसीआई'), '-', 'F3 failed: non-numeric bank text must become -');
   assert.equal(cleanHouseNo('. नि लि'), '-', 'F3 failed: non-numeric abbreviations must become -');
   assert.equal(cleanHouseNo('मकान संख्या: 2क'), '2क', 'F3 failed: label stripped but 2क preserved');
+  assert.equal(cleanHouseNo('मकान नं. 45'), '45', 'F3: label stripped and 45 preserved');
+  assert.equal(cleanHouseNo('म.सं. 12/4'), '12/4', 'F3: abbreviation stripped and 12/4 preserved');
   console.log('✓ F3 House Number tests passed successfully.');
 
   // Connect to MongoDB to verify F1, F2, F4, F5, F6

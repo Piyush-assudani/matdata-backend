@@ -779,7 +779,9 @@ def extract_single_pdf(pdf_path, default_ward=None, default_part=None, include_d
                         c_cand = re.sub(r'^(?:मकान|संख्या|मकरन|सपखजर|सपखसर|गृह|house|no)[:ः\.\-\s]*', '', c_cand, flags=re.I).strip()
                         c_cand = re.sub(r'[,:ः\.\s]+$', '', c_cand).strip()
                         if c_cand and any(ch.isdigit() for ch in c_cand) and not any(k in c_cand for k in ['Photo', 'EPIC', 'RJ/', 'VOTER']):
-                            if re.match(r'^0+\d+$', c_cand):
+                            if re.match(r'^0+$', c_cand):
+                                c_cand = '-'
+                            elif re.match(r'^0+\d+$', c_cand):
                                 c_cand = str(int(c_cand))
                             elif re.match(r'^0+\d+', c_cand):
                                 c_cand = re.sub(r'^0+(\d+)', r'\1', c_cand)

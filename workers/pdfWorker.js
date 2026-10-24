@@ -252,6 +252,9 @@ const ExcelJS = require('exceljs');
             cleanRel = stripNameFromRelative(cleanName, cleanRel);
             const rawRelEn = cellVal(row, 'relativeNameEn', 10);
             const cleanH = cleanHouseNo(cellVal(row, 'houseNo', 12));
+            const finalHouse = (cleanH && cleanH !== '0' && cleanH !== '00') ? cleanH : '-';
+            const finalNameEn = (rawNameEn && /[a-zA-Z]/.test(rawNameEn)) ? String(rawNameEn).trim() : cleanName;
+            const finalRelEn = (rawRelEn && /[a-zA-Z]/.test(rawRelEn)) ? String(rawRelEn).trim() : (cleanRel.length >= 2 ? cleanRel : (rawRel || ''));
             
             const rawAge = cellVal(row, 'age', 7);
             let ageVal = rawAge ? parseInt(rawAge, 10) : null;
@@ -283,11 +286,11 @@ const ExcelJS = require('exceljs');
               serialNo: serialVal || (finalVoterList.length + 1),
               epic: cleanEpic,
               nameHi: cleanName,
-              nameEn: cleanName, // Pure Hindi data only
+              nameEn: finalNameEn,
               relativeNameHi: cleanRel.length >= 2 ? cleanRel : rawRel,
-              relativeNameEn: cleanRel.length >= 2 ? cleanRel : rawRel, // Pure Hindi data only
+              relativeNameEn: finalRelEn,
               relationType: relType,
-              houseNo: cleanH || cellVal(row, 'houseNo', 12),
+              houseNo: finalHouse,
               age: ageVal,
               gender: genderVal,
               status: statusVal,
@@ -301,6 +304,8 @@ const ExcelJS = require('exceljs');
             });
           } else if (serialVal || (epic && epic !== '-' && epic.trim().length >= 4)) {
             // Unreadable / corrupted voter record - capture for review and manual editing
+            const cleanH = cleanHouseNo(cellVal(row, 'houseNo', 12));
+            const finalHouse = (cleanH && cleanH !== '0' && cleanH !== '00') ? cleanH : '-';
             finalVoterList.push({
               serialNo: serialVal || (finalVoterList.length + 1),
               epic: (epic && epic !== '-' && epic.trim() !== '') ? epic.trim() : `UNREADABLE_W${rowWard}_P${rowBooth}_S${serialVal || (finalVoterList.length + 1)}`,
@@ -309,7 +314,7 @@ const ExcelJS = require('exceljs');
               relativeNameHi: cellVal(row, 'relativeNameHi', 11) || '',
               relativeNameEn: cellVal(row, 'relativeNameEn', 10) || '',
               relationType: 'पिता',
-              houseNo: cleanHouseNo(cellVal(row, 'houseNo', 12)) || '',
+              houseNo: finalHouse,
               age: null,
               gender: 'पुरुष',
               status: 'Unreadable',
@@ -383,15 +388,20 @@ const ExcelJS = require('exceljs');
         const targetWard = String(voter.wardNo || wardNo || defaultWardNo || '').trim();
         const targetPart = String(voter.partNo || boothNo || defaultPartNo || '').trim();
 
+        const hClean = cleanHouseNo(voter.houseNo);
+        const voterHouse = (hClean && hClean !== '0' && hClean !== '00') ? hClean : '-';
+        const voterNameEn = (voter.nameEn && /[a-zA-Z]/.test(voter.nameEn)) ? voter.nameEn : (voter.nameHi || '');
+        const voterRelEn = (voter.relativeNameEn && /[a-zA-Z]/.test(voter.relativeNameEn)) ? voter.relativeNameEn : (voter.relativeNameHi || '');
+
         const updateFields = {
           epic: voter.epic,
           serialNo: serialNumber,
           nameHi: voter.nameHi,
-          nameEn: voter.nameHi, // Pure Hindi data only
+          nameEn: voterNameEn,
           relativeNameHi: voter.relativeNameHi,
-          relativeNameEn: voter.relativeNameHi || '', // Pure Hindi data only
+          relativeNameEn: voterRelEn,
           relationType: voter.relationType,
-          houseNo: cleanHouseNo(voter.houseNo),
+          houseNo: voterHouse,
           age: voter.age,
           gender: voter.gender,
           status: voterStatus,
