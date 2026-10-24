@@ -8,7 +8,6 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const express = require('express');
-const cors = require('cors');
 const dotenv = require('dotenv');
 const helmet = require('helmet'); // Security Headers & CSP
 let compression = null;
@@ -76,13 +75,6 @@ app.use(helmet({
   crossOriginOpenerPolicy: false,
 }));
 
-// CORS Configuration: Open and permissive so clients (Vercel, Android WebView, Localhost) NEVER get blocked
-app.use(cors({
-  origin: true,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-organization-id', 'x-requested-with', 'Accept']
-}));
 
 // High-speed payload compression (shrinks JSON payloads by up to 90% when module is available)
 if (compression) {
