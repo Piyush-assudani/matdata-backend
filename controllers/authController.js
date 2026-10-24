@@ -40,8 +40,8 @@ exports.login = async (req, res) => {
   try {
     const { email, password, username } = req.body;
     const loginIdentifier = (email || username || '').trim();
-    if (!loginIdentifier || typeof password !== 'string') {
-      return res.status(400).json({ message: 'Email/Username and password are required.' });
+    if (!loginIdentifier || typeof password !== 'string' || loginIdentifier.length > 120 || password.length > 200) {
+      return res.status(400).json({ message: 'Email/Username and password are required in valid format.' });
     }
 
     const safeRegex = loginIdentifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

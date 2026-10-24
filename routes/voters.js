@@ -526,7 +526,7 @@ router.get('/', verifyToken, requireModule('voters', 'community', 'workers', 'mi
     const query = addVoterAccess(req);
 
     if (typeof search === 'string' && search.trim()) {
-      const trimmed = search.trim();
+      const trimmed = search.trim().slice(0, 100);
       const searchRegex = safeRegex(trimmed);
       if (searchRegex) {
         query.$or = [
@@ -548,7 +548,8 @@ router.get('/', verifyToken, requireModule('voters', 'community', 'workers', 'mi
     }
     
     if (typeof relative === 'string' && relative.trim()) {
-      const relativeRegex = safeRegex(relative);
+      const relTrimmed = relative.trim().slice(0, 100);
+      const relativeRegex = safeRegex(relTrimmed);
       if (relativeRegex) {
         if (query.$or) {
           query.$and = [{ $or: query.$or }, { $or: [{ relativeNameHi: relativeRegex }, { relativeNameEn: relativeRegex }] }];
@@ -750,18 +751,23 @@ router.put('/:id', verifyToken, (req, res, next) => {
     const updates = {};
     for (const [key, dbColumn] of Object.entries(columns)) {
       if (Object.hasOwn(req.body, key)) {
+        const val = req.body[key];
         if (key === 'age') {
-          const numAge = Number.parseInt(req.body[key], 10);
+          const numAge = Number.parseInt(val, 10);
           updates[dbColumn] = !isNaN(numAge) && numAge >= 18 && numAge <= 125 ? numAge : null;
         } else if (key === 'serialNo') {
-          const numSerial = Number.parseInt(req.body[key], 10);
+          const numSerial = Number.parseInt(val, 10);
           updates[dbColumn] = !isNaN(numSerial) && numSerial > 0 ? numSerial : null;
-        } else if (key === 'nameHi' && typeof req.body[key] === 'string') {
-          updates[dbColumn] = req.body[key].replace(/[a-zA-Z\d\u0966-\u096F]/g, '').replace(/[^\u0900-\u097F\s]/g, '').replace(/\s+/g, ' ').trim();
-        } else if (key === 'relativeNameHi' && typeof req.body[key] === 'string') {
-          updates[dbColumn] = req.body[key].replace(/[a-zA-Z\d\u0966-\u096F]/g, '').replace(/[^\u0900-\u097F\s]/g, '').replace(/\s+/g, ' ').trim();
-        } else {
-          updates[dbColumn] = req.body[key];
+        } else if (key === 'voted' || key === 'isMigrant') {
+          updates[dbColumn] = Boolean(val);
+        } else if (key === 'nameHi' && typeof val === 'string') {
+          updates[dbColumn] = val.replace(/[a-zA-Z\d\u0966-\u096F]/g, '').replace(/[^\u0900-\u097F\s]/g, '').replace(/\s+/g, ' ').trim().slice(0, 100);
+        } else if (key === 'relativeNameHi' && typeof val === 'string') {
+          updates[dbColumn] = val.replace(/[a-zA-Z\d\u0966-\u096F]/g, '').replace(/[^\u0900-\u097F\s]/g, '').replace(/\s+/g, ' ').trim().slice(0, 100);
+        } else if (typeof val === 'string') {
+          updates[dbColumn] = val.trim().slice(0, 500);
+        } else if (typeof val === 'number') {
+          updates[dbColumn] = val;
         }
       }
     }
@@ -816,7 +822,11 @@ router.put('/:id/vote', verifyToken, requireModule('poll-desk', 'turnout'), asyn
       query._id = id;
     }
     
-    const voter = await Voter.findOneAndUpdate(query, { $set: { voted } }, { returnDocument: 'after' });
+    const voter = await Voter.findOneAndUpdate(
+      query,
+      { $set: { voted, votedAt: voted ? new Date() : null } },
+      { returnDocument: 'after' }
+    );
     
     if (!voter) return res.status(404).json({ message: 'Voter not found or access denied.' });
     

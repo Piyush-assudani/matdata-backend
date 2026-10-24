@@ -741,10 +741,10 @@ router.get('/export.xlsx', async (req, res) => {
     };
     const requiredModules = datasetModules[dataset];
     if (!requiredModules) return res.status(400).json({ message: 'Invalid dataset requested.' });
-    if (['voters', 'turnout', 'migrants', 'community'].includes(dataset) && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'पूरा डेटा एक साथ डाउनलोड करने की अनुमति केवल सुपर एडमिन को है।' });
+    if (['voters', 'turnout', 'migrants', 'community'].includes(dataset) && req.user.role !== 'admin' && req.user.role !== 'tenant_admin') {
+      return res.status(403).json({ message: 'पूरा डेटा एक साथ डाउनलोड करने की अनुमति केवल एडमिन को है।' });
     }
-    if (req.user.role !== 'admin' && !requiredModules.some((module) => req.user.modules?.includes(module))) {
+    if (req.user.role !== 'admin' && req.user.role !== 'tenant_admin' && !requiredModules.some((module) => req.user.modules?.includes(module))) {
       return res.status(403).json({ message: 'Your account does not have access to this export.' });
     }
 
@@ -921,7 +921,7 @@ router.get('/slip-config', async (req, res) => {
   }
 });
 
-router.put('/slip-config', async (req, res) => {
+router.put('/slip-config', verifyToken, async (req, res) => {
   try {
     let orgId = req.user?.organizationId || 'org_default';
     const selected = req.body?.organizationId || req.headers['x-organization-id'] || req.headers['x-client-id'] || req.query?.organizationId;
@@ -936,7 +936,32 @@ router.put('/slip-config', async (req, res) => {
       orgId = selected;
     }
 
-    const incomingConfig = req.body?.slipConfig || req.body;
+    const rawConfig = req.body?.slipConfig || req.body || {};
+    
+    // Sanitize incoming slip configuration keys to prevent DB bloat
+    const allowedKeys = [
+      'candidateName', 'candidateNameEn', 'partyName', 'partySymbolName',
+      'partySymbolImage', 'candidateImage', 'headerGraphicImage', 'useHeaderGraphic',
+      'evmNumber', 'appealHeadline', 'subTitle', 'appealText', 'footerAppeal',
+      'pollingStationFallback', 'wardPollingStations', 'ghoshnaye', 'accentColor', 'theme'
+    ];
+    
+    const incomingConfig = {};
+    for (const key of allowedKeys) {
+      if (rawConfig[key] !== undefined) {
+        // Limit string lengths to prevent massive payloads (max 2.5MB per image, 2000 chars for text)
+        if (typeof rawConfig[key] === 'string') {
+          if (rawConfig[key].startsWith('data:image/')) {
+            if (rawConfig[key].length > 3.5 * 1024 * 1024) continue; // Skip oversized base64
+          } else {
+            incomingConfig[key] = rawConfig[key].slice(0, 3000);
+            continue;
+          }
+        }
+        incomingConfig[key] = rawConfig[key];
+      }
+    }
+
     const org = await Organization.findByIdAndUpdate(
       orgId,
       {

@@ -133,7 +133,9 @@ module.exports = {
       console.log('Connecting to MongoDB at:', uri);
       await mongoose.connect(uri, {
         serverSelectionTimeoutMS: 10000,
-        maxPoolSize: 20,
+        maxPoolSize: 50,
+        minPoolSize: 5,
+        socketTimeoutMS: 45000,
       });
       console.log('✅ Standalone MongoDB Connected Successfully!');
     } catch (standaloneErr) {
@@ -143,7 +145,9 @@ module.exports = {
         inMemoryServer = await MongoMemoryServer.create();
         const memoryUri = inMemoryServer.getUri();
         await mongoose.connect(memoryUri, {
-          maxPoolSize: 20,
+          maxPoolSize: 50,
+          minPoolSize: 5,
+          socketTimeoutMS: 45000,
         });
         console.log('✅ In-Memory MongoDB Server Connected Successfully at:', memoryUri);
       } catch (memErr) {
