@@ -11,7 +11,12 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const helmet = require('helmet'); // Security Headers & CSP
-const compression = require('compression'); // Gzip / Deflate Compression for 10x faster payloads
+let compression = null;
+try {
+  compression = require('compression'); // Gzip / Deflate Compression for 10x faster payloads
+} catch (err) {
+  console.log('ℹ️ [Server] compression package not installed; running without response compression.');
+}
 const logger = require('./lib/logger'); // Structured Logging
 const { sanitizeInput } = require('./middleware/sanitizeMiddleware');
 
@@ -79,14 +84,16 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'x-organization-id', 'x-requested-with', 'Accept']
 }));
 
-// High-speed payload compression (shrinks JSON payloads by up to 90%)
-app.use(compression({
-  threshold: 1024, // compress responses above 1KB
-  filter: (req, res) => {
-    if (req.headers['x-no-compression']) return false;
-    return compression.filter(req, res);
-  }
-}));
+// High-speed payload compression (shrinks JSON payloads by up to 90% when module is available)
+if (compression) {
+  app.use(compression({
+    threshold: 1024, // compress responses above 1KB
+    filter: (req, res) => {
+      if (req.headers['x-no-compression']) return false;
+      return compression.filter(req, res);
+    }
+  }));
+}
 
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
