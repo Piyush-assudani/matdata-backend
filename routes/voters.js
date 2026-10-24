@@ -995,6 +995,8 @@ router.post('/bulk-update', verifyToken, requireModule('voters', 'community'), a
     cache.delPrefix(`wards_summary_${orgKey}_`);
     cache.delPrefix(`turnout_summary_${orgKey}_`);
     cache.delPrefix(`households_${orgKey}_`);
+    cache.delPrefix(`caste_`);
+    cache.delPrefix(`community_`);
 
     res.json({
       success: true,

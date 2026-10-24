@@ -69,6 +69,17 @@ const uploadLimiter = rateLimit({
 
 const path = require('path');
 
+// Universal Open CORS Middleware (Zero CORS blocking on any route or origin)
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-organization-id, x-no-compression');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 // Security & Performance Middlewares
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
