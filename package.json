@@ -29,7 +29,7 @@
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.11.1",
-    "multer": "^2.4.0",
+    "multer": "^2.5.0",
     "node-cache": "^5.1.2",
     "node-cron": "^4.6.0",
     "pdf-parse": "^1.1.1",
@@ -37,6 +37,12 @@
     "pg": "^8.23.1",
     "tesseract.js": "^7.0.0",
     "winston": "^3.19.0"
+  },
+  "overrides": {
+    "multer": "^2.5.0",
+    "body-parser": "^2.4.0",
+    "uuid": "^11.1.1",
+    "ip-address": "^10.7.4"
   },
   "devDependencies": {
     "mongodb-memory-server": "^11.3.0",
