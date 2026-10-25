@@ -47,82 +47,133 @@ const CONSONANTS = {
 const HALANT = '्';
 
 function transliteratePhonetic(word) {
-  let result = '';
-  const len = word.length;
+  if (!word) return '';
+  const clean = word.trim();
+  if (!clean) return '';
 
-  for (let i = 0; i < len; i++) {
-    const char = word[i];
-    const nextChar = i + 1 < len ? word[i + 1] : '';
+  const chars = Array.from(clean);
+  const units = [];
+  let i = 0;
+  const n = chars.length;
 
-    if (VOWELS[char]) {
-      result += VOWELS[char];
+  while (i < n) {
+    const c = chars[i];
+    const next = i + 1 < n ? chars[i + 1] : '';
+
+    const combinedNukta = c + next;
+    if (CONSONANTS[combinedNukta]) {
+      i += 2;
+      let matra = '';
+      if (i < n && MATRAS[chars[i]]) {
+        matra = chars[i]; i++;
+      } else if (i < n && chars[i] === HALANT) {
+        matra = HALANT; i++;
+      }
+      units.push({ type: 'CONS', char: combinedNukta, base: CONSONANTS[combinedNukta], matra });
       continue;
     }
 
-    if (CONSONANTS[char]) {
-      const base = CONSONANTS[char];
-
-      if (nextChar === HALANT) {
-        result += base;
-        i++;
-        continue;
+    if (VOWELS[c]) {
+      let matra = '';
+      if (next === 'ं' || next === 'ँ') { matra = next; i++; }
+      units.push({ type: 'VOWEL', char: c, base: VOWELS[c], matra });
+      i++;
+    } else if (CONSONANTS[c]) {
+      let base = CONSONANTS[c];
+      if (c === 'फ' && (clean.startsWith('फतेह') || clean.startsWith('फारू') || clean.startsWith('फिरो') || clean.startsWith('फैज') || clean.startsWith('फकी'))) {
+        base = 'f';
       }
+      i++;
+      let matra = '';
+      if (i < n && MATRAS[chars[i]]) {
+        matra = chars[i]; i++;
+      } else if (i < n && chars[i] === HALANT) {
+        matra = HALANT; i++;
+      }
+      units.push({ type: 'CONS', char: c, base, matra });
+    } else if (MATRAS[c]) {
+      units.push({ type: 'OTHER', char: c, base: MATRAS[c], matra: '' });
+      i++;
+    } else {
+      units.push({ type: 'OTHER', char: c, base: c, matra: '' });
+      i++;
+    }
+  }
 
-      if (nextChar === '़') {
-        let nuktaBase = base;
-        if (char === 'ड') nuktaBase = 'd';
-        else if (char === 'ढ') nuktaBase = 'dh';
-        else if (char === 'ज') nuktaBase = 'z';
-        else if (char === 'फ') nuktaBase = 'f';
-        i++;
-        
-        const afterNukta = i + 1 < len ? word[i + 1] : '';
-        if (afterNukta === HALANT) {
-          result += nuktaBase;
-          i++;
-        } else if (MATRAS[afterNukta]) {
-          let matraEn = MATRAS[afterNukta];
-          if (afterNukta === 'ी' && (i + 2 >= len || word[i + 2] === ' ')) matraEn = 'i';
-          if (afterNukta === 'ू' && (i + 2 >= len || word[i + 2] === ' ')) matraEn = 'u';
-          result += nuktaBase + matraEn;
-          i++;
-        } else if (i === len - 1) {
-          result += nuktaBase;
+  let out = '';
+  const numUnits = units.length;
+
+  for (let uIdx = 0; uIdx < numUnits; uIdx++) {
+    const u = units[uIdx];
+    if (u.type === 'OTHER') {
+      out += u.base;
+      continue;
+    }
+    if (u.type === 'VOWEL') {
+      let vStr = out.length === 0 ? u.base : u.base.toLowerCase();
+      if (u.matra === 'ं' || u.matra === 'ँ') vStr += 'n';
+      out += vStr;
+      continue;
+    }
+
+    let base = u.base;
+    if (u.matra === HALANT) {
+      out += base;
+      continue;
+    }
+
+    if (u.matra) {
+      let matraStr = MATRAS[u.matra] || '';
+      if (u.matra === 'ी' && (uIdx === numUnits - 1 || (uIdx === numUnits - 2 && ['दान', 'राम', 'लाल'].includes(units[numUnits - 1]?.char)))) {
+        matraStr = 'i';
+      } else if (u.matra === 'ू' && uIdx === numUnits - 1) {
+        matraStr = 'u';
+      } else if (u.matra === 'ं' || u.matra === 'ँ') {
+        const nextU = uIdx + 1 < numUnits ? units[uIdx + 1] : null;
+        if (nextU && nextU.type === 'CONS') {
+          const nextC = nextU.char;
+          if (['प', 'फ', 'ब', 'भ', 'म', 'फ़'].includes(nextC)) matraStr = 'am';
+          else if (['क', 'ख', 'ग', 'घ'].includes(nextC)) matraStr = 'ang';
+          else matraStr = 'an';
         } else {
-          result += nuktaBase + 'a';
+          matraStr = (uIdx === numUnits - 1) ? 'on' : 'an';
         }
-        continue;
       }
+      out += base + matraStr;
+      continue;
+    }
 
-      if (MATRAS[nextChar]) {
-        let matraEn = MATRAS[nextChar];
-        if (nextChar === 'ी' && (i + 2 >= len || word[i + 2] === ' ')) matraEn = 'i';
-        if (nextChar === 'ू' && (i + 2 >= len || word[i + 2] === ' ')) matraEn = 'u';
-        result += base + matraEn;
-        i++;
-        continue;
-      }
-
-      if (i === len - 1) {
-        result += base;
+    const isLast = (uIdx === numUnits - 1);
+    if (isLast) {
+      if (base === 'dr' || base === 'ndr') {
+        out += base + 'a';
       } else {
-        result += base + 'a';
+        out += base;
       }
       continue;
     }
 
-    if (MATRAS[char]) {
-      result += MATRAS[char];
-      continue;
+    const nextU = units[uIdx + 1];
+    const prevU = uIdx > 0 ? units[uIdx - 1] : null;
+    let deleteSchwa = false;
+
+    if (nextU && nextU.type === 'CONS' && nextU.matra === HALANT) {
+      deleteSchwa = false;
+    } else if (nextU && nextU.type === 'CONS' && nextU.matra) {
+      if (prevU && prevU.matra !== HALANT) {
+        deleteSchwa = true;
+      }
+    } else if (nextU && nextU.type === 'CONS' && (nextU.char === 'र' || nextU.char === 'ल') && numUnits >= 4) {
+      if (uIdx >= 2) deleteSchwa = true;
     }
 
-    result += char;
+    out += deleteSchwa ? base : (base + 'a');
   }
 
-  if (result.length > 0) {
-    return result.charAt(0).toUpperCase() + result.slice(1).toLowerCase();
+  if (out.length > 0) {
+    return out.charAt(0).toUpperCase() + out.slice(1).toLowerCase();
   }
-  return result;
+  return out;
 }
 
 function transliterateSingleWord(word) {

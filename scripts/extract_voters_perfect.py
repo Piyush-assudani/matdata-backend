@@ -28,148 +28,271 @@ from openpyxl.utils import get_column_letter
 # 1. MASTER GLYPH-HASH DICTIONARY (Universal SEC Rajasthan Voter PDFs)
 # ==============================================================================
 GLYPH_HASH_TO_HINDI = {
-    # Vowels (स्वर)
-    'ce804ce7c6': 'अ', '45c4b91091': 'अ', '119c73e737': 'अ', '35ced6b628': 'अ', 'a89dd76efd': 'अ',
-    'a61442952b': 'अ', 'bd69840d9e': 'अ', 'bb08ab4b35': 'अ',
-    '2efd2c4701': 'आ',
-    '5b1d3367b9': 'इ',
-    '4f3a2f5d5c': 'ई', 'e14bcf495a': 'ई', '3b00b1dda7': 'ई', '5788fb4ce4': 'ई', '39e2dee31f': 'ई',
-    'c76170c082': 'ई', 'd1bd160dd1': 'ई', '9923d29632': 'ई',
-    '5cea448068': 'उ',
-    '046b405861': 'ऊ', '93723488c9': 'ऊ', '55fa26fd10': 'ऊ', 'e82b6adb94': 'ऊ', '726b6ec72c': 'ऊ',
-    '4137d91632': 'ए', '5c95b4cd3e': 'ए', '81f45a91fd': 'ए',
-    'b6160428e9': 'ऐ', '7c559bebf6': 'ऐ',
-    '4dff97ade2': 'ओ', 'e53613119b': 'ओ',
-    '2c80487e3f': 'औ',
-    '805bc11136': 'ऋ',
-
-    # Matras & Modifiers (मात्राएं)
-    'ddb59861ec': 'ा', '78feea417a': 'ा',
-    '940f102545': 'ि', 'cad285f226': 'ि', 'f90e17bc6a': 'ि', 'ee740424e8': 'ि',
-    '52e1ecd704': 'िं',
-    '0bfe8aba54': 'ी', 'fd2c68b827': 'ी', '561778e61e': 'ी', '0c38a1de68': 'ी',
-    'eb4776a788': 'ु', '9270cf40b5': 'ु', '634b191808': 'ु',
-    '139503929c': 'ू', '3ba30e63ba': 'पू', '7600b543f9': 'पू', '6a4f928c94': 'पू',
-    '5673f83eb2': 'ृ',
-    'ff774a509c': 'े', 'dc6ebfed73': 'े', 'a394fa367f': 'े',
-    'e0d2a0aa9a': 'ै',
-    '4b894f09df': 'ो', '9777c7fcc8': 'ो',
-    '3ed9121507': 'ौ',
-    '48c0ec2ca4': 'ों', '96ce23ca34': 'ों',
-    '047d8b1a18': 'ं', '02680e665a': 'ं', 'd3a4a84020': 'ं', 'bf77dee873': 'ं', '1164f99f87': 'ं', 'd75610cf75': 'ं',
-    '9a18581fbc': 'र्', '906d14ca84': 'र्', 'def56c5e38': 'र्', 'a7e73062a8': 'र्', '3e6d4c4f43': 'र्',
+    '0171bec762': 'ड',
+    '027103c065': 'ड़',
+    '046b405861': 'ऊ',
+    '047d8b1a18': 'ं',
+    '05308cc89b': 'ड़',
+    '07941b38f2': 'ज्',
     '0a5158353b': '्',
-    '81e8fe8892': '॰', '1ab8336925': '॰',
-
-    # Consonants & Conjuncts (व्यंजन व संयुक्त अक्षर)
-    'ee91b64b3c': 'क', '74d744e8b3': 'क्ष', 'b0659ef005': 'क्र', '976ca4a5be': 'क्ष्', 'bdbd89856b': 'क',
-    '63eefd4c14': 'क', 'bd6c1eae30': 'क', '40dd73efe7': 'क',
-    '8f83dd2ba5': 'ख्', '8b642bd434': 'ख', '11d46de407': 'ख', '6569af7a4c': 'ख', '9364604c2b': 'ख', '6dcfad013f': 'ख', '521d45dc3d': 'ख',
-    'd03da9c3bc': 'ग', 'd2ca7f547d': 'ग्र',
+    '0ba1327fc4': 'ड़',
+    '0bfe8aba54': 'ी',
+    '0c388fbb92': 'ग्',
+    '0c38a1de68': 'ी',
+    '0c4b471492': 'झ',
+    '0c756f93f5': 'प्त',
     '0cda6a9133': 'घ',
-    'd6141a350d': 'च',
+    '0e190bfd1c': 'ज्ञ',
+    '1164f99f87': 'ण्',
+    '11cfd439b5': 'ल्',
+    '11d46de407': 'ीं',
+    '12fb9d0f09': 'हु',
+    '139503929c': 'ू',
+    '1480d40370': 'ष्ठ',
+    '14a018752f': 'प्',
+    '16396a0352': 'स्त्र',
+    '1861fa3ec0': 'न्न',
+    '190b11d6ea': 'झ',
+    '194c71316e': 'ढ',
+    '19774bcbf7': 'ल्',
+    '1ba2a675b1': 'ल्',
+    '1d0368ca3b': 'ल्',
+    '1d729d00ce': 'भ',
+    '1e10d3a1d3': 'ड़',
+    '1f2f22cd9c': 'ब्',
+    '21655d6d20': 'थ्',
+    '2252e0fd34': 'ज्ज',
+    '22c91adf3c': 'ज्ञ',
+    '23f46f5991': 'श्र',
+    '2480d88cb1': 'द्र',
+    '258d7eff1b': 'ीं',
+    '259c4ab587': 'प्',
+    '25e9022dfc': 'ेर्',
+    '2600840ca6': 'द्र',
+    '26654ce284': 'प्',
+    '2ab96237ef': 'म',
+    '2b15a97444': 'ि',
+    '2baee2673d': 'ष्',
+    '2c9c034cf8': 'ैं',
+    '2d961fc68a': 'ट',
+    '2efd2c4701': 'आ',
+    '3147fcb544': 'थ्',
+    '31d7d7ca5a': '◌',
+    '326b85b3ae': 'ि',
+    '37cbf77554': 'ट्ट',
+    '384789ba2d': 'ेर्ं',
+    '39e2dee31f': 'ई',
+    '3a11828b40': 'ल्',
+    '3a9f4a0e0a': 'ि',
+    '3b2dc7fb19': 'ड़',
+    '3ba30e63ba': 'ऊ',
+    '3cb89da98e': 'ल्',
+    '3e6d4c4f43': 'ि',
+    '3ecd36bc08': 'ीं',
+    '3ed9121507': 'ौ',
+    '3fc2dc4f83': 'ओ',
+    '40dd73efe7': 'ैं',
+    '4137d91632': 'ए',
+    '42d41c8023': 'ल्',
+    '46454da477': 'ढ',
+    '4732f6e4cd': 'व',
+    '47a66ae6f0': 'ड़',
+    '47cc38d7c7': 'ड्ड',
+    '47d70eff7c': 'ड़',
+    '48c0ec2ca4': 'ों',
+    '4b894f09df': 'ो',
+    '4c94216b25': 'फ',
+    '4d1d034fca': 'द्य',
+    '4d4d1bf640': 'ेर्ं',
+    '4dff97ade2': 'ओं',
+    '4e05551e38': 'ल्',
+    '4e7e55c17c': 'ल्',
+    '4f3a2f5d5c': 'ई',
+    '4f5142b1bc': 'ीं',
+    '504921c133': 'त्र',
+    '5074b61402': 'द्घ',
+    '51061acd4a': 'ड़',
+    '513d4f697f': 'ीर्',
+    '521d45dc3d': 'ीं',
+    '52e1ecd704': 'िं',
+    '561778e61e': 'ी',
+    '5673f83eb2': 'ृ',
+    '5788fb4ce4': 'ई',
+    '5819a1061b': 'ॅ',
+    '599c678acf': 'झ',
+    '5b1d3367b9': 'इ',
+    '5c95b4cd3e': 'ए',
+    '5cea448068': 'उ',
+    '5d1ddd1813': 'स',
+    '5f1d629e11': 'द्र',
+    '5f38615013': 'श्व',
+    '60ee998735': 'रू',
+    '613075704b': 'प्',
+    '61ece8dbe0': 'ि',
+    '63eefd4c14': 'ैं',
+    '65695721a3': 'प',
+    '66e5287b94': 'त्',
+    '66ff22024f': 'फ',
+    '6751e9ce99': 'न्',
+    '68e969101b': 'श्',
+    '6a4f928c94': 'ऊ',
+    '6af89d7c27': 'ष',
+    '6b0a2443cf': 'झ',
+    '6dcfad013f': 'ीं',
+    '6fee751c4f': 'ोर्',
+    '70ffa394e7': 'ीं',
+    '721e46753b': 'ड़',
+    '726b6ec72c': 'ऊ',
+    '73586743ed': 'रु',
+    '738886d79d': 'ेर्',
+    '73ecbe4a6c': 'ीं',
     '747ebbd4ad': 'छ',
-    '07941b38f2': 'ज्', 'e895e1e174': 'ज', '758397e072': 'ज़', '86a1b3345a': 'ज्ज', '22c91adf3c': 'ज', '0e190bfd1c': 'ज',
-    'd60218c6fa': 'झ', '190b11d6ea': 'झ', '0c4b471492': 'झ', '04ebdad9fa': 'झ', 'ae7ed0be9e': 'झ', '6b0a2443cf': 'झ', '89240a9925': 'झ',
-    '2d961fc68a': 'ट', '9e75d77c52': 'ट्', '37cbf77554': 'ट',
+    '74d744e8b3': 'क्ष',
+    '74db27ca64': 'फ',
+    '750c1b0d41': 'प्',
+    '758397e072': 'ज़',
+    '7600b543f9': 'फ',
+    '76cbcdf490': 'झ',
+    '772188adff': 'च्',
+    '78ebd5f238': 'ड्ड',
+    '78feea417a': '◌',
+    '79e6225dee': 'ध',
+    '7ab9ef3167': 'ऊ',
+    '7c559bebf6': 'ऐ',
+    '7cb6208062': 'न',
+    '7d81b055b4': 'फ',
+    '7f66e38315': 'ीर्',
+    '805bc11136': 'ऋ',
+    '807e80bed1': 'ीं',
+    '81e8fe8892': '॰',
+    '81f45a91fd': 'ए',
+    '83692da855': 'हु',
+    '86a1b3345a': 'ज्ज',
+    '87a20b56c9': 'प्',
+    '890802b019': 'ड्ड',
+    '890b44a110': 'म्',
+    '89240a9925': 'झ',
+    '8b642bd434': 'ख',
+    '8ba1e1db3f': 'ड्ड',
+    '8c44df052d': 'स्',
+    '8ca833b6f2': 'ण',
+    '8e1c2ad8ae': 'र',
+    '8f83dd2ba5': 'ख्',
+    '8f924cc8ba': 'फ',
+    '8f994df474': 'ढ',
+    '8fce6b30ee': 'ीं',
+    '906d14ca84': 'ेर्',
+    '9076ec49ea': 'त',
+    '91c4fb9cde': 'द्र',
+    '9270cf40b5': '◌',
+    '9364604c2b': 'ों',
+    '93723488c9': 'ऊ',
+    '93d2baa93d': 'ल्',
+    '940f102545': 'ि',
+    '976ca4a5be': 'क्ष्',
+    '9923d29632': 'ई',
+    '9a18581fbc': 'र्',
+    '9b5ae33b17': 'ध्',
+    '9b795c29ee': 'द',
+    '9bbba179cc': 'ौं',
+    '9dbe3751a3': 'ि',
+    '9e75d77c52': 'ट्य',
+    '9f91e4de31': 'ल',
     'a015e63dde': 'ठ',
-    '890802b019': 'ड्ड', 'ec9ce8b169': 'ड़', '721e46753b': 'ड़', '0171bec762': 'ड',
-    '0ba1327fc4': 'ड्', '1e10d3a1d3': 'ड्', '47a66ae6f0': 'ड्', '027103c065': 'ड्', 'a6d1de452f': 'ड्', '87ecd127d1': 'ड्',
-    '313d4f057a': 'ड', 'f3a1c96457': 'ड', '05308cc89b': 'ड', '7fc0e56d87': 'ड', '3b2dc7fb19': 'ड', 'f97a78be37': 'ड', '47d70eff7c': 'ड', 'af77da75e5': 'ड', '1a9bf75e17': 'ड', '78ebd5f238': 'ड', '7e98014dff': 'ड', '47cf62e4aa': 'ड',
-    'fb772abf30': 'ड़', 'd9784dc043': 'ड़',
-    '8f994df474': 'ढ', 'fad0ed760c': 'ढ', '46454da477': 'ढ', 'b8eb273898': 'ढ', 'a5bf22212a': 'ढ', 'b4c6be945c': 'ढ', 'ddea34e5cc': 'ढ', 'c6202b4bc3': 'ढ',
-    '8ca833b6f2': 'ण', 'b677287bbf': 'ण',
-    '9076ec49ea': 'त', '504921c133': 'त्र', '66e5287b94': 'त्', '230f051b3f': 'त', 'c005752634': 'त',
-    '3147fcb544': 'थ्', 'a8bcabc3c7': 'थ',
-    '9b795c29ee': 'द', 'aa29d6fd6a': 'द', 'c248b92527': 'द',
-    '79e6225dee': 'ध', 'a029efb9f7': 'घ्र', '9b5ae33b17': 'ध्य',
-    '7cb6208062': 'न', '6751e9ce99': 'न्', '5f1d629e11': 'द्र', '1861fa3ec0': 'न्न', 'c4da05d397': 'न्द्र',
-    '91c4fb9cde': 'द्र', 'd652713d5b': 'द्र', '2480d88cb1': 'द्र', '2600840ca6': 'द्र', '6b25cffc75': 'द्र',
-    '65695721a3': 'प', 'f278d9cdb5': 'प', 'ec864e5618': 'प्र', '26654ce284': 'प्',
-    'a9f61e1199': 'प्', 'c68d1cf440': 'प्', 'a3422e66d6': 'प्', '750c1b0d41': 'प्', '25e823bbd8': 'प्', '613075704b': 'प्', '259c4ab587': 'प्',
-    '0c756f93f5': 'प', '14a018752f': 'प', '87a20b56c9': 'प', 'a9b34f178a': 'प',
-    'c4bad94212': 'ओ', '3fc2dc4f83': 'ओ',
-    '4c94216b25': 'फ', '74db27ca64': 'फ', '66ff22024f': 'फ', 'ad465bf0bc': 'फ', 'c88c48c79e': 'फ', 'a9488cba84': 'फ', '1428919c17': 'फ', 'fe0dc18178': 'फ',
-    'b195fad4ed': 'ब', 'b6d9b989ad': 'बृ', '8fce6b30ee': 'ब',
-    '1d729d00ce': 'भ', '7ab9ef3167': 'भा', '3ecd36bc08': 'भ',
-    '2ab96237ef': 'म', '890b44a110': 'म्', 'eaeead89e4': 'म्', 'dd069c3351': 'म्म', '1024bbd493': 'म्म',
+    'a029efb9f7': 'ध्र',
+    'a178079bc2': 'व्य',
+    'a3422e66d6': 'प्',
+    'a394fa367f': '◌',
+    'a4274d8f98': 'हु',
+    'a5bf22212a': 'ढ',
+    'a6d1de452f': 'ड़',
+    'a6dd172025': 'ल़',
+    'a7e73062a8': 'ेर्',
+    'a8739110de': 'ों',
+    'a8b78a0c82': '◌',
+    'a8bcabc3c7': 'थ',
+    'a9488cba84': 'फ',
+    'a9b34f178a': 'प्',
+    'a9f61e1199': 'प्',
+    'aa29d6fd6a': 'द',
+    'aacdfd3864': 'द्ध',
+    'ac1d0b4152': 'क्',
+    'acae4e4844': 'ह',
+    'ad6125f089': 'ीं',
+    'ad9ebd3f61': 'श्न',
+    'ae7ed0be9e': 'झ',
+    'af77da75e5': 'ड्ड',
+    'b0659ef005': 'क्र',
+    'b195fad4ed': 'ब',
+    'b25df06259': 'ल्',
+    'b4c6be945c': 'ढ',
+    'b516ed4428': 'ेर्ं',
+    'b6160428e9': 'ऐ',
+    'b627b4ad55': 'ीर्',
+    'b654a1fab9': 'थ्र',
+    'b677287bbf': 'ण्',
+    'b6d9b989ad': 'ब्र',
+    'bb420533eb': 'द्ध',
+    'bc42741d95': 'ल्',
+    'bdbd89856b': 'क़',
+    'bead7b885e': 'स्न',
+    'bebbc6ce45': 'च्च',
+    'bf77dee873': 'ँ',
+    'c005752634': 'त्न',
     'c42eb6b0f3': 'य',
-    '8e1c2ad8ae': 'र', '60ee998735': 'रु', '73586743ed': 'रु',
-    'd9036427cf': 'र', '3a9f4a0e0a': 'र', '9dbe3751a3': 'र', '326b85b3ae': 'र', '25e9022dfc': 'र', '6fee751c4f': 'र', '738886d79d': 'र', '61ece8dbe0': 'र', '384789ba2d': 'र', '7f66e38315': 'र', 'b516ed4428': 'र', '4d4d1bf640': 'र', '2b15a97444': 'र', 'f762cc5fd1': 'र',
-    '9f91e4de31': 'ल', '3cb89da98e': 'ल्य', '4e05551e38': 'ल्', 'bc42741d95': 'ल्', '42d41c8023': 'ल्', '11cfd439b5': 'ल्', '93d2baa93d': 'ल', 'b25df06259': 'ल', '19774bcbf7': 'ल', 'dd11ba4798': 'ल्',
-    '9bbba179cc': 'ल', '9ecc1fb7b9': 'ल', '3a11828b40': 'ल', 'a6dd172025': 'ल', 'f4616f7a0d': 'ल', '1ba2a675b1': 'ल',
-    '4732f6e4cd': 'व', 'a178079bc2': 'व्य', '258d7eff1b': 'व',
-    'd3151878f0': 'श', '68e969101b': 'श्व', '5f38615013': 'श्व', '23f46f5991': 'श्र',
-    '6af89d7c27': 'ष', 'f8eaaf6e12': 'ष्ठ', '764d763216': 'ष्ठ', '2baee2673d': 'ष्',
-    '56654280a6': 'ष', '1480d40370': 'ष', 'e058c1c9d7': 'ष', '334d4c7c01': 'ष', 'a6b2b19659': 'ष', 'e3d24bba6b': 'ष',
-    '5d1ddd1813': 'स', '8c44df052d': 'स्', 'dc32c6ed02': 'स्', '16396a0352': 'स्त्र', 'dc507a85ae': 'स्', '68454725c9': 'स्',
-    '73ecbe4a6c': 'स', 'bead7b885e': 'स', 'ad6125f089': 'स',
-    'acae4e4844': 'ह', 'f1bad2c450': 'ह', 'a4274d8f98': 'हु', 'adb8160514': 'हुक', '83692da855': 'हुक', '12fb9d0f09': 'हु',
-    'f2e90f726c': 'थ्व', '4d1d034fca': 'द्ध', 'aacdfd3864': 'द्ध', 'd05bddea29': 'द्ध',
-
-    # Universal Cross-District Learned Glyphs (01.pdf, Maulasar, Ramasani Bala)
-    '9ed0305c30': 'ए', '79cddf1cb9': 'ओ', 'cb9f96efec': 'अ', 'c21b1d6645': 'अ', '2807fb8b26': 'ऋ',
-    'f3006b2bd4': 'ु', '9608da6ec3': 'ु', 'bd72e8264e': 'ी', 'a887f64657': 'ी',
-    '66e5ec4b59': 'े', '1a936145d7': 'े', '9905d0b67d': 'ें',
-    '5878c30f0f': 'ं', '880e3635c0': 'मं', 'e393fd53d5': 'मं',
-    'c87fa4db51': '॰', '1a15cc97e6': '॰', '618091d0dd': '॰',
-    '5db4f82d8b': 'ग', '3310bc81b7': 'ग', '751f7b6026': 'ग', '0c388fbb92': 'ग',
-    '4d08822826': 'ख',
-    '766fe62e17': 'ज्ञ',
-    '7a8b483f91': 'ज्ज', '7aae07cf6a': 'ज्ज',
-    '0a5f709151': 'ठ',
-    '24ca7284a8': 'ड़', 'aacf38e6ce': 'ड़', 'ad6801aa35': 'ड़', 'fd2282cbb7': 'ड़', 'b93ab2f0b6': 'ड़', '9d16edd8cd': 'ड़',
-    '99ca17969d': 'ष्ठ', '473e6ecf96': 'ष्ठ',
-    'e5f1089bca': 'ण',
-    'b2e4278acd': 'त', '561ef8b7ef': 'त्र',
-    'aefa09333b': 'ध',
-    'fa7d21cbd0': 'द्म', 'a3ca9fb4d5': 'द्वा', 'b6fc0aacd4': 'द्य', '674cf0dbd2': 'द्व',
-    '495ad4ec8e': 'प्', '7473598df5': 'प्', '269ee0b78c': 'प्',
-    'b96edff874': 'प्र', 'b39bd255e2': 'प्र', '70dcf1cf7a': 'ओ',
-    '67dd4b48cc': 'ब', '7d81b055b4': 'ब',
-    '2fbf81e97d': 'म्प', 'a3fe1024db': 'म्', '2a332feaeb': 'म्बि',
-    '5f84c76bc9': 'ड्डी',
-    '6b41226650': 'र', '751ed94097': 'र', '326ffdd62a': 'र',
-    '7eff7b2ba9': 'र्', 'e55899c163': 'र्',
-    '3a9d583bb3': 'ल्', '2e17cc8d2c': 'ल्',
-    '0e0d111f5f': 'व', 'caad6dc898': 'व', '358a9cf564': 'व',
-    '1416a867ad': 'द',
-
-    # Additional Universal Glyph Hashes
-    'e936687da2': 'उ', 'a8b78a0c82': 'म्', '5074b61402': 'द्धा', '194c71316e': 'भा',
-    '10bdad6422': 'ों', '78a401ac9f': 'य', 'be35a81a12': 'ष्ठ', '513d4f697f': 'र्',
-    '31d7d7ca5a': 'म', 'ad9ebd3f61': 'द्य', 'e014c65273': 'त्', '47cc38d7c7': 'ड्डी',
-    'ac1d0b4152': 'मा', '2c9c034cf8': 'कु', 'b654a1fab9': 'र्था', 'f80362e7d7': 'खे',
-    '4e7e55c17c': 'प्पू', 'bb420533eb': 'द्धा', '4f5142b1bc': 'ी', 'c62677ef77': 'मे',
-    '21655d6d20': 'थ्वी', '76cbcdf490': 'ज', '8efe6a46a7': 'क्रमा', '8f924cc8ba': 'पू',
-    '807e80bed1': 'थू', '1f2f22cd9c': 'ब्', 'f5e95ba074': 'र्', 'dee07a7b88': 'प्',
-    '1d0368ca3b': 'न्नी', 'efefeeb9c9': 'ों', 'daa8a4ef98': 'क्रमा', 'a8739110de': 'सिंह',
-    '51061acd4a': 'त्री', '70ffa394e7': 'ज', '599c678acf': 'स्व', 'd64d1492a7': 'णे',
-    '2252e0fd34': 'ंगा', 'da7cc732a5': 'ध', '6da47de8a5': 'ह्', 'b7fa15a1db': 'म्प',
-    '4fe5abd638': 'फ', 'b9b2e35f43': 'रा', '04d32fed8d': 'ठ', 'b7a049a8b4': 'र्',
-    'c4166758d5': 'ध्रु', 'c848285f51': 'ल', '539252633f': 'ु', '3f5e22c3d7': 'ख',
-    '4ab52e0982': 'दी', 'da5a2df435': '॰', '1f99651d39': 'दा', 'b47e524af4': '॰',
-    '49f6a30031': 'ै', '5d12329365': 'ों', '3e39d95712': 'क्ष', 'ea264bbac5': 'क',
-    '983a3b3e51': 'न', '8f499f1686': 'ा', '2f6d32e2ab': 'द्वि', 'd5840cd7c5': 'भु',
-
-    # Universal Batch 2 (Completing all 40 Electoral Roll PDFs)
-    '772188adff': 'छ', '8ba1e1db3f': 'ड्डी', 'ccb67ba80e': 'क', 'b9a9b43dee': 'व',
-    'b5abb8b83c': 'ि', '7ac292b944': 'ध', '5aa7546876': 'ग', 'bbe1ebb1c0': 'ंख',
-    '1a0d6e034a': 'ंख', '002d8126d7': '॰', '1f15aabb4d': 'य', 'a0562332a5': 'ि',
-    'f89a8b1813': '॰', 'd77e63e68d': '७', '5710b18d8d': 'षि', 'c85f26e4bd': '१',
-    '01106da655': '२', '78dfa31248': '५', '89bf870bd7': '०', 'a11f424a94': 'त',
-    '933cd8ad1e': 'शा', 'b5ef41f3f3': '०', 'bcad0229a9': '६', 'd36435bef2': 'स',
-    '5a4d2599b7': 'ो', '15197076ee': '॰', 'd9f90e5222': '॰', 'eeb67b0b42': 'र',
-    '70431749e1': '७', 'c8110836dc': '०',
-
-    # Multi-PDF Verified Ligatures & Numerical Glyphs (Universal Coverage)
-    'bebbc6ce45': 'च्च', 'b627b4ad55': 'र्ी', 'c000dbe9e4': 'ों',
-    'c82f75d685': 'ों', '5819a1061b': 'ॅ', '3527876949': '३'
+    'c4bad94212': 'ओ',
+    'c62677ef77': 'ऊ',
+    'c68d1cf440': 'प्',
+    'c76170c082': 'ई',
+    'c88c48c79e': 'फ',
+    'cad285f226': 'ि',
+    'ccb67ba80e': 'ैं',
+    'ce804ce7c6': 'अ',
+    'd03da9c3bc': 'ग',
+    'd05bddea29': 'द्व',
+    'd1bd160dd1': 'ई',
+    'd2ca7f547d': 'ग्र',
+    'd3151878f0': 'श',
+    'd3a4a84020': 'ें',
+    'd60218c6fa': 'झ',
+    'd6141a350d': 'च',
+    'd64d1492a7': 'ेर्',
+    'd652713d5b': 'द्र',
+    'd75610cf75': 'ैं',
+    'd9036427cf': 'ि',
+    'd9784dc043': 'ड़',
+    'dc507a85ae': 'स्',
+    'dc6ebfed73': 'े',
+    'dd11ba4798': 'ल्',
+    'ddb59861ec': 'ा',
+    'dee07a7b88': 'प्',
+    'def56c5e38': 'ेर्',
+    'e014c65273': 'त्त',
+    'e058c1c9d7': 'ष्ठ',
+    'e0d2a0aa9a': 'ै',
+    'e53613119b': 'ओ',
+    'e82b6adb94': 'ऊ',
+    'e895e1e174': 'ज',
+    'e936687da2': 'ऊ',
+    'eb4776a788': 'ु',
+    'ec864e5618': 'प्र',
+    'ec9ce8b169': 'ड़',
+    'ee91b64b3c': 'क',
+    'f2e90f726c': 'थ्',
+    'f4616f7a0d': 'ों',
+    'f5e95ba074': 'ि',
+    'f762cc5fd1': 'ि',
+    'f8eaaf6e12': 'ष्ठ',
+    'f90e17bc6a': 'ि',
+    'fad0ed760c': 'ढ',
+    'fb772abf30': 'ड़',
+    'fe0dc18178': 'फ',
+    'ff774a509c': 'े',
 }
 
-PRE_BASE_HASHES = {'940f102545', 'cad285f226', 'f90e17bc6a', 'ee740424e8', '52e1ecd704', 'b5abb8b83c', 'a0562332a5'}
-REPH_HASHES = {'9a18581fbc', '906d14ca84', 'def56c5e38', 'a7e73062a8', '3e6d4c4f43', '7eff7b2ba9', 'e55899c163', '513d4f697f', 'f5e95ba074', 'b7a049a8b4'}
-MATRA_CHARS = {'ा', 'ि', 'ी', 'ु', 'ू', 'ृ', 'े', 'ै', 'ो', 'ौ', 'ं', 'ों', 'िं', '्', 'ें', 'ॅ'}
+PRE_BASE_HASHES = set(['2b15a97444', '326b85b3ae', '3a9f4a0e0a', '3e6d4c4f43', '52e1ecd704', '61ece8dbe0', '940f102545', '9dbe3751a3', 'cad285f226', 'd9036427cf', 'f5e95ba074', 'f762cc5fd1', 'f90e17bc6a'])
+REPH_HASHES = set(['25e9022dfc', '384789ba2d', '4d4d1bf640', '513d4f697f', '6fee751c4f', '738886d79d', '7f66e38315', '906d14ca84', '9a18581fbc', 'a7e73062a8', 'b516ed4428', 'b627b4ad55', 'd64d1492a7', 'def56c5e38'])
+MATRA_CHARS = {'ा', 'ि', 'ी', 'ु', 'ू', 'ृ', 'े', 'ै', 'ो', 'ौ', 'ं', 'ँ', 'ः', 'ॅ', 'ों', 'ौं', 'ैं', 'ीं', 'ें', '्'}
 
 # ==============================================================================
 # CONTINUOUS SELF-LEARNING GLYPH & WORD DICTIONARY SYSTEM
@@ -594,17 +717,22 @@ def decode_hashes_to_hindi(hash_list):
     for h in hash_list:
         if h == 'SPACE':
             tokens.append(('SPACE', ' '))
-        elif h in PRE_BASE_HASHES:
-            tokens.append(('PRE_I', GLYPH_HASH_TO_HINDI.get(h, 'ि')))
-        elif h in REPH_HASHES:
-            tokens.append(('REPH', 'र्'))
+            continue
+        s = GLYPH_HASH_TO_HINDI.get(h, '')
+        if not s or s == '◌':
+            continue
+        if s in ['ि', 'िं']:
+            tokens.append(('PRE_I', s))
+        elif 'र्' in s:
+            tokens.append(('REPH_COMP', s))
+        elif s in MATRA_CHARS or any(s.startswith(m) for m in MATRA_CHARS):
+            tokens.append(('MATRA', s))
+        elif s.endswith('्'):
+            tokens.append(('HALF', s))
         else:
-            s = GLYPH_HASH_TO_HINDI.get(h, '')
-            is_matra = (s in MATRA_CHARS)
-            is_half = s.endswith('्') and len(s) >= 2 and not is_matra
-            tokens.append(('MATRA' if is_matra else ('HALF' if is_half else 'CONS'), s))
+            tokens.append(('CONS', s))
 
-    # Rule 1: Chhoti-i ('ि' / 'िं') ko agle consonant ke baad lagao
+    # Rule 1: Chhoti-i ('ि' / 'िं') ko agle consonant / conjunct cluster ke baad lagao
     i = 0
     while i < len(tokens):
         if tokens[i][0] == 'PRE_I':
@@ -619,11 +747,16 @@ def decode_hashes_to_hindi(hash_list):
         else:
             i += 1
 
-    # Rule 2: Reph ('र्') ko pichle consonant se pehle lagao
+    # Rule 2: Reph ('र्' / 'ीर्' / 'ेर्' / 'ोर्' / 'ेर्ं') ko pichle consonant cluster se pehle lagao
+    # Agar token me matra bhi hai (jaise 'ीर्', 'ेर्'), toh matra us consonant ke baad rahegi aur 'र्' pehle jayega
     i = 0
     while i < len(tokens):
-        if tokens[i][0] == 'REPH':
+        if tokens[i][0] == 'REPH_COMP':
+            s = tokens[i][1]
+            matra_part = s.replace('र्', '')
             tokens.pop(i)
+            if matra_part:
+                tokens.insert(i, ('MATRA', matra_part))
             j = i - 1
             while j >= 0 and tokens[j][0] == 'MATRA':
                 j -= 1
@@ -632,7 +765,7 @@ def decode_hashes_to_hindi(hash_list):
             while j >= 0 and tokens[j][0] == 'HALF':
                 j -= 1
             tokens.insert(j + 1, ('HALF', 'र्'))
-            i += 1
+            i += (1 if matra_part else 0)
         else:
             i += 1
 
@@ -971,19 +1104,19 @@ def extract_single_pdf(pdf_path, default_ward=None, default_part=None, include_d
                     'ward': str(ward_no),
                     'part': str(part_no),
                     'serial': s_num,
-                    'name_en': '',  # Pure Hindi Data Only
+                    'name_en': transliterate_hindi(name_hi),
                     'name_hi': name_hi or 'मतदाता',
                     'age': age_val,
                     'gender': gender,
                     'relation': rel_type,
-                    'relative_name_en': '',  # Pure Hindi Data Only
+                    'relative_name_en': transliterate_hindi(rel_hi),
                     'relative_name_hi': rel_hi or '-',
                     'house_no': house_no or '-',
                     'house_no_hi': house_no or '-',
                     'mobile': '',
                     'caste': '',
                     'family_id': '',
-                    'village_en': '',  # Pure Hindi Data Only
+                    'village_en': transliterate_hindi(current_village_hi),
                     'village_hi': current_village_hi or '-',
                     'status': status,
                     'photo_file': photo_filename
@@ -1162,42 +1295,116 @@ def transliterate_token(token: str) -> str:
         return ''
     if token in COMMON_INDIAN_NAME_TRANSLATIONS:
         return COMMON_INDIAN_NAME_TRANSLATIONS[token]
-    chars = list(token)
-    n = len(chars)
-    res = []
+    clean = token.strip()
+    if not clean:
+        return ''
+
+    chars = list(clean)
+    units = []
     i = 0
+    n = len(chars)
     while i < n:
         c = chars[i]
-        if i + 1 < n and chars[i+1] == '़':
-            c = c + '़'
-            i += 1
+        next_c = chars[i + 1] if i + 1 < n else ''
+        combined = c + next_c
+        if combined in DEV_CONSONANTS:
+            i += 2
+            matra = ''
+            if i < n and chars[i] in DEV_MATRAS:
+                matra = chars[i]; i += 1
+            elif i < n and chars[i] == '्':
+                matra = '्'; i += 1
+            units.append({'type': 'CONS', 'char': combined, 'base': DEV_CONSONANTS[combined], 'matra': matra})
+            continue
+
         if c in DEV_VOWELS:
-            res.append(DEV_VOWELS[c].lower() if res else DEV_VOWELS[c])
+            matra = ''
+            if next_c in ('ं', 'ँ'):
+                matra = next_c; i += 1
+            units.append({'type': 'VOWEL', 'char': c, 'base': DEV_VOWELS[c], 'matra': matra})
+            i += 1
         elif c in DEV_CONSONANTS:
             base = DEV_CONSONANTS[c]
-            if i + 1 < n and chars[i+1] == '्':
-                res.append(base)
-                i += 1
-            elif i + 1 < n and chars[i+1] in DEV_MATRAS:
-                res.append(base)
-                matra = chars[i+1]
-                if matra in ('ं', 'ँ'):
-                    res.append('an')
-                else:
-                    res.append(DEV_MATRAS[matra])
-                i += 1
-            elif i + 1 < n and chars[i+1] in DEV_CONSONANTS:
-                res.append(base + 'a')
-            elif i == n - 1:
-                res.append(base)
-            else:
-                res.append(base + 'a')
+            if c == 'फ' and (clean.startswith('फतेह') or clean.startswith('फारू') or clean.startswith('फिरो') or clean.startswith('फैज') or clean.startswith('फकी')):
+                base = 'f'
+            i += 1
+            matra = ''
+            if i < n and chars[i] in DEV_MATRAS:
+                matra = chars[i]; i += 1
+            elif i < n and chars[i] == '्':
+                matra = '्'; i += 1
+            units.append({'type': 'CONS', 'char': c, 'base': base, 'matra': matra})
         elif c in DEV_MATRAS:
-            res.append(DEV_MATRAS[c])
+            units.append({'type': 'MATRA', 'char': c, 'base': DEV_MATRAS[c], 'matra': ''})
+            i += 1
         else:
-            res.append(c)
-        i += 1
-    s = ''.join(res)
+            units.append({'type': 'OTHER', 'char': c, 'base': c, 'matra': ''})
+            i += 1
+
+    out = []
+    num_units = len(units)
+    for uIdx in range(num_units):
+        u = units[uIdx]
+        if u['type'] == 'OTHER':
+            out.append(u['base'])
+            continue
+        if u['type'] == 'VOWEL':
+            v_str = u['base'] if not out else u['base'].lower()
+            if u['matra'] in ('ं', 'ँ'):
+                v_str += 'n'
+            out.append(v_str)
+            continue
+        if u['type'] == 'MATRA':
+            out.append(u['base'])
+            continue
+
+        base = u['base']
+        if u['matra'] == '्':
+            out.append(base)
+            continue
+
+        if u['matra']:
+            m_char = u['matra']
+            matra_str = DEV_MATRAS.get(m_char, '')
+            if m_char in ('ं', 'ँ'):
+                next_u = units[uIdx + 1] if uIdx + 1 < num_units else None
+                if next_u and next_u['type'] == 'CONS':
+                    next_c = next_u['char']
+                    if next_c in ['प', 'फ', 'ब', 'भ', 'म', 'फ़']:
+                        matra_str = 'am'
+                    elif next_c in ['क', 'ख', 'ग', 'घ']:
+                        matra_str = 'ang'
+                    else:
+                        matra_str = 'an'
+                else:
+                    matra_str = 'on' if uIdx == num_units - 1 else 'an'
+            out.append(base + matra_str)
+            continue
+
+        is_last = (uIdx == num_units - 1)
+        if is_last:
+            # Word-final 'dra' exception (e.g. Narendra, Dharmendra, Rajendra)
+            if base in ('dr', 'ndr'):
+                out.append(base + 'a')
+            else:
+                out.append(base)
+            continue
+
+        next_u = units[uIdx + 1]
+        prev_u = units[uIdx - 1] if uIdx > 0 else None
+        delete_schwa = False
+        if next_u and next_u['type'] == 'CONS' and next_u['matra'] == '्':
+            delete_schwa = False
+        elif next_u and next_u['type'] == 'CONS' and next_u['matra']:
+            if prev_u and prev_u.get('matra') != '्':
+                delete_schwa = True
+        elif next_u and next_u['type'] == 'CONS' and next_u['char'] in ('र', 'ल') and num_units >= 4:
+            if uIdx >= 2:
+                delete_schwa = True
+
+        out.append(base if delete_schwa else base + 'a')
+
+    s = ''.join(out)
     return s.capitalize()
 
 def transliterate_hindi(text: str) -> str:
@@ -1266,26 +1473,26 @@ def save_templated_voter_excel(voters_list, output_file_path, template_path=None
         ws_voters.title = 'Voters'
         ws_voters.append(TEMPLATE_HEADERS)
 
-    # 1. Fill Sheet 1: Voters (Exact 18 columns, Pure Hindi Data only - English fields blank as requested)
+    # 1. Fill Sheet 1: Voters (Exact 18 columns, populated with verified Hindi & English data)
     for v in voters_list:
         row = [
             v.get('epic') or ('' if v.get('status') != 'विलोपित' else f"VOTER_{v.get('serial', '')}"),
             str(v.get('ward') or ''),
             str(v.get('part') or ''),
             v.get('serial') or '',
-            '',  # Name (English) - kept blank, pure Hindi data only
+            v.get('name_en') or transliterate_hindi(v.get('name_hi') or ''),
             v.get('name_hi') or '',
             v.get('age') or 30,
             v.get('gender') or 'पुरुष',
             v.get('relation') or 'पिता',
-            '',  # Relative Name (English) - kept blank
+            v.get('relative_name_en') or transliterate_hindi(v.get('relative_name_hi') or ''),
             v.get('relative_name_hi') or '',
             str(v.get('house_no') or '-'),
             str(v.get('house_no') or '-'),
             v.get('mobile') or '',
             v.get('caste') or '',
             v.get('family_id') or '',
-            '',  # Village (English) - kept blank
+            v.get('village_en') or transliterate_hindi(v.get('village_hi') or ''),
             v.get('village_hi') or ''
         ]
         ws_voters.append(row)
