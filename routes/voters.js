@@ -5,6 +5,7 @@ const { formatVoter } = require('./features');
 const { verifyToken, requireModule } = require('../middleware/authMiddleware');
 const { addVoterAccess, getEffectiveOrgId } = require('../lib/access');
 const { escapeRegex, safeRegex, latinToDevanagariRegex } = require('../lib/regexUtils');
+const { normalizeDevanagariDigits } = require('../lib/phoneUtils');
 const { Voter, User, Organization, SystemSetting } = require('../models/index');
 
 const DEFAULT_CASTES = [
@@ -814,11 +815,14 @@ router.put('/:id', verifyToken, (req, res, next) => {
       if (Object.hasOwn(req.body, key)) {
         const val = req.body[key];
         if (key === 'age') {
-          const numAge = Number.parseInt(val, 10);
+          const numAge = Number.parseInt(normalizeDevanagariDigits(val), 10);
           updates[dbColumn] = !isNaN(numAge) && numAge >= 18 && numAge <= 125 ? numAge : null;
         } else if (key === 'serialNo') {
-          const numSerial = Number.parseInt(val, 10);
+          const numSerial = Number.parseInt(normalizeDevanagariDigits(val), 10);
           updates[dbColumn] = !isNaN(numSerial) && numSerial > 0 ? numSerial : null;
+        } else if (key === 'phone' || key === 'mobileNo') {
+          const cleanPh = normalizeDevanagariDigits(String(val || '')).replace(/\D/g, '').slice(-10);
+          updates[dbColumn] = cleanPh;
         } else if (key === 'voted' || key === 'isMigrant') {
           updates[dbColumn] = Boolean(val);
         } else if (key === 'nameHi' && typeof val === 'string') {
@@ -969,7 +973,8 @@ router.post('/bulk-update', verifyToken, requireModule('voters', 'community'), a
       if (updates.migrantLocation) safeUpdates.migrantLocation = String(updates.migrantLocation).trim();
     }
     if (Object.hasOwn(updates || {}, 'mobileNo') || Object.hasOwn(updates || {}, 'phone')) {
-      const ph = String(updates.mobileNo || updates.phone || '').trim().replace(/\D/g, '').slice(-10);
+      const rawPh = String(updates.mobileNo || updates.phone || '').trim();
+      const ph = normalizeDevanagariDigits(rawPh).replace(/\D/g, '').slice(-10);
       safeUpdates.mobileNo = ph;
     }
     if (Object.hasOwn(updates || {}, 'notes')) {
@@ -1018,7 +1023,7 @@ router.post('/family-phone', verifyToken, requireModule('voters', 'community'), 
     if (!houseNo) {
       return res.status(400).json({ message: 'मकान संख्या आवश्यक है।' });
     }
-    const cleanPhone = String(phone || '').trim().replace(/\D/g, '').slice(-10);
+    const cleanPhone = normalizeDevanagariDigits(String(phone || '')).trim().replace(/\D/g, '').slice(-10);
     const query = addVoterAccess(req);
     const cleanH = String(houseNo).replace(/^#/, '').trim();
     query.houseNo = { $in: [houseNo, cleanH, `#${cleanH}`] };

@@ -7,12 +7,12 @@
  * 4. Null byte injection (\0)
  */
 
-function sanitizeObject(obj, depth = 0) {
+function sanitizeObject(obj, isQuery = false, depth = 0) {
   if (depth > 10) return null; // Prevent deeply nested stack overflow
   if (!obj || typeof obj !== 'object') return obj;
 
   if (Array.isArray(obj)) {
-    return obj.map((item) => sanitizeObject(item, depth + 1));
+    return obj.map((item) => sanitizeObject(item, isQuery, depth + 1));
   }
 
   const clean = {};
@@ -31,13 +31,24 @@ function sanitizeObject(obj, depth = 0) {
     if (typeof val === 'string') {
       // Strip null bytes
       let cleanStr = val.replace(/\0/g, '');
-      // In query parameters, cap string lengths to 255 characters to prevent ReDoS/memory exhaustion
-      if (depth === 0 && cleanStr.length > 2000) {
-        cleanStr = cleanStr.slice(0, 2000);
+      if (isQuery) {
+        // In query parameters, cap string lengths to 500 characters to prevent ReDoS/memory exhaustion
+        if (cleanStr.length > 500) {
+          cleanStr = cleanStr.slice(0, 500);
+        }
+      } else {
+        // In body, allow dataUrl / base64 image strings (e.g. voter slips) up to 20MB, but cap regular text at 15,000 chars
+        if (cleanStr.startsWith('data:image/') || cleanStr.startsWith('data:application/')) {
+          if (cleanStr.length > 20 * 1024 * 1024) {
+            cleanStr = cleanStr.slice(0, 20 * 1024 * 1024);
+          }
+        } else if (cleanStr.length > 15000) {
+          cleanStr = cleanStr.slice(0, 15000);
+        }
       }
       clean[key] = cleanStr;
     } else if (typeof val === 'object' && val !== null) {
-      clean[key] = sanitizeObject(val, depth + 1);
+      clean[key] = sanitizeObject(val, isQuery, depth + 1);
     } else {
       clean[key] = val;
     }
@@ -48,13 +59,13 @@ function sanitizeObject(obj, depth = 0) {
 function sanitizeInput(req, res, next) {
   try {
     if (req.query && typeof req.query === 'object') {
-      req.query = sanitizeObject(req.query);
+      req.query = sanitizeObject(req.query, true);
     }
     if (req.params && typeof req.params === 'object') {
-      req.params = sanitizeObject(req.params);
+      req.params = sanitizeObject(req.params, true);
     }
     if (req.body && typeof req.body === 'object') {
-      req.body = sanitizeObject(req.body);
+      req.body = sanitizeObject(req.body, false);
     }
     next();
   } catch (err) {

@@ -262,7 +262,7 @@ router.get('/migrants', requireModule('migrants'), async (req, res) => {
         v.voted ? 'मतदान दर्ज' : 'मतदान बाकी'
       ]);
       addSheet(workbook, 'Migrant_Voters', headers, rows);
-      return sendWorkbook(res, `Migrant_Voters_${Date.now()}.xlsx`, workbook);
+      return sendWorkbook(res, workbook, `Migrant_Voters_${Date.now()}`);
     }
 
     res.json({
@@ -553,8 +553,8 @@ router.get('/community', requireModule('community'), async (req, res) => {
         v.voted ? 'मतदान दर्ज' : 'मतदान बाकी'
       ]);
       addSheet(workbook, 'Caste_Voters', headers, rows);
-      const filename = `Caste_Voters_${casteParam || 'Report'}_${Date.now()}.xlsx`;
-      return sendWorkbook(res, filename, workbook);
+      const filename = `Caste_Voters_${casteParam || 'Report'}_${Date.now()}`;
+      return sendWorkbook(res, workbook, filename);
     }
 
     const page = boundedNumber(req.query.page, 1, 1000);

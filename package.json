@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node test/comprehensive_stress_test.js && node test/monkey_edge_case_test.js",
+    "test:stress": "node test/comprehensive_stress_test.js",
+    "test:monkey": "node test/monkey_edge_case_test.js",
     "start": "node index.js",
     "dev": "nodemon index.js",
     "test:e2e": "node test/e2e-smoke.js"

@@ -69,13 +69,15 @@ const uploadLimiter = rateLimit({
 
 const path = require('path');
 
-// Universal Open CORS Middleware (Zero CORS blocking on any route or origin)
+// Universal Open CORS Middleware (Zero CORS blocking on any route, method, origin, or custom headers)
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-organization-id, x-no-compression');
+  res.header('Access-Control-Allow-Headers', '*');
+  res.header('Access-Control-Expose-Headers', '*');
+  res.header('Access-Control-Max-Age', '86400'); // Cache preflight for 24 hours to reduce server load
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
+    return res.status(204).end();
   }
   next();
 });
@@ -85,7 +87,6 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
   crossOriginOpenerPolicy: false,
 }));
-
 
 // High-speed payload compression (shrinks JSON payloads by up to 90% when module is available)
 if (compression) {
@@ -106,6 +107,21 @@ app.use(sanitizeInput);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Health checks placed before rate limiters so monitoring probes never get rate limited
+app.get(['/health', '/api/health'], async (_req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      res.json({ status: 'ok', database: 'connected', timestamp: new Date().toISOString() });
+    } else {
+      res.status(503).json({ status: 'degraded', database: 'unavailable' });
+    }
+  } catch (err) {
+    console.error('Health check failed:', err.message);
+    res.status(503).json({ status: 'degraded', database: 'error' });
+  }
+});
 
 app.get(['/privacy', '/privacy.html'], (_req, res) => res.sendFile(path.join(__dirname, 'public', 'privacy.html')));
 app.get(['/terms', '/terms.html'], (_req, res) => res.sendFile(path.join(__dirname, 'public', 'terms.html')));
@@ -160,20 +176,6 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/features', featureRoutes.router);
 app.use('/api/admin/pdf', require('./routes/admin_pdf'));
-
-app.get(['/health', '/api/health'], async (_req, res) => {
-  try {
-    const mongoose = require('mongoose');
-    if (mongoose.connection.readyState === 1) {
-      res.json({ status: 'ok', database: 'connected', timestamp: new Date().toISOString() });
-    } else {
-      res.status(503).json({ status: 'degraded', database: 'unavailable' });
-    }
-  } catch (err) {
-    console.error('Health check failed:', err.message);
-    res.status(503).json({ status: 'degraded', database: 'error' });
-  }
-});
 
 app.get('/', (req, res) => {
   res.send('Chunav Ranniti (चुनाव रणनीति) Backend API is running.');

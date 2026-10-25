@@ -125,6 +125,10 @@ voterSchema.index({ organizationId: 1, supportStatus: 1 });
 voterSchema.index({ organizationId: 1, supportStatus: 1, wardNo: 1 });
 voterSchema.index({ organizationId: 1, isMigrant: 1 });
 voterSchema.index({ organizationId: 1, isMigrant: 1, wardNo: 1, serialNo: 1 });
+voterSchema.index({ organizationId: 1, voted: 1, wardNo: 1, partNo: 1, serialNo: 1 });
+voterSchema.index({ organizationId: 1, partNo: 1, voted: 1 });
+voterSchema.index({ organizationId: 1, gender: 1, voted: 1 });
+voterSchema.index({ organizationId: 1, status: 1 });
 
 // Organization Model Indexes
 organizationSchema.index({ isActive: 1, name: 1 });

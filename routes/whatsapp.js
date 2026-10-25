@@ -7,6 +7,7 @@ const { verifyToken, requireModule, isAdmin } = require('../middleware/authMiddl
 const { addVoterAccess, getEffectiveOrgId } = require('../lib/access');
 const { Voter, SlipDispatch, Organization, CampaignTemplate } = require('../models/index');
 const { escapeRegex } = require('../lib/regexUtils');
+const { normalizeDevanagariDigits } = require('../lib/phoneUtils');
 
 /**
  * Resolve effective Meta configuration (Token, Phone ID, WABA ID)
@@ -124,7 +125,8 @@ async function uploadMediaToMeta({ token, phoneNumberId, buffer, mimeType, filen
  */
 function normalizePhoneNumber(input) {
   if (!input) return "";
-  let digits = input.replace(/[^\d]/g, '');
+  const devanagariCleaned = normalizeDevanagariDigits(input);
+  let digits = devanagariCleaned.replace(/[^\d]/g, '');
   if (digits.startsWith('0')) {
     digits = digits.substring(1);
   }
