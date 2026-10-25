@@ -507,7 +507,7 @@ router.post('/send-slip', verifyToken, requireModule('voters'), async (req, res)
 • मतदान केंद्र: *${boothName}*
 
 ${publicImageUrl ? `🖼️ डिजिटल पर्ची फोटो: ${publicImageUrl}\n\n` : ''}🇮🇳 मतदान हमारा अधिकार एवं कर्तव्य है। कृपया पहचान पत्र (Voter ID/आधार कार्ड) साथ लाएं।
-*— मतदाता पोर्टल (Matdata Portal) चुनाव वॉर रूम*`;
+*— मतदाता पोर्टल (Matdata Portal) इलेक्शन मैनेजमेंट*`;
 
     let response;
     let lastError = null;
@@ -829,7 +829,7 @@ ${directPhotoLink}
 • *परिवार में कुल मतदाता:* ${familyCount}
 
 🇮🇳 _मतदान हमारा अधिकार एवं कर्तव्य है। मतदान हेतु पहचान पत्र अवश्य साथ लाएं।_
-*— मतदाता पोर्टल (Matdata Portal) चुनाव वॉर रूम*`;
+*— मतदाता पोर्टल (Matdata Portal) इलेक्शन मैनेजमेंट*`;
     } else {
       messageText = `🗳️ *आधिकारिक मतदाता सूचना पर्ची* 🗳️
 
@@ -848,7 +848,7 @@ ${relativeName ? `• *${relationType}:* ${relativeName}\n` : ''}• *वार�
 • *आयु / लिंग:* ${ageGender}
 
 🇮🇳 _मतदान हमारा अधिकार एवं कर्तव्य है। कृपया पहचान पत्र (Voter ID/आधार कार्ड) साथ लाएं।_
-*— मतदाता पोर्टल (Matdata Portal) चुनाव वॉर रूम*`;
+*— मतदाता पोर्टल (Matdata Portal) इलेक्शन मैनेजमेंट*`;
     }
 
     const waLink = `https://wa.me/${recipientPhone}?text=${encodeURIComponent(messageText)}`;

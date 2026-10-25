@@ -98,8 +98,8 @@ router.get('/war-room', requireModule('warroom'), async (req, res) => {
 
     res.json({ metrics, support, booths });
   } catch (err) {
-    console.error('War room analytics failed:', err.message);
-    res.status(500).json({ message: 'War room data could not be loaded.' });
+    console.error('Election management analytics failed:', err.message);
+    res.status(500).json({ message: 'Election management data could not be loaded.' });
   }
 });
 
