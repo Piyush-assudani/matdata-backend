@@ -1184,6 +1184,18 @@ router.post('/upload-voters', verifyToken, isAdmin, upload.single('file'), async
       return extractCellValue(row.getCell(colIdx));
     };
 
+    const cleanImportHouseNo = (raw) => {
+      if (!raw) return '';
+      let s = String(raw).trim().replace(/['"`‘’“”#]/g, '').trim();
+      if (['-', '—', "'—", '0', '00', '000', 'nil', 'na', 'n/a', 'none', 'null', 'undefined', 'लागू नहीं', 'उपलब्ध नहीं'].includes(s.toLowerCase())) {
+        return '';
+      }
+      if (/^0+(\d+)$/.test(s)) {
+        s = s.replace(/^0+/, '');
+      }
+      return s;
+    };
+
     const parseRow = (row, rowNumber) => {
       const cellText = (colKey, fallbackIdx) => getVal(row, colKey, fallbackIdx);
       
@@ -1223,8 +1235,8 @@ router.post('/upload-voters', verifyToken, isAdmin, upload.single('file'), async
         relationType: cellText('relationType', 9) || 'पिता',
         relativeNameEn: cellText('relativeNameEn', 10),
         relativeNameHi: stripNameFromRelative(nameHi, cellText('relativeNameHi', 11)),
-        houseNo: cellText('houseNo', 12) || '',
-        houseNoHi: cellText('houseNoHi', 13) || '',
+        houseNo: cleanImportHouseNo(cellText('houseNo', 12)),
+        houseNoHi: cleanImportHouseNo(cellText('houseNoHi', 13)),
         mobileNo: cellText('mobileNo', 14) || '',
         caste: cellText('caste', 15) || '',
         familyId: cellText('familyId', 16) || '',

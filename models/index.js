@@ -110,6 +110,7 @@ voterSchema.index({ organizationId: 1, partNo: 1, serialNo: 1 });
 voterSchema.index({ organizationId: 1, serialNo: 1 });
 voterSchema.index({ organizationId: 1, wardNo: 1 });
 voterSchema.index({ organizationId: 1, wardNo: 1, partNo: 1 });
+voterSchema.index({ organizationId: 1, wardNo: 1, houseNo: 1 });
 voterSchema.index({ organizationId: 1, houseNo: 1 });
 voterSchema.index({ organizationId: 1, partNo: 1, houseNo: 1 });
 voterSchema.index({ organizationId: 1, familyId: 1 });

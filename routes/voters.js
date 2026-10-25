@@ -349,11 +349,19 @@ router.get('/wards-summary', verifyToken, requireModule('voters', 'community', '
       ]),
       Voter.countDocuments(query),
       Voter.aggregate([
-        { $match: query },
+        {
+          $match: {
+            ...query,
+            houseNo: {
+              $exists: true,
+              $nin: [null, '', '-', '—', "'—", "'0", '0', '00', '000', 'NA', 'na', 'N/A', 'n/a', 'null', 'undefined', 'लागू नहीं', 'उपलब्ध नहीं']
+            }
+          }
+        },
         {
           $group: {
             _id: {
-              houseNo: { $ifNull: ['$houseNo', '—'] },
+              houseNo: '$houseNo',
               wardNo: { $ifNull: ['$wardNo', ''] },
               panchayat: { $ifNull: ['$panchayat', ''] },
               partNo: { $ifNull: ['$partNo', ''] }
@@ -438,6 +446,14 @@ router.get('/households', verifyToken, requireModule('voters', 'community'), asy
       }
     }
 
+    // Exclude invalid/placeholder house numbers from household groupings
+    const invalidHouseList = [null, '', '-', '—', "'—", "'0", '0', '00', '000', 'NA', 'na', 'N/A', 'n/a', 'null', 'undefined', 'लागू नहीं', 'उपलब्ध नहीं'];
+    if (!query.$and) query.$and = [];
+    query.$and.push(
+      { houseNo: { $exists: true, $nin: invalidHouseList } },
+      { houseNo: { $not: /^[\s\-_0—'"]*$/ } }
+    );
+
     const orgId = query.organizationId || req.user.organizationId || 'org_default';
     const cacheKey = `households_${orgId}_${req.user.id}_w${ward || ''}_pn${panchayat || ''}_p${part || ''}_s${search || ''}_p${page}_l${limit}`;
     const cached = cache.get(cacheKey);
@@ -448,7 +464,7 @@ router.get('/households', verifyToken, requireModule('voters', 'community'), asy
       {
         $group: {
           _id: {
-            houseNo: { $ifNull: ['$houseNo', '—'] },
+            houseNo: '$houseNo',
             wardNo: { $ifNull: ['$wardNo', ''] },
             panchayat: { $ifNull: ['$panchayat', ''] },
             partNo: { $ifNull: ['$partNo', ''] }
@@ -471,6 +487,7 @@ router.get('/households', verifyToken, requireModule('voters', 'community'), asy
               wardNo: '$wardNo',
               panchayat: '$panchayat',
               partNo: '$partNo',
+              familyHead: '$familyHead',
               phone: { $ifNull: ['$mobileNo', '$phone'] },
               mobileNo: { $ifNull: ['$mobileNo', '$phone'] },
               boothName: '$boothName',
@@ -500,6 +517,9 @@ router.get('/households', verifyToken, requireModule('voters', 'community'), asy
       const wardNo = item._id.wardNo;
       const partNo = item._id.partNo;
       const members = (item.members || []).sort((a, b) => (Number(a.serialNo) || 0) - (Number(b.serialNo) || 0));
+      const headVoter = members.find((m) => m.familyHead && (m.familyHead === m.nameHi || m.familyHead === m.nameEn))
+        || [...members].sort((a, b) => (Number(b.age) || 0) - (Number(a.age) || 0))[0]
+        || members[0];
       const caste = members.find((m) => m.caste)?.caste || '';
       return {
         key: `${wardNo}_${partNo}_${houseNo}`,
@@ -509,7 +529,7 @@ router.get('/households', verifyToken, requireModule('voters', 'community'), asy
         partNo,
         members,
         memberCount: item.memberCount,
-        headName: item.headName || members[0]?.nameHi || members[0]?.nameEn || 'मुखिया',
+        headName: headVoter?.nameHi || headVoter?.nameEn || item.headName || 'मुखिया',
         caste
       };
     });
@@ -701,6 +721,11 @@ router.get('/family/:houseNo', verifyToken, requireModule('voters', 'community')
   try {
     const rawHouse = (req.params.houseNo || '').trim();
     const cleanHouse = rawHouse.replace(/^#/, '').trim();
+    const invalidHouses = ['', '-', '—', "'—", "'0", '0', '00', '000', 'na', 'n/a', 'null', 'undefined', 'लागू नहीं', 'उपलब्ध नहीं'];
+    if (!cleanHouse || invalidHouses.includes(cleanHouse.toLowerCase())) {
+      return res.json([]);
+    }
+
     const houseNum = Number.parseInt(cleanHouse, 10);
 
     const houseConditions = [
@@ -716,24 +741,32 @@ router.get('/family/:houseNo', verifyToken, requireModule('voters', 'community')
 
     const andConditions = [{ $or: houseConditions }];
 
-    if (typeof req.query.ward === 'string' && req.query.ward.trim()) {
-      const rawWard = req.query.ward.trim();
-      const cleanWard = rawWard.replace(/^(वार्ड|Ward)\s*/i, '').trim();
-      const wardNum = Number.parseInt(cleanWard, 10);
-      const wardConditions = [
-        { wardNo: rawWard },
-        { wardNo: cleanWard },
-        { wardNo: `Ward ${cleanWard}` },
-        { wardNo: `वार्ड ${cleanWard}` }
-      ];
-      if (!Number.isNaN(wardNum)) {
-        wardConditions.push({ wardNo: wardNum });
+    const query = addVoterAccess(req);
+
+    // STRICT WARD ISOLATION
+    let requestedWard = req.query.ward || req.query.wardNo;
+
+    // If ward was not passed in URL, but voterId or epic was, anchor strictly to that voter's ward
+    if (!requestedWard && (req.query.voterId || req.query.epic)) {
+      const anchorVoter = await Voter.findOne({
+        organizationId: query.organizationId || req.user.organizationId,
+        ...(req.query.voterId ? { _id: req.query.voterId } : { epic: req.query.epic })
+      }).select('wardNo partNo').lean();
+      if (anchorVoter && anchorVoter.wardNo) {
+        requestedWard = anchorVoter.wardNo;
+        if (!req.query.part && anchorVoter.partNo) {
+          req.query.part = anchorVoter.partNo;
+        }
       }
-      andConditions.push({ $or: wardConditions });
     }
 
-    if (typeof req.query.part === 'string' && req.query.part.trim()) {
-      const rawPart = req.query.part.trim();
+    if (typeof requestedWard === 'string' && requestedWard.trim()) {
+      applyWardFilter(query, requestedWard.trim());
+    }
+
+    const requestedPart = req.query.part || req.query.partNo;
+    if (typeof requestedPart === 'string' && requestedPart.trim()) {
+      const rawPart = requestedPart.trim();
       const cleanPart = rawPart.replace(/^(भाग|Part)\s*/i, '').trim();
       const partNum = Number.parseInt(cleanPart, 10);
       const partConditions = [
@@ -748,7 +781,6 @@ router.get('/family/:houseNo', verifyToken, requireModule('voters', 'community')
       andConditions.push({ $or: partConditions });
     }
 
-    const query = addVoterAccess(req);
     if (query.$and && Array.isArray(query.$and)) {
       query.$and.push(...andConditions);
     } else {

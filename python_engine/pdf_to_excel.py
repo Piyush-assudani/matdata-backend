@@ -234,10 +234,12 @@ def parse_full_card_tess(text: str) -> Dict[str, Any]:
             if c:
                 rel_name = c
 
-        hm = re.search(r'(?:मकान|गृह|मकारन|मकरन|म\.?\s*सं\.?|म\.?\s*नं\.?|म०\s*सं०?|म०\s*नं०?|house|h\.no)\s*(?:संख्या|नंबर|नं|क्रं|सपखजर|सपखसर)?\s*[:ः\-\s]*(.+)', l, re.I)
+        hm = re.search(r'(?:मकान|गृह|मकारन|म\s*[\.०]?\s*सं|म\s*[\.०]?\s*क्र|H(?:ouse)?\.?\s*No\.?)\s*(?:संख्या|नंबर|नं|क्रं|सपखजर)?\s*[:ः\-\s]*(.+)', l)
         if hm and not house:
-            c = clean_house_no(hm.group(1))
-            if c and c not in ['-', '०', '0', '00', ':', '']:
+            raw_c = hm.group(1).strip()
+            raw_c = re.split(r'\b(?:आयु|उम्र|आजच|आय|लिंग|सलग|जेंडर|Sex|फोटो|उपलब्ध|विलोपित|DELETED)\b', raw_c, flags=re.IGNORECASE)[0].strip()
+            c = clean_house_no(raw_c)
+            if c and c not in ['-', '०', ':', '']:
                 house = c
 
         am = re.search(r'(?:आयु|आयू|आजच|आय|उम्र)\s*[:ः\-\s]*(\d+)', l)
@@ -661,236 +663,77 @@ SEC_RAJASTHAN_DICTIONARY = {
     'करलपररम': 'कालूराम', 'अमरर ररम': 'अमरा राम', 'चजनरररम': 'चेनाराम',
     'जसपदर': 'यशोदा', 'मपतललरल': 'मोतीलाल', 'टलकप': 'टीकू', 'आसमररम': 'आसाराम',
     'आरतल': 'आरती', 'दकरललरल': 'देवीलाल', 'गणपत ररम': 'गणपत राम', 'अमरतल': 'अमृती',
-    'हसतच': 'हस्तू', 'आमबरररम': 'आंबाराम', 'गयरधनररम': 'गोवर्धनराम', 'अलसलररम': 'अचलाराम',
-    'अलसल': 'अचला', 'इननय': 'इन्दो', 'नकनरररम': 'नेनाराम', 'लकरत': 'लीली', 'बजरदकरल': 'बाधुदेवी',
-    'गणपतलरल': 'गणपतलाल', 'रमकश कचमरर': 'रमेश कुमार', 'मरपगल लरल': 'मांगीलाल',
-    'नरररजणररम': 'नारायणराम', 'गजरररम': 'गजाराम', 'उदरररम': 'उदाराम',
-    'नरररसणररम': 'नारायणराम', 'लमणरररम': 'लूणाराम', 'मनयहर': 'मनोहर', 'सररप ररम': 'स्वरूप राम',
-    'जसररज': 'जसराज', 'अमकर': 'अमरा', 'मदन': 'मदन', 'मनपज': 'मनोज',
-    'दलपत ररम': 'दलपत राम', 'दलपतररम': 'दलपतराम', 'दलपत': 'दलपत', 'गणपत': 'गणपत',
-    'हकमरररम': 'हेमाराम', 'हकमर': 'हेमा', 'दचगरर': 'दुर्गा', 'दचगर': 'दुर्गा',
-    'शजतरनर ररम': 'शिवकरण राम', 'शजतरनरररम': 'शिवकरणराम', 'शजतरनररम': 'शिवकरणराम', 'शजतरनर': 'शिवकरण',
-    'ददनकश कचमरर': 'दिनेश कुमार', 'ददनकश': 'दिनेश', 'शरपनत': 'शान्ति', 'दचगरश': 'दुर्गेश',
-    'लकमण ररम': 'लक्ष्मण राम', 'लकमणररम': 'लक्ष्मणराम', 'लक मण ररम': 'लक्ष्मण राम', 'लकमण': 'लक्ष्मण',
-    'लकमल': 'लक्ष्मी', 'कककबप': 'केकू', 'कमब': 'कमू', 'करलब': 'कालू', 'जसब': 'जसू',
-    'मपजब': 'मंजू', 'मयटब': 'मोटू', 'मरपगब': 'मांगी', 'ररजब': 'राजू', 'सगब': 'सगू',
-    'सपतब': 'संतो', 'सयनब': 'सोनू', 'ररजय': 'राजू', 'सररई': 'सवाई', 'नगरधर': 'गिरधर',
-    'ननतकश': 'नितेश', 'पमयद': 'प्रमोद', 'मकघररल': 'मेघवाल', 'घनशजरम': 'घनश्याम',
-    'कयशलजर': 'कौशल्या', 'कसतचर': 'कस्तूर', 'कसतबर': 'कस्तूर', 'खचशरल': 'खुशाल',
-    'चजनर': 'चेना', 'चरनदर': 'चन्द्र', 'चरपदर': 'चन्द्र', 'जगरधररल': 'गिरधारीलाल',
-    'जतलपकर': 'त्रिलोक', 'जलरण': 'जीवन', 'जलरन': 'जीवन', 'जशररज': 'जसराज',
-    'टलकबररम': 'टीकूराम', 'दललदकरल': 'डली देवी', 'धयकलरररम': 'धोकलराम',
-    'नगरधररलररम': 'गिरधारीलालराम', 'नतलयकरररम': 'त्रिलोकराम', 'नरररजण': 'नारायण',
-    'नशरनरररजण': 'शिवनारायण', 'पजरगरररम': 'पुखराजराम', 'बकरलसरलररम': 'बेरीसालराम',
-    'बलरबलररम': 'बलबीरराम', 'भभजरररम': 'भोजाराम', 'मकहररज': 'मेघराज',
-    'मचलतरनरररम': 'मुलतानराम', 'मचलरररम': 'मूलाराम', 'मबलरररम': 'मूलाराम',
-    'रचपगरररम': 'रूघाराम', 'ररजकनन': 'राजेन्द्र', 'रररमलररम': 'रामूराम',
-    'लखरररम': 'लाखाराम', 'लरखरररम': 'लाखाराम', 'लचणरररम': 'लूणाराम', 'लबणरररम': 'लूणाराम',
-    'लरधबररम': 'लाधूराम', 'शजरम': 'श्याम', 'सचरजरनरररम': 'सूरजराम', 'सबरजरनरररम': 'सूरजराम',
-    'हरलररम': 'हरीराम', 'हलरर': 'हीरा', 'हलररररम': 'हीरालालराम',
-    'शपकररररम': 'शंकराराम', 'जचगतरररम': 'जुगतराम', 'चकनरररम': 'चेनाराम', 'अचलरररम': 'अचलाराम',
-    'रषरर': 'ईश्वर', 'दमगरश': 'दिनेश', 'जपसमष': 'पीयूष',
-    'लरल': 'लाल', 'ररम': 'राम', 'दकरल': 'देवी', 'दकर': 'देव', 'बरई': 'बाई',
-    'कपरर': 'कंवर', 'नसह': 'सिंह', 'पकरश': 'प्रकाश', 'चचदर': 'चंद्र',
-    'सलतर': 'सीता', 'सपगलतर': 'संगीता', 'ककलरश': 'कैलाश', 'सयहनलरल': 'सोहनलाल',
-    'दकशनलरल': 'किशनलाल', 'ककसरररम': 'केसाराम', 'छकलरररम': 'छैलाराम',
-    'मरलल': 'माली', 'पकमलल': 'कमला', 'मपगलर': 'मंगला', 'मपगरररम': 'मगाराम',
-    'खखररररम': 'खींयाराम', 'परलररजर': 'परिहार', 'ररजकश': 'राजेश', 'महकनद': 'महेंद्र',
-    'हलररलरल': 'हीरालाल', 'बरबचलरल': 'बाबूलाल', 'नशरपकरश': 'शिवप्रकाश',
-    'सचनमतरर': 'सुमित्रा', 'शमरर': 'शर्मा', 'नजततद': 'जितेंद्र',
-    'झबमर': 'झूमर', 'सचरकश': 'सुरेश', 'नतसच': 'नत्थू', 'हरखरररम': 'हरखाराम',
-    'बपसललरल': 'बंसीलाल', 'जकठरररम': 'जेठाराम', 'हकमलतर': 'हेमलता',
-    'तकज': 'तेज', 'अनचपर': 'अनुपा', 'सचतरर': 'सुतार', 'ककसबररम': 'केसूराम',
-    'उषर': 'उषा', 'पपचर': 'पांचू', 'ककषनररम': 'कृष्णाराम', 'ककषनर': 'कृष्णा',
-    'मनकष': 'मनीष', 'मनयज': 'मनोज', 'सपजय': 'संजय', 'नदपक': 'दीपक',
-    'पपम': 'पूनम', 'रखम': 'रेखा', 'भपरर': 'भंवरा', 'महनपल': 'महिपाल',
-    'हसतमल': 'हस्तीमल', 'ररमदनल': 'रामदीन', 'भगररथरम': 'भागीरथराम'
-}
-
-def decode_sec_rajasthan(text: str) -> str:
-    if not text:
-        return ""
-    s = re.sub(r'^(?:[नहकम]\s+)+', '', text.strip())
-    
-    # Direct dictionary substitutions sorted by length descending
-    for k, v in sorted(SEC_RAJASTHAN_DICTIONARY.items(), key=lambda x: -len(x[0])):
-        if k in s:
-            s = s.replace(k, v)
-            
-    s = s.replace('लरल', 'लाल').replace('ररम', 'राम').replace('दकरल', 'देवी')
-    s = s.replace('कचमरर', 'कुमार').replace('कममरर', 'कुमार')
-    
-    s = re.sub(r'([क-ह])य([क-ह])', r'\1ो\2', s)
-    s = re.sub(r'([क-ह])क([क-ह])', r'\1े\2', s)
-    s = re.sub(r'([क-ह])च([क-ह])', r'\1ु\2', s)
-    s = re.sub(r'([क-ह])ब(?=\s|$|[क-ह])', r'\1ू', s)
-    
-    s = s.replace('रर', 'रा')
-    
-    s = re.sub(r'ा+', 'ा', s)
-    s = re.sub(r'ी+', 'ी', s)
-    s = re.sub(r'े+', 'े', s)
-    s = re.sub(r'ू+', 'ू', s)
-    s = re.sub(r'ु+', 'ु', s)
-    return re.sub(r'\s+', ' ', s).strip()
-
-def clean_hindi_name(raw: str) -> str:
-    """Strips labels, watermarks, and applies typography corrections (F4)"""
-    if not raw:
-        return ""
-    n = decode_sec_rajasthan(raw.strip())
-    
-    # Reject administrative / geographical words mistakenly captured as voter names
-    if any(w in n for w in ADMIN_WORDS_BLACKLIST):
-        return ""
-
-    # Strip invisible joiners (ZWJ/ZWNJ)
-    n = n.replace('\u200d', '').replace('\u200c', '')
-    # Standardize stray nuktas
-    n = n.replace('क़', 'क').replace('ख़', 'ख').replace('ग़', 'ग')
-
-    if 'नाम' in n:
-        parts = n.split('नाम')
-        n = parts[-1].strip()
-    if 'नरम' in n:
-        parts = n.split('नरम')
-        n = parts[-1].strip()
-        
-    n = re.sub(r'^[;:ः\-\.\s\/\|_]+', '', n)
-    n = re.sub(r'^(?:नरम|नाम|नाम्|नाभ|नाव|त्ताम|त्ाम|ताम|मा|ज्ञाञ्|ज्ञा|साभ|जप्र|ज्ञात)[:ः\.\-\s]+', '', n)
-    n = re.sub(r'^(?:D\s*E\s*L\s*E\s*T\s*E\s*D|DELETED|ELETED)\s*', '', n, flags=re.IGNORECASE)
-    if '_' in n:
-        n = n.replace('_', '')
-    n = re.sub(r'[a-zA-Z]+', ' ', n)
-    n = re.sub(r'[\d\u0966-\u096F]+', ' ', n)
-    n = re.sub(r'[^\u0900-\u097F\s]', ' ', n)
-    n = re.sub(r'\s+', ' ', n).strip()
-    
-    for _ in range(2):
-        n = re.sub(r'\s+(?:का\s*नरक|नरक|कफ|कस|कर|डा|ए|झारे|औडे|हा|फ्रे|दल|डी|ईडी|लेटे|डिलीट|शा|हि|हू|हु|का|के|की|ज|ब|त|क|घ|छ|झ|ण|प|फ|य|र|ल|व|श|ष|स|ह)$', '', n).strip()
-    
-    # Strip leading stray stamp marks (e.g. 'नी जवरी' -> 'जवरी', 'वि रमेश' -> 'रमेश')
-    n = re.sub(r'^(?:नी|वि|सं|डी|ए|ई|नं|म)\s+', '', n).strip()
-
-    # Fix broken leading matras (e.g. 'ुर्गाराम' -> 'दुर्गाराम')
-    n = re.sub(r'^[\u0941\u0942]र्गा', 'दुर्गा', n)
-    # Deduplicate repeated nuktas and normalize
-    n = re.sub(r'[\u093C]+', '\u093C', n)
-    n = re.sub(r'जांगिड़\u093C+', 'जांगिड़', n)
-
-    for pat, repl in SEC_TYPO_MAP.items():
-        pat_fixed = pat.replace(r'\b', r'(?!\S)')
-        n = re.sub(pat_fixed, repl, n)
-        
-    # Apply Pillar 5 Lexicon fuzzy correction
-    n = fuzzy_lexicon_correct(n)
-    n = re.sub(r'[\u093C]+', '\u093C', n)
-    n = re.sub(r'जांगिड़\u093C+', 'जांगिड़', n)
-    
-    banned = {
-        'मतदाता', 'कलेण्डर', 'विधानसभा', 'निर्वाचक', 'नामावली', 'वार्ड', 'अनुभाग',
-        'प्रारूप', 'मतदान', 'हस्ताक्षर', 'फोटो', 'उपलब्ध', 'संख्या', 'भाग', 'सूची',
-        'ग्राम', 'नगर', 'मकान', 'गृह', 'आयु', 'उम्र', 'लिंग', 'पिता', 'पति', 'माता',
-        'अन्य', 'नातेदार', 'नाम', 'नरम', 'ग्रामपंचायत', 'पंचायत', 'जिलापरिषद', 'ओसियाँ', 'प्रतापनगर'
-    }
-    if n in banned or len(n) < 2:
-        return ""
-    return n
-
-
-def clean_relative_info(raw: str) -> Tuple[str, str]:
-    """Cleans relative name and relation type (F4)"""
-    if not raw:
-        return "", "पिता"
-    s = raw.strip()
-    s = s.replace('\u200d', '').replace('\u200c', '')
-    s = s.replace('क़', 'क').replace('ख़', 'ख').replace('ग़', 'ग')
-
-    rel_type = "पिता"
-    if "पति" in s or "पनत" in s:
-        rel_type = "पति"
-    elif "माता" in s or "मरतर" in s:
-        rel_type = "माता"
-    elif "पिता" in s or "नपतर" in s:
-        rel_type = "पिता"
-    
-    s = re.sub(r'^(?:पिता|पति|माता|अन्य|नपतर|पनत|मरतर)?\s*(?:का|के|की|कर)?\s*(?:नाम|नरम|ताम|नाम्|माम|नाव|त्ताम|त्ाम|ज्ञाञ्|साभ|जप्र)[:ः\.\-\s]*', '', s)
-    if "नाम" in s:
-        s = s.split("नाम")[-1]
-    if "नरम" in s:
-        s = s.split("नरम")[-1]
-    
-    s = re.sub(r'^[;:ः\-\.\s\/\|_]+', '', s)
-    s = re.sub(r'^(?:D\s*E\s*L\s*E\s*T\s*E\s*D|DELETED|ELETED)\s*', '', s, flags=re.IGNORECASE)
-    s = re.sub(r'\s+(?:D\s*E\s*L\s*E\s*T\s*E\s*D|DELETED|ELETED|कफ|कस|कर|डा|ए|झारे|औडे|हा|फ्रे|दल)$', '', s, flags=re.IGNORECASE)
-    if '_' in s:
-        s = s.replace('_', '')
-    s = re.sub(r'[^\u0900-\u097F\s]', ' ', s)
-    s = re.sub(r'\s+', ' ', s).strip()
-    
-    s = clean_hindi_name(s)
-    return s, rel_type
-
-
-def clean_house_no(raw: str) -> str:
+    'हसतच': 'हस्तू', 'आमबरररम': 'आंबाराम', 'गयरध�def clean_house_no(raw: str) -> str:
     """
-    Strict House Number extraction and normalization.
-    Rule 1: Supports numerical values (0-9, ०-९) with separators ('/', '-').
-    Rule 2: Preserves valid alphanumeric house identifiers (e.g., '12A', 'A-12', '12क', '15/ख', 'Flat 4').
-    Rule 3: Strips label words ('मकान', 'संख्या', 'गृह', 'म.नं.', 'म.सं.') and return '-' if no valid identifier exists.
-    Rule 4: Never returns '0', '00', or empty. Leading zeros like '05' are normalized to '5'.
+    Accurate House Number extraction and normalization for Indian Electoral Rolls.
+    1. Converts Devanagari numerals (०-९ -> 0-9).
+    2. Strips leading prefixes like 'मकान', 'संख्या', 'म.सं.', 'म.क्र.', 'गृह', 'H.No', colons, quotes.
+    3. Stops before adjacent keywords on same line ('आयु', 'उम्र', 'लिंग', 'Sex', 'Photo', etc.).
+    4. Accurately extracts house numbers with separators and sub-divisions:
+       - '12' -> '12'
+       - '12/1', '12-1', '14/A', '12A', '12-A', '12क', '12-क', '14/ख', 'क-12', 'A-12'
+       - Strips leading zeroes: '001' -> '1', '012' -> '12'
+    5. Disallows invalid values:
+       - '0', '00', '000', '-', '—', 'nil', 'na', 'n/a', 'लागू नहीं', 'उपलब्ध नहीं' -> returns '-'
+       - Arbitrary Hindi words/garbage text (like 'बाईपास', 'सपखजर', 'बैंक') are NOT treated as house numbers -> returns '-'
     """
     if not raw:
         return "-"
     s = normalize_numerals(str(raw).strip())
-    if any(w in s.lower() for w in ['लागू नहीं', 'उपलब्ध नहीं', 'शून्य', 'nil', 'na', 'none', 'n/a']):
+    
+    # Strip quotes, apostrophes, hashtags
+    s = re.sub(r'['"`‘’“”#]', '', s).strip()
+    
+    # Check invalid placeholders
+    s_lower = s.lower()
+    if any(w in s_lower for w in ['लागू नहीं', 'उपलब्ध नहीं', 'शून्य', 'nil', 'na', 'none', 'n/a', 'null', 'nan', 'unknown']):
         return "-"
-    if re.match(r'^(?:0+|०+|—|-+|\.+)$', s):
-        return "-"
+
+    # Stop before adjacent metadata keywords if present on same line
+    s = re.split(r'\b(?:आयु|उम्र|आजच|आय|लिंग|जेंडर|सलग|sex|फोटो|उपलब्ध|deleted|विलोपित)\b', s, flags=re.IGNORECASE)[0].strip()
 
     # Strip prefixes and labels
-    s = re.sub(r'^(?:मकान|संख्या|मकरन|सपखजर|सपखसर|गृह|आयु|उम्र|लिंग|पुरुष|पुरूष|स्त्री|महिला|नाम|पिता|पति|माता|ward|house|no|room|flat|ft|at|et|Fy|Ik|iad|है|हे|मिका|पु|Nha|AY)[:ः\.\-\s]*', '', s, flags=re.IGNORECASE)
-    s = re.sub(r'^(?:म\.?\s*सं\.?|म\.?\s*नं\.?|म\.?\s*क्र\.?|म०\s*सं०?|म०\s*नं०?|गृह\s*सं\.?|h\.?\s*no\.?)[:ः\.\-\s]*', '', s, flags=re.IGNORECASE)
-    s = re.sub(r'(?:मकान|संख्या|मकरन|सपखजर|सपखसर|गृह|आयु|उम्र|लिंग|ward|house|no)+', '', s, flags=re.IGNORECASE)
+    s = re.sub(r'^(?:मकान|संख्या|मकरन|मकारन|सपखजर|गृह|वार्ड|ward|house|no|room|flat|ft|at|et|Fy|Ik|iad|है|हे|मिका|पु|Nha|AY|म\.?\s*सं\.?|म\.?\s*क्र\.?|H\.?\s*No\.?)[ :ः\.\-\s]*', '', s, flags=re.IGNORECASE).strip()
+    s = re.sub(r'(?:मकान|संख्या|मकरन|मकारन|सपखजर|गृह|ward|house|no)+', '', s, flags=re.IGNORECASE).strip()
     
-    # Strip unnecessary punctuation but keep /, -, alphanumeric
-    s = re.sub(r'[%*~_!?;\'"‘’।॥«»°+={}\[\]()|<>^$&#@¥]+', ' ', s).strip()
-    s = s.strip(':.- ')
+    # Strip unwanted symbols except valid house separators / and -
+    s = re.sub(r'[%*~_!?:;‘’।॥«»°+={}\[\]()|<>^$&#@¥]+', ' ', s).strip()
+    s = re.sub(r'\s+', ' ', s).strip()
 
-    if not s or re.match(r'^(?:0+|०+|—|-+|\.+)$', s):
-        return "-"
-
-    # Prefix allowed pattern: e.g. "क-12" or "ख/4" or "A-12"
-    m_pre = re.search(r'([क-छA-Za-z])\s*[\/\-]?\s*(\d+(?:[\/\-]\d+)*)', s)
+    # Prefix pattern: e.g. "क-12", "क/12", "A-12", "A/12"
+    m_pre = re.match(r'^([A-Za-zक-ह])\s*[\/\-\s]\s*(\d+(?:[\/\-]\d+)*)$', s)
     if m_pre:
-        dig = m_pre.group(2)
-        if re.match(r'^0+$', dig):
-            return "-"
-        dig = re.sub(r'^0+([1-9]\d*)', r'\1', dig)
-        return f"{m_pre.group(1).upper()}-{dig}"
+        prefix = m_pre.group(1).upper()
+        digits = m_pre.group(2).lstrip('0') or '0'
+        return f"{prefix}-{digits}"
 
-    # Core pattern: Digits with optional '/' or '-' and optional suffix [क-छ] or standalone single letter [A-Za-z]
-    m_num = re.search(r'(\d+(?:[\/\-]\d+)*)(?:\s*([\/\-]?\s*(?:[क-छ]|[A-Za-z](?![A-Za-z]))))?', s)
-    if m_num:
-        digits_part = m_num.group(1)
-        if re.match(r'^0+$', digits_part):
-            return "-"
-        # Strip leading zeroes on numbers: e.g. '05' -> '5', '012/1' -> '12/1'
+    # Standard pattern: Digits with optional separators and sub-divisions (e.g. 12, 12/1, 12-1, 12A, 12-A, 12/A, 12क, 12-क, 12/ख)
+    m_core = re.search(r'(\d+(?:[\/\-]\d+)*)(?:\s*[\/\-]?\s*([A-Za-zक-ह]))?', s)
+    if m_core:
+        digits_part = m_core.group(1)
+        sub_part = (m_core.group(2) or '').strip()
+        
+        # Clean leading zeros on parts (e.g. 005 -> 5, 012/002 -> 12/2)
         parts = digits_part.split('/')
-        cleaned_parts = [re.sub(r'^0+([1-9]\d*)', r'\1', p) for p in parts]
-        cleaned_digits = '/'.join(cleaned_parts)
-        suffix = (m_num.group(2) or '').replace(' ', '').upper()
-        return f"{cleaned_digits}{suffix}"
+        if len(parts) > 1:
+            cleaned_digits = '/'.join(p.lstrip('0') or '0' for p in parts)
+        else:
+            hyphen_parts = digits_part.split('-')
+            if len(hyphen_parts) > 1:
+                cleaned_digits = '-'.join(p.lstrip('0') or '0' for p in hyphen_parts)
+            else:
+                cleaned_digits = digits_part.lstrip('0') or '0'
 
-    # Preserve meaningful Hindi area/colony landmarks if present (e.g. बाईपास, माधव पैलेस)
-    landmark = decode_sec_rajasthan(re.sub(r'[^\u0900-\u097F\s]', '', s)).strip()
-    banned_landmarks = {'मकान', 'संख्या', 'गृह', 'आयु', 'उम्र', 'लिंग', 'पुरुष', 'स्त्री', 'नाम', 'पिता', 'पति', 'माता', 'फोटो', 'उपलब्ध'}
-    if len(landmark) >= 3 and landmark not in banned_landmarks:
-        return landmark
+        # If it's just '0' without any sub-part, it's invalid
+        if cleaned_digits == '0' and not sub_part:
+            return "-"
 
-    # If no valid digits or landmarks are found, leave empty ('-')
+        if sub_part:
+            return f"{cleaned_digits}{sub_part}"
+        return cleaned_digits
+
+    # If no numbers were found, do NOT return random Hindi words/landmarks as house numbers!
     return "-"
-
 
 def ensemble_ocr_line(preprocessed_img: np.ndarray) -> str:
     """
