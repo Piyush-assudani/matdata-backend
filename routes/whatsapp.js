@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { verifyToken, requireModule, isAdmin } = require('../middleware/authMiddleware');
 const { addVoterAccess, getEffectiveOrgId } = require('../lib/access');
-const { Voter, SlipDispatch, Organization } = require('../models/index');
+const { Voter, SlipDispatch, Organization, CampaignTemplate } = require('../models/index');
 const { escapeRegex } = require('../lib/regexUtils');
 
 /**
@@ -1442,6 +1442,263 @@ router.post('/config', verifyToken, isAdmin, async (req, res) => {
  * WHATSAPP MARKETING & GHOSHNA PATRA CAMPAIGN API ROUTES
  * =========================================================================
  */
+
+const DEFAULT_APPROVED_CAMPAIGN_TEMPLATES = [
+  {
+    title: 'घोषणा पत्र व संकल्प पत्र (Manifesto 2026)',
+    category: 'घोषणा पत्र',
+    badge: 'लोकप्रिय',
+    organizationId: null,
+    status: 'approved',
+    approvedBy: 'Admin',
+    content: `🚩 *सादर जय श्री राम / नमस्कार {नाम} जी,*
+
+आगामी चुनाव हेतु हमारा आधिकारिक *विकास संकल्प व घोषणा पत्र 2026* प्रस्तुत है।
+
+📌 *प्रमुख संकल्प व प्राथमिकताएं:*
+1. 🚰 हर घर शुद्ध पेयजल व निर्बाध विद्युत आपूर्ति।
+2. 🛣️ पक्की आंतरिक सड़कें व आधुनिक नालियों का निर्माण।
+3. 🏥 प्राथमिक स्वास्थ्य केंद्र में 24×7 डॉक्टर व मुफ्त दवाइयां।
+4. 🏫 विद्यालयों का आधुनिकीकरण व डिजिटल लाइब्रेरी।
+5. 🛡️ महिलाओं व बुजुर्गों की सुरक्षा, पेंशन व त्वरित जनसुनवाई।
+
+आपका हर मत क्षेत्र के उज्ज्वल भविष्य व चहुंमुखी विकास का आधार बनेगा।
+कृपया अपना अमूल्य मत व आशीर्वाद देकर सेवा का अवसर प्रदान करें।
+
+🗳️ *निवेदक:* आपका अपना प्रत्याशी व संपूर्ण चुनाव रणनीति टीम
+📞 *हेल्पलाइन:* किसी भी समस्या हेतु संपर्क करें।`
+  },
+  {
+    title: 'प्रत्याशी वोट अपील (Vote Appeal)',
+    category: 'वोट अपील',
+    badge: 'प्रचार',
+    organizationId: null,
+    status: 'approved',
+    approvedBy: 'Admin',
+    content: `🙏 *सादर प्रणाम {नाम} जी,*
+
+लोकतंत्र के इस पावन महापर्व में आपका एक-एक वोट हमारे क्षेत्र की दिशा और दशा तय करेगा।
+
+गत वर्षों में हमने पूरी निष्ठा, ईमानदारी और समर्पण के साथ हर सुख-दुख में आपके साथ खड़े होकर सेवा की है। विकास की इस अविरल यात्रा को और अधिक सशक्त बनाने के लिए आपके अमूल्य समर्थन और आशीर्वाद की विनम्र प्रार्थना है।
+
+📅 *मतदान दिवस:* आगामी चुनाव में अवश्य मतदान करें
+📍 *बूथ:* अपने पोलिंग बूथ पर पहुंचकर मतदान सुनिश्चित करें
+
+*आपका एक वोट, सुरक्षित एवं समृद्ध भविष्य का संकल्प!*
+धन्यवाद! 🙏`
+  },
+  {
+    title: 'जनसभा व आमंत्रण (Public Rally Invitation)',
+    category: 'आमंत्रण',
+    badge: 'इवेंट',
+    organizationId: null,
+    status: 'approved',
+    approvedBy: 'Admin',
+    content: `📢 *विशाल जनसभा व संकल्प सभा आमंत्रण*
+
+आदरणीय {नाम} जी,
+
+हमारे चुनाव क्षेत्र में सर्वांगीण विकास व जनहित के मुद्दों पर विचार साझा करने हेतु एक विशाल जनसभा का आयोजन किया जा रहा है।
+
+🗓️ *दिनांक:* आगामी रविवार, शाम 4:00 बजे
+📍 *स्थान:* मुख्य सभा प्रांगण, वार्ड/पंचायत चौक
+👥 *मुख्य अतिथि:* क्षेत्रीय गणमान्य प्रतिनिधि व वरिष्ठ मार्गदर्शक
+
+आपकी गरिमामयी उपस्थिति हमारे संकल्प को नई ऊर्जा प्रदान करेगी। सपरिवार सादर आमंत्रित हैं।
+
+🚩 *समस्त ग्रामवासी व क्षेत्रीय कार्यकर्ता टीम*`
+  },
+  {
+    title: 'विजयी संकल्प व जनसंवाद (Direct Outreach)',
+    category: 'जनसंवाद',
+    badge: 'स्वीकृत',
+    organizationId: null,
+    status: 'approved',
+    approvedBy: 'Admin',
+    content: `💐 *सादर अभिवादन {नाम} जी,*
+
+क्षेत्र के विकास और जनहित के मुद्दों पर हमारा निरंतर प्रयास जारी है। आगामी चुनाव में आपका बहुमूल्य सहयोग व आशीर्वाद हमारे संकल्प को मजबूत बनाएगा।
+
+आपके सुझाव हमारे लिए महत्वपूर्ण हैं। किसी भी समस्या के समाधान हेतु सदैव तत्पर।
+
+सादर,
+आपका अपना जनसेवक प्रत्याशी`
+  }
+];
+
+/**
+ * Seed default templates if collection is empty
+ */
+async function ensureSeedCampaignTemplates() {
+  try {
+    const count = await CampaignTemplate.countDocuments();
+    if (count === 0) {
+      for (const item of DEFAULT_APPROVED_CAMPAIGN_TEMPLATES) {
+        await CampaignTemplate.create({
+          ...item,
+          _id: `tmpl_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to seed campaign templates:', err.message);
+  }
+}
+
+// Auto-seed on route registration
+ensureSeedCampaignTemplates();
+
+/**
+ * GET /api/whatsapp/campaign/templates - Get approved campaign templates for client
+ * Only templates approved by admin and assigned to this organization (or global) are returned
+ */
+router.get('/campaign/templates', verifyToken, async (req, res) => {
+  try {
+    await ensureSeedCampaignTemplates();
+    const orgId = getEffectiveOrgId(req);
+
+    const query = {
+      status: 'approved',
+      $or: [
+        { organizationId: null },
+        { organizationId: '' },
+        { organizationId: 'global' },
+        ...(orgId ? [{ organizationId: orgId }] : [])
+      ]
+    };
+
+    const templates = await CampaignTemplate.find(query).sort({ createdAt: -1 }).lean();
+
+    res.json({
+      success: true,
+      templates: templates.map((t) => ({
+        id: t._id,
+        name: t.title,
+        title: t.title,
+        category: t.category,
+        badge: t.badge || 'स्वीकृत',
+        defaultText: t.content,
+        organizationId: t.organizationId,
+        status: t.status,
+        approvedBy: t.approvedBy || 'Admin'
+      }))
+    });
+  } catch (err) {
+    console.error('Fetch campaign templates error:', err);
+    res.status(500).json({ message: 'अभियान टेम्पलेट्स लोड करने में त्रुटि आई।' });
+  }
+});
+
+/**
+ * GET /api/whatsapp/admin/campaign-templates - List all campaign templates (Admin Only)
+ */
+router.get('/admin/campaign-templates', verifyToken, isAdmin, async (req, res) => {
+  try {
+    await ensureSeedCampaignTemplates();
+    const { orgId, status } = req.query;
+    const query = {};
+
+    if (orgId && orgId !== 'all') {
+      if (orgId === 'global') {
+        query.$or = [{ organizationId: null }, { organizationId: '' }, { organizationId: 'global' }];
+      } else {
+        query.organizationId = orgId;
+      }
+    }
+
+    if (status && status !== 'all') {
+      query.status = status;
+    }
+
+    const templates = await CampaignTemplate.find(query).sort({ createdAt: -1 }).lean();
+    res.json({ success: true, templates });
+  } catch (err) {
+    console.error('Admin fetch templates error:', err);
+    res.status(500).json({ message: 'टेम्पलेट्स सूची लोड करने में त्रुटि आई।' });
+  }
+});
+
+/**
+ * POST /api/whatsapp/admin/campaign-templates - Create a new campaign template (Admin Only)
+ */
+router.post('/admin/campaign-templates', verifyToken, isAdmin, async (req, res) => {
+  try {
+    const { title, category, content, organizationId, badge, status } = req.body || {};
+    if (!title || !title.trim()) {
+      return res.status(400).json({ message: 'टेम्पलेट का शीर्षक आवश्यक है।' });
+    }
+    if (!content || !content.trim()) {
+      return res.status(400).json({ message: 'संदेश सामग्री आवश्यक है।' });
+    }
+
+    const template = new CampaignTemplate({
+      _id: `tmpl_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      title: title.trim(),
+      category: category ? category.trim() : 'घोषणा पत्र',
+      content: content.trim(),
+      organizationId: organizationId === 'global' || !organizationId ? null : organizationId.trim(),
+      badge: badge ? badge.trim() : 'स्वीकृत',
+      status: status || 'approved',
+      approvedBy: req.user?.fullName || req.user?.email || 'Admin',
+      createdAt: new Date()
+    });
+
+    await template.save();
+    res.json({ success: true, message: 'टेम्पलेट सफलतापूर्वक बनाया व स्वीकृत किया गया।', template });
+  } catch (err) {
+    console.error('Admin create template error:', err);
+    res.status(500).json({ message: err.message || 'टेम्पलेट बनाने में त्रुटि आई।' });
+  }
+});
+
+/**
+ * PUT /api/whatsapp/admin/campaign-templates/:id - Update or Approve/Reject template (Admin Only)
+ */
+router.put('/admin/campaign-templates/:id', verifyToken, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, category, content, organizationId, badge, status } = req.body || {};
+
+    const template = await CampaignTemplate.findById(id);
+    if (!template) {
+      return res.status(404).json({ message: 'टेम्पलेट नहीं मिला।' });
+    }
+
+    if (title !== undefined) template.title = title.trim();
+    if (category !== undefined) template.category = category.trim();
+    if (content !== undefined) template.content = content.trim();
+    if (badge !== undefined) template.badge = badge.trim();
+    if (organizationId !== undefined) {
+      template.organizationId = organizationId === 'global' || !organizationId ? null : organizationId.trim();
+    }
+    if (status !== undefined) {
+      template.status = status;
+      if (status === 'approved') {
+        template.approvedBy = req.user?.fullName || req.user?.email || 'Admin';
+      }
+    }
+
+    await template.save();
+    res.json({ success: true, message: 'टेम्पलेट सफलतापूर्वक अपडेट कर दिया गया।', template });
+  } catch (err) {
+    console.error('Admin update template error:', err);
+    res.status(500).json({ message: err.message || 'टेम्पलेट अपडेट करने में त्रुटि आई।' });
+  }
+});
+
+/**
+ * DELETE /api/whatsapp/admin/campaign-templates/:id - Delete template (Admin Only)
+ */
+router.delete('/admin/campaign-templates/:id', verifyToken, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await CampaignTemplate.findByIdAndDelete(id);
+    res.json({ success: true, message: 'टेम्पलेट हटा दिया गया।' });
+  } catch (err) {
+    console.error('Admin delete template error:', err);
+    res.status(500).json({ message: 'टेम्पलेट हटाने में त्रुटि आई।' });
+  }
+});
 
 /**
  * POST /api/whatsapp/campaign/send - Launch Bulk Marketing / Ghoshna Patra Campaign

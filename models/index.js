@@ -213,6 +213,20 @@ const systemSettingSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
+const campaignTemplateSchema = new mongoose.Schema({
+  _id: { type: String, default: () => `tmpl_${Date.now()}_${Math.random().toString(36).substring(2, 7)}` },
+  title: { type: String, required: true },
+  category: { type: String, default: 'घोषणा पत्र' },
+  content: { type: String, required: true },
+  badge: { type: String, default: 'स्वीकृत' },
+  organizationId: { type: String, default: null, index: true }, // null or 'global' means available to all clients
+  status: { type: String, enum: ['approved', 'pending', 'rejected'], default: 'approved', index: true },
+  approvedBy: { type: String, default: 'Admin' },
+  createdAt: { type: Date, default: Date.now, index: true }
+});
+
+campaignTemplateSchema.index({ status: 1, organizationId: 1 });
+
 const Organization = mongoose.model('Organization', organizationSchema);
 const User = mongoose.model('User', userSchema);
 const Voter = mongoose.model('Voter', voterSchema);
@@ -220,6 +234,7 @@ const SlipDispatch = mongoose.model('SlipDispatch', slipDispatchSchema);
 const Lead = mongoose.model('Lead', leadSchema);
 const LearnedDictionary = mongoose.model('LearnedDictionary', learnedDictionarySchema);
 const SystemSetting = mongoose.model('SystemSetting', systemSettingSchema);
+const CampaignTemplate = mongoose.model('CampaignTemplate', campaignTemplateSchema);
 
 module.exports = {
   Organization,
@@ -228,6 +243,7 @@ module.exports = {
   SlipDispatch,
   Lead,
   LearnedDictionary,
-  SystemSetting
+  SystemSetting,
+  CampaignTemplate
 };
 
