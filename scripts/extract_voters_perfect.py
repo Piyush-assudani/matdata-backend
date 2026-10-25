@@ -88,7 +88,7 @@ GLYPH_HASH_TO_HINDI = {
     '65695721a3': 'प', 'f278d9cdb5': 'प', 'ec864e5618': 'प्र', '26654ce284': 'प्',
     'a9f61e1199': 'प्', 'c68d1cf440': 'प्', 'a3422e66d6': 'प्', '750c1b0d41': 'प्', '25e823bbd8': 'प्', '613075704b': 'प्', '259c4ab587': 'प्',
     '0c756f93f5': 'प', '14a018752f': 'प', '87a20b56c9': 'प', 'a9b34f178a': 'प',
-    'c4bad94212': 'प्रे', '3fc2dc4f83': 'प्रे',
+    'c4bad94212': 'ओ', '3fc2dc4f83': 'ओ',
     '4c94216b25': 'फ', '74db27ca64': 'फ', '66ff22024f': 'फ', 'ad465bf0bc': 'फ', 'c88c48c79e': 'फ', 'a9488cba84': 'फ', '1428919c17': 'फ', 'fe0dc18178': 'फ',
     'b195fad4ed': 'ब', 'b6d9b989ad': 'बृ', '8fce6b30ee': 'ब',
     '1d729d00ce': 'भ', '7ab9ef3167': 'भा', '3ecd36bc08': 'भ',
@@ -125,7 +125,7 @@ GLYPH_HASH_TO_HINDI = {
     'aefa09333b': 'ध',
     'fa7d21cbd0': 'द्म', 'a3ca9fb4d5': 'द्वा', 'b6fc0aacd4': 'द्य', '674cf0dbd2': 'द्व',
     '495ad4ec8e': 'प्', '7473598df5': 'प्', '269ee0b78c': 'प्',
-    'b96edff874': 'प्र', 'b39bd255e2': 'प्र', '70dcf1cf7a': 'प्रे',
+    'b96edff874': 'प्र', 'b39bd255e2': 'प्र', '70dcf1cf7a': 'ओ',
     '67dd4b48cc': 'ब', '7d81b055b4': 'ब',
     '2fbf81e97d': 'म्प', 'a3fe1024db': 'म्', '2a332feaeb': 'म्बि',
     '5f84c76bc9': 'ड्डी',
@@ -339,7 +339,16 @@ GOV_LEXICON_RULES = [
     (re.compile(r'\bश्रीी+'), 'श्री'),
     (dev_word('श्रीीकिसन'), 'श्रीकिसन'),
     (dev_word('पंठेप सिंह'), 'प्रताप सिंह'),
-    (dev_word('पंेेप सिंह'), 'प्रताप सिंह')
+    (dev_word('पंेेप सिंह'), 'प्रताप सिंह'),
+    (dev_word('ओम्पप्रकाश'), 'ओमप्रकाश'),
+    (dev_word('ओम्प्रकाश'), 'ओमप्रकाश'),
+    (dev_word('ओमपकाश'), 'ओमप्रकाश'),
+    (dev_word('ओपमप्रकाश'), 'ओमप्रकाश'),
+    (dev_word('प्रेमपकाश'), 'प्रेमप्रकाश'),
+    (dev_word('प्रेममप्रकाश'), 'प्रेमप्रकाश'),
+    (dev_word('रामसवरूप'), 'रामस्वरूप'),
+    (dev_word('राम सवरूप'), 'रामस्वरूप'),
+    (dev_word('सवरुपाराम'), 'स्वरूपाराम')
 ]
 
 ENDRA_CONJUNCT_RULES = [
@@ -925,7 +934,10 @@ def extract_single_pdf(pdf_path, default_ward=None, default_part=None, include_d
 COMMON_INDIAN_NAME_TRANSLATIONS = {
     'गंगा': 'Ganga', 'वासुदेव': 'Vasudev', 'नगाराम': 'Naga Ram', 'नखताराम': 'Nakhta Ram',
     'सुआ': 'Sua', 'पूनाराम': 'Poona Ram', 'निजरों': 'Nijro', 'पदमाराम': 'Padma Ram',
-    'ओम प्रकाश': 'Om Prakash', 'मुकेश': 'Mukesh', 'राधा कुमारी': 'Radha Kumari',
+    'ओम प्रकाश': 'Om Prakash', 'ओमप्रकाश': 'Om Prakash', 'प्रेम प्रकाश': 'Prem Prakash', 'प्रेमप्रकाश': 'Prem Prakash',
+    'ओमाराम': 'Oma Ram', 'ओमा राम': 'Oma Ram', 'प्रेमाराम': 'Prema Ram', 'प्रेमा राम': 'Prema Ram',
+    'ओमदास': 'Om Das', 'प्रेमदास': 'Prem Das', 'ओमनाथ': 'Om Nath', 'प्रेमनाथ': 'Prem Nath',
+    'मुकेश': 'Mukesh', 'राधा कुमारी': 'Radha Kumari',
     'कालूराम': 'Kalu Ram', 'छगन': 'Chhagan', 'छगनी': 'Chhagani', 'लीलाधर': 'Leeladhar',
     'तारों देवी': 'Taro Devi', 'भंवरूराम': 'Bhanwroo Ram', 'लीला': 'Leela',
     'पुरखाराम': 'Purkha Ram', 'मुढमा': 'Mudhma', 'गुमानाराम': 'Gumana Ram',
