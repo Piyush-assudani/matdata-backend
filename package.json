@@ -7,7 +7,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "seed": "node scripts/seed_db.js",
     "test:e2e": "node test/e2e-smoke.js"
   },
   "keywords": [],

@@ -499,6 +499,7 @@ router.get('/households', verifyToken, requireModule('voters', 'community'), asy
       const wardNo = item._id.wardNo;
       const partNo = item._id.partNo;
       const members = (item.members || []).sort((a, b) => (Number(a.serialNo) || 0) - (Number(b.serialNo) || 0));
+      const caste = members.find((m) => m.caste)?.caste || '';
       return {
         key: `${wardNo}_${partNo}_${houseNo}`,
         houseNo,
@@ -507,7 +508,8 @@ router.get('/households', verifyToken, requireModule('voters', 'community'), asy
         partNo,
         members,
         memberCount: item.memberCount,
-        headName: item.headName || members[0]?.nameHi || members[0]?.nameEn || 'मुखिया'
+        headName: item.headName || members[0]?.nameHi || members[0]?.nameEn || 'मुखिया',
+        caste
       };
     });
 
@@ -1037,6 +1039,42 @@ router.post('/family-phone', verifyToken, requireModule('voters', 'community'), 
   } catch (err) {
     console.error('Family phone update failed:', err.message);
     res.status(500).json({ message: 'परिवार मोबाइल नंबर सहेजने में त्रुटि आई।' });
+  }
+});
+
+// Set Family Caste (assigns caste tag to entire household)
+router.post('/family-caste', verifyToken, requireModule('voters', 'community'), async (req, res) => {
+  try {
+    const { houseNo, wardNo, caste } = req.body;
+    if (!houseNo) {
+      return res.status(400).json({ message: 'मकान संख्या आवश्यक है।' });
+    }
+    const cleanCaste = String(caste || '').trim();
+    if (!cleanCaste) {
+      return res.status(400).json({ message: 'जाति का नाम आवश्यक है।' });
+    }
+    const query = addVoterAccess(req);
+    const cleanH = String(houseNo).replace(/^#/, '').trim();
+    query.houseNo = { $in: [houseNo, cleanH, `#${cleanH}`] };
+    if (wardNo) applyWardFilter(query, wardNo);
+
+    const result = await Voter.updateMany(query, { $set: { caste: cleanCaste } });
+
+    const orgKey = query.organizationId || req.user.organizationId || 'org_default';
+    cache.delPrefix(`voters_all_${orgKey}_`);
+    cache.delPrefix(`households_${orgKey}_`);
+    cache.delPrefix(`caste_${orgKey}_`);
+    cache.delPrefix(`community_${orgKey}_`);
+
+    res.json({
+      success: true,
+      message: `परिवार के सभी ${result.modifiedCount} सदस्यों के लिए जाति '${cleanCaste}' सफलतापूर्वक अपडेट की गई।`,
+      modifiedCount: result.modifiedCount,
+      caste: cleanCaste
+    });
+  } catch (err) {
+    console.error('Family caste update failed:', err.message);
+    res.status(500).json({ message: 'परिवार की जाति अपडेट करने में त्रुटि आई।' });
   }
 });
 

@@ -145,12 +145,32 @@ voterSchema.index(
 const slipDispatchSchema = new mongoose.Schema({
   _id: { type: String, default: () => `disp_${Date.now()}_${Math.random().toString(36).substring(2, 7)}` },
   voterId: { type: String, required: true, index: true },
-  voterEpic: { type: String, required: true },
+  voterEpic: { type: String, default: '' },
   voterName: { type: String, required: true },
   recipientPhone: { type: String, required: true },
-  slipType: { type: String, enum: ['individual', 'family'], default: 'individual' },
-  dispatchType: { type: String, enum: ['whatsapp', 'manual_whatsapp', 'sms'], default: 'whatsapp' },
-  status: { type: String, required: true },
+  slipType: { type: String, default: 'individual' },
+  dispatchType: { type: String, default: 'whatsapp' },
+  status: { type: String, required: true }, // 'sent' | 'delivered' | 'read' | 'failed' | 'sending' | 'manual_link'
+  deliveredAt: { type: Date, default: null },
+  readAt: { type: Date, default: null },
+  messageContent: { type: String, default: '' },
+  templateName: { type: String, default: '' },
+  mediaUrl: { type: String, default: '' },
+  campaignName: { type: String, default: '' },
+  windowExpiresAt: { type: Date, default: null },
+  conversationHistory: {
+    type: [
+      {
+        direction: { type: String, enum: ['outbound', 'inbound'], default: 'outbound' },
+        text: { type: String, default: '' },
+        mediaUrl: { type: String, default: '' },
+        status: { type: String, default: 'sent' }, // sent, delivered, read
+        timestamp: { type: Date, default: Date.now },
+        messageId: { type: String, default: null }
+      }
+    ],
+    default: []
+  },
   providerMessageId: { type: String, default: null, index: true },
   errorMessage: { type: String, default: null },
   organizationId: { type: String, required: true, index: true },
@@ -161,6 +181,7 @@ const slipDispatchSchema = new mongoose.Schema({
 slipDispatchSchema.index({ organizationId: 1, createdAt: -1 });
 slipDispatchSchema.index({ organizationId: 1, status: 1, createdAt: -1 });
 slipDispatchSchema.index({ organizationId: 1, dispatchType: 1, createdAt: -1 });
+slipDispatchSchema.index({ organizationId: 1, campaignName: 1, createdAt: -1 });
 
 const leadSchema = new mongoose.Schema({
   _id: { type: String, required: true },
