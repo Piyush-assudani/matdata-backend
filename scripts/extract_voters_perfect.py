@@ -1271,7 +1271,12 @@ COMPOUND_NAME_SUFFIXES = [
     ('राम', ' Ram'), ('लाल', ' Lal'), ('कुमार', ' Kumar'), ('कुमारी', ' Kumari'),
     ('सिंह', ' Singh'), ('कंवर', ' Kanwar'), ('देवी', ' Devi'), ('बाई', ' Bai'),
     ('प्रसाद', ' Prasad'), ('प्रकाश', ' Prakash'), ('चंद', ' Chand'), ('चन्द', ' Chand'),
-    ('नाथ', ' Nath'), ('दास', ' Das'), ('शंकर', ' Shanker'), ('चन्द्र', ' Chandra')
+    ('नाथ', ' Nath'), ('दास', ' Das'), ('शंकर', ' Shanker'), ('चन्द्र', ' Chandra'),
+    ('धर', ' Dhar'), ('भूषण', ' Bhushan'), ('शेखर', ' Shekhar'), ('वल्लभ', ' Vallabh'),
+    ('कांत', ' Kant'), ('कान्त', ' Kant'), ('मोहन', ' Mohan'), ('सुंदर', ' Sundar'),
+    ('सुन्दर', ' Sundar'), ('रंजन', ' Ranjan'), ('वर्धन', ' Vardhan'), ('मणि', ' Mani'),
+    ('मित्र', ' Mitra'), ('पुत्र', ' Putra'), ('स्वरूप', ' Swaroop'), ('नारायण', ' Narayan'),
+    ('ेंद्र', 'endra'), ('ेन्द्र', 'endra'), ('इंद्र', 'indra'), ('इन्द्र', 'indra')
 ]
 
 KNOWN_SECTION_TRANSLATIONS = {
@@ -1383,8 +1388,9 @@ def transliterate_token(token: str) -> str:
 
         is_last = (uIdx == num_units - 1)
         if is_last:
-            # Word-final 'dra' exception (e.g. Narendra, Dharmendra, Rajendra)
-            if base in ('dr', 'ndr'):
+            prev_u = units[uIdx - 1] if uIdx > 0 else None
+            is_conjunct_end = prev_u and prev_u.get('matra') == '्'
+            if base in ('dr', 'ndr') or is_conjunct_end:
                 out.append(base + 'a')
             else:
                 out.append(base)
@@ -1393,13 +1399,13 @@ def transliterate_token(token: str) -> str:
         next_u = units[uIdx + 1]
         prev_u = units[uIdx - 1] if uIdx > 0 else None
         delete_schwa = False
-        if next_u and next_u['type'] == 'CONS' and next_u['matra'] == '्':
+        is_penultimate = (uIdx + 1 == num_units - 1 and not next_u.get('matra'))
+        if is_penultimate:
+            delete_schwa = False
+        elif next_u and next_u['type'] == 'CONS' and next_u['matra'] == '्':
             delete_schwa = False
         elif next_u and next_u['type'] == 'CONS' and next_u['matra']:
             if prev_u and prev_u.get('matra') != '्':
-                delete_schwa = True
-        elif next_u and next_u['type'] == 'CONS' and next_u['char'] in ('र', 'ल') and num_units >= 4:
-            if uIdx >= 2:
                 delete_schwa = True
 
         out.append(base if delete_schwa else base + 'a')
