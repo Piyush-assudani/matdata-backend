@@ -24,6 +24,14 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'python_engine'))
+try:
+    from sandhi_viched import sandhi_viched
+except Exception:
+    def sandhi_viched(text):
+        return text
+
 # ==============================================================================
 # 1. MASTER GLYPH-HASH DICTIONARY (Universal SEC Rajasthan Voter PDFs)
 # ==============================================================================
@@ -1035,8 +1043,8 @@ def extract_single_pdf(pdf_path, default_ward=None, default_part=None, include_d
                         elif f == '/9' and x >= cb_x + 70.0:
                             gen_hashes.extend([ch_hash.get(c, '') for c in b])
 
-                name_hi = decode_hashes_to_hindi(name_hashes)
-                rel_hi = decode_hashes_to_hindi(rel_hashes)
+                name_hi = sandhi_viched(decode_hashes_to_hindi(name_hashes))
+                rel_hi = sandhi_viched(decode_hashes_to_hindi(rel_hashes))
                 rel_t_hi = decode_hashes_to_hindi(rel_type_hashes)
                 gen_hi = decode_hashes_to_hindi(gen_hashes)
 
