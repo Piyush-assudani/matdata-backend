@@ -451,6 +451,16 @@ GOV_LEXICON_RULES = [
     (dev_word('उत्मचंद'), 'उत्तमचंद'),
     (dev_word('उत्म चंद'), 'उत्तमचंद'),
     (dev_word('उत्म'), 'उत्तम'),
+    (dev_word('उत्तम चपद'), 'उत्तमचंद'),
+    (dev_word('उतम चपद'), 'उत्तमचंद'),
+    (dev_word('चपद'), 'चंद'),
+
+    # 7b. Hasmukh & Paliwal fixes
+    (dev_word('हसमचरख'), 'हसमुख'),
+    (dev_word('हसमचख'), 'हसमुख'),
+    (dev_word('हसमख'), 'हसमुख'),
+    (dev_word('पाललवालल'), 'पालीवालों'),
+    (dev_word('पाललवाल'), 'पालीवाल'),
     
     # 8. Devi / Glued Suffix fixes
     (re.compile(r'([^\s])तेवी(?=[^\u0900-\u097F]|$)'), r'\1 देवी'),
@@ -1020,8 +1030,8 @@ def extract_single_pdf(pdf_path, default_ward=None, default_part=None, include_d
                             p_age = int(txt)
                             if 18 <= p_age <= 125:
                                 age_val = p_age
-                            elif p_age < 18:
-                                age_val = 20 + p_age
+                            elif 0 < p_age < 18:
+                                age_val = p_age
                         elif f == '/9' and x >= cb_x + 70.0:
                             gen_hashes.extend([ch_hash.get(c, '') for c in b])
 
@@ -1034,7 +1044,19 @@ def extract_single_pdf(pdf_path, default_ward=None, default_part=None, include_d
                 rel_hi = strip_name_from_relative(name_hi, rel_hi)
 
                 rel_type = "पति" if "पति" in rel_t_hi else ("माता" if "माता" in rel_t_hi else "पिता")
-                gender = "स्त्री" if ("स्त्र" in gen_hi or rel_type == "पति") else "पुरुष"
+                
+                # Multi-layer gender detection
+                FEMALE_NAME_MARKERS = {'देवी', 'कंवर', 'बाई', 'कुमारी', 'बेगम', 'बानू', 'कांता', 'शांता', 'कमला', 'मंजू', 'सुशीला', 'संतोष', 'पूजा', 'रेखा', 'अनिता', 'सुनीता', 'प्रियंका', 'दीक्षा', 'कविता', 'आशा', 'ममता', 'संगीता', 'मोनिका', 'सरोज', 'ललिता', 'उर्मिला', 'विमला', 'किरण', 'पप्पूड़ी', 'बदामी'}
+                MALE_NAME_MARKERS = {'राम', 'लाल', 'सिंह', 'कुमार', 'चन्द', 'चंद', 'प्रसाद', 'दीन', 'नाथ', 'गिरी', 'पूरी', 'पुरी', 'प्रकाश', 'भंवर', 'किशन', 'गोपाल', 'महेन्द्र', 'सुरेन्द्र', 'राजेन्द्र', 'नरेश', 'मुकेश', 'दिनेश', 'सुरेश', 'रमेश', 'राकेश', 'अनिल', 'सुनील', 'विकास', 'अशोक', 'विनोद', 'प्रमोद', 'प्रदीप', 'संदीप', 'दीपक', 'मनोज', 'संजय', 'अजय', 'विजय', 'चिराग', 'हसमुख', 'नेमाराम'}
+                
+                if rel_type == "पति" or "स्त्र" in gen_hi or "महिला" in gen_hi:
+                    gender = "स्त्री"
+                elif any(fm in name_hi for fm in FEMALE_NAME_MARKERS):
+                    gender = "स्त्री"
+                elif any(mm in name_hi for mm in MALE_NAME_MARKERS):
+                    gender = "पुरुष"
+                else:
+                    gender = "स्त्री" if "स्त्र" in gen_hi else "पुरुष"
                 status = "विलोपित" if s_num in deletions_serials else "सक्रिय"
 
                 # Filter out deleted voters when include_deleted is False (default)
