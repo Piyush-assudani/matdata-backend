@@ -1,13 +1,8 @@
-# Matdata Portal Electoral Roll PDF-to-Excel Engine Requirements
-# Run: pip install -r requirements.txt
+# Matdata Portal Electoral Roll PDF Engine Requirements (Lightweight & High-Speed)
+# Run: pip install -r requirements.txt --break-system-packages
 
 pypdf>=4.0.0
 openpyxl>=3.1.0
 PyMuPDF>=1.24.0
-pytesseract>=0.3.10
 Pillow>=10.0.0
-opencv-python>=4.8.0
-numpy>=1.24.0
-torch>=2.0.0
-easyocr>=1.7.0
 indic-nlp-library>=0.92
