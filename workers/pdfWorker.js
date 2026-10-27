@@ -32,28 +32,36 @@ function stripNameFromRelative(voterName, relName) {
   let rn = String(relName).trim();
   if (!rn || !vn) return rn;
 
-  if (rn.startsWith(vn)) {
-    rn = rn.slice(vn.length).trim();
-  }
+  const HONORIFIC_SUFFIXES = new Set(['राम', 'देवी', 'लाल', 'सिंह', 'कुमार', 'कुमारी', 'बाई', 'प्रसाद', 'दास', 'चंद', 'चन्द', 'नाथ', 'कंवर']);
 
-  const vnTokens = vn.split(/\s+/).filter(Boolean);
-  for (const tok of vnTokens) {
-    if (tok.length >= 2 && rn.startsWith(tok)) {
-      rn = rn.slice(tok.length).trim();
+  // 1. Exact full voter name prefix match
+  if (rn.startsWith(vn) && rn.length > vn.length) {
+    const remainder = rn.slice(vn.length).trim();
+    if (remainder.length >= 3 && !HONORIFIC_SUFFIXES.has(remainder)) {
+      return remainder;
     }
   }
 
+  // 2. Token match: Only if voter has 2+ words and rel begins with ALL of them
+  const vnTokens = vn.split(/\s+/).filter(Boolean);
   const rnTokens = rn.split(/\s+/).filter(Boolean);
-  if (rnTokens.length > 1 && vnTokens.length > 0) {
-    const firstR = rnTokens[0];
-    const firstV = vnTokens[0];
-    if (firstR.length >= 2) {
-      if (firstR.includes(firstV) || firstV.includes(firstR) || levenshtein(firstR, firstV) <= 2) {
-        rn = rnTokens.slice(1).join(' ').trim();
+  if (vnTokens.length >= 2 && rnTokens.length > vnTokens.length) {
+    let allMatch = true;
+    for (let i = 0; i < vnTokens.length; i++) {
+      if (rnTokens[i] !== vnTokens[i]) {
+        allMatch = false;
+        break;
+      }
+    }
+    if (allMatch) {
+      const remainder = rnTokens.slice(vnTokens.length).join(' ').trim();
+      if (remainder.length >= 3 && !HONORIFIC_SUFFIXES.has(remainder)) {
+        return remainder;
       }
     }
   }
 
+  // Safe guard: Never strip father's first name just because it rhymes/is similar with voter!
   return rn;
 }
 

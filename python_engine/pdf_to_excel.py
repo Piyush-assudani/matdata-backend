@@ -335,6 +335,7 @@ RAJASTHAN_LEXICON = {
     'रामस्वरूप', 'घनश्याम', 'भागचंद', 'नारायण', 'चंद्रप्रकाश',
     'रामकिशन', 'ओंकार', 'मूलचंद', 'हरकिशन', 'रामनिवास',
     'बिरजू', 'छगन', 'पन्ना', 'फूल', 'मोती', 'हीरा', 'लाडली',
+    'ककली', 'मूमली', 'आम्बु', 'प्रतापराम', 'सेवाराम', 'कालूराम', 'प्रताप',
 }
 
 def levenshtein_dist(s1: str, s2: str) -> int:
@@ -357,8 +358,12 @@ def levenshtein_dist(s1: str, s2: str) -> int:
 
 def strip_name_from_relative(voter_name: str, rel_name: str) -> str:
     """
-    Prevents voter name from repeating inside father/husband relative name.
-    Handles exact match, token prefix match, and fuzzy 1-2 char OCR typo variants.
+    Safely prevents voter name from repeating inside father/husband relative name.
+    CRITICAL SAFEGUARDS:
+    1. NEVER strips if the remainder is just a single suffix like 'राम', 'लाल', 'देवी', 'सिंह'.
+       (Preventing data corruption where 'सेवाराम', 'कालूराम' became just 'राम').
+    2. NEVER uses fuzzy 1-2 char edit distance between voter name and relative name,
+       because family members frequently have rhyming/similar names ('रेखा' & 'सेवाराम', 'कमली' & 'कालूराम').
     """
     if not voter_name or not rel_name:
         return rel_name or ""
@@ -366,35 +371,44 @@ def strip_name_from_relative(voter_name: str, rel_name: str) -> str:
     rn = rel_name.strip()
     if not rn or not vn:
         return rn
-    
-    # 1. Exact prefix match (e.g. voter="नगराम", rel="नगराम नखतराम" -> "नखतराम")
-    if rn.startswith(vn):
-        rn = rn[len(vn):].strip()
-        
-    # 2. Token prefix match (e.g. voter="राधा कुमारी", rel="राधा कुमारी पदमा राम" -> "पदमा राम")
+
+    HONORIFIC_SUFFIXES = {'राम', 'देवी', 'लाल', 'सिंह', 'कुमार', 'कुमारी', 'बाई', 'प्रसाद', 'दास', 'चंद', 'चन्द', 'नाथ', 'कंवर'}
+
+    # 1. Exact full voter name prefix match (e.g. voter="रेखा देवी", rel="रेखा देवी सेवाराम" -> "सेवाराम")
+    if rn.startswith(vn) and len(rn) > len(vn):
+        remainder = rn[len(vn):].strip()
+        if len(remainder) >= 3 and remainder not in HONORIFIC_SUFFIXES:
+            return remainder
+
+    # 2. Token match: Only if voter has 2+ words and rel begins with ALL of them
     vn_tokens = vn.split()
-    for tok in vn_tokens:
-        if len(tok) >= 2 and rn.startswith(tok):
-            rn = rn[len(tok):].strip()
-            
-    # 3. Fuzzy first-word match (e.g. voter="गंगा", relative="गगा रासुदेव" -> strip "गगा")
-    # or voter="रासुदेव", relative="रासुदा नखतराम" -> strip "रासुदा"
     rn_tokens = rn.split()
-    if len(rn_tokens) > 1 and len(vn_tokens) > 0:
-        first_r = rn_tokens[0]
-        first_v = vn_tokens[0]
-        if len(first_r) >= 2:
-            if first_r in vn or vn in first_r or levenshtein_dist(first_r, first_v) <= 2:
-                rn = " ".join(rn_tokens[1:]).strip()
+    if len(vn_tokens) >= 2 and len(rn_tokens) > len(vn_tokens):
+        if rn_tokens[:len(vn_tokens)] == vn_tokens:
+            remainder = " ".join(rn_tokens[len(vn_tokens):]).strip()
+            if len(remainder) >= 3 and remainder not in HONORIFIC_SUFFIXES:
+                return remainder
 
     return rn
 
 
 def descramble_sec_glyphs(w: str) -> str:
-    """De-scrambles Rajasthan SEC/ECI font glyph desynchronizations (e.g. 'च' -> 'ु')"""
+    """De-scrambles Rajasthan SEC/ECI font glyph desynchronizations & common OCR errors"""
     if not w:
         return ""
     s = w
+    # Consonant drops / missing padastha & conjuncts
+    s = re.sub(r'\bपताप\s*राम\b', 'प्रतापराम', s)
+    s = re.sub(r'\bपताप\b', 'प्रताप', s)
+    s = re.sub(r'\bआमबु\s*देवी\b', 'आम्बु देवी', s)
+    s = re.sub(r'\bआमबु\b', 'आम्बु', s)
+    s = re.sub(r'\bपकाश\b', 'प्रकाश', s)
+    s = re.sub(r'\bपमोद\b', 'प्रमोद', s)
+    s = re.sub(r'\bपदीप\b', 'प्रदीप', s)
+    s = re.sub(r'\bपेम\b', 'प्रेम', s)
+    s = re.sub(r'\bपेरणा\b', 'प्रेरणा', s)
+
+    # Systematic glyph substitutions
     s = re.sub(r'([क-ह])च([क-ह])', r'\1ु\2', s)
     s = re.sub(r'([क-ह])चर्', r'\1ुर्', s)
     s = re.sub(r'द[कलग]रल', 'देवी', s)

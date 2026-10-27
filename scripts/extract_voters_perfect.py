@@ -574,7 +574,11 @@ GOV_LEXICON_RULES = [
     (dev_word('ओमपकाश'), 'ओमप्रकाश'),
     (dev_word('ओपमप्रकाश'), 'ओमप्रकाश'),
     (dev_word('प्रेमपकाश'), 'प्रेमप्रकाश'),
-    (dev_word('प्रेममप्रकाश'), 'प्रेमप्रकाश')
+    (dev_word('प्रेममप्रकाश'), 'प्रेमप्रकाश'),
+    (re.compile(r'\bपताप\s*राम\b'), 'प्रतापराम'),
+    (dev_word('पताप'), 'प्रताप'),
+    (re.compile(r'\bआमबु\s*देवी\b'), 'आम्बु देवी'),
+    (dev_word('आमबु'), 'आम्बु'),
 ]
 
 ENDRA_CONJUNCT_RULES = [
@@ -641,22 +645,29 @@ def normalize_electoral_hindi(text: str) -> str:
     return re.sub(r'\s+', ' ', s).strip()
 
 def strip_name_from_relative(voter_name: str, rel_name: str) -> str:
-    """Strictly prevents voter name from repeating inside father/husband name."""
+    """Strictly prevents voter name from repeating inside father/husband name without corrupting suffixes."""
     if not voter_name or not rel_name:
         return rel_name or ""
     vn = voter_name.strip()
     rn = rel_name.strip()
     if not rn or not vn:
         return rn
-    if rn.startswith(vn):
-        rn = rn[len(vn):].strip()
-        return rn
+
+    HONORIFIC_SUFFIXES = {'राम', 'देवी', 'लाल', 'सिंह', 'कुमार', 'कुमारी', 'बाई', 'प्रसाद', 'दास', 'चंद', 'चन्द', 'नाथ', 'कंवर'}
+
+    if rn.startswith(vn) and len(rn) > len(vn):
+        remainder = rn[len(vn):].strip()
+        if len(remainder) >= 3 and remainder not in HONORIFIC_SUFFIXES:
+            return remainder
+
     vn_tokens = vn.split()
     rn_tokens = rn.split()
-    if len(vn_tokens) > 0 and len(rn_tokens) > 1:
-        first_v = vn_tokens[0]
-        if rn_tokens[0] == first_v and len(first_v) >= 2 and first_v not in ['देवी', 'राम', 'लाल', 'सिंह', 'बाई', 'कुमार']:
-            rn = " ".join(rn_tokens[1:]).strip()
+    if len(vn_tokens) >= 2 and len(rn_tokens) > len(vn_tokens):
+        if rn_tokens[:len(vn_tokens)] == vn_tokens:
+            remainder = " ".join(rn_tokens[len(vn_tokens):]).strip()
+            if len(remainder) >= 3 and remainder not in HONORIFIC_SUFFIXES:
+                return remainder
+
     return rn
 
 # ==============================================================================
