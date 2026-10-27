@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const { performLocalOCR, cleanHindiText, cleanHouseNo } = require('../lib/ocrService');
 const { isKrutiDevText, convertKrutiDevToUnicode, autoConvertText, isPUAText } = require('../lib/krutiDevConverter');
 const { fixCorruptedHindi } = require('../lib/hindiDictionary');
-const { fuzzyCorrectName } = require('../lib/fuzzyNameMatcher');
+const { fuzzyCorrectName, cleanVillageOrSectionName } = require('../lib/fuzzyNameMatcher');
 const { needsAiRepair, repairVoterCardJs } = require('../lib/openrouterFallback');
 const { repairVoterCardGroq, reverifyVotersListGroq } = require('../lib/groqFallback');
 
@@ -287,14 +287,32 @@ const ExcelJS = require('exceljs');
               genderVal = 'पुरुष';
             }
 
-            const villageEn = cellVal(row, 'villageName', 17);
-            const villageHi = cellVal(row, 'villageNameHi', 18);
+            const villageEn = cleanVillageOrSectionName(cellVal(row, 'villageName', 17));
+            const villageHi = cleanVillageOrSectionName(cellVal(row, 'villageNameHi', 18));
             let statusVal = cellVal(row, 'status') || 'Active';
             if (cleanName.includes('विलोपित') || (epic && epic.includes('विलोपित')) || (rawSerial && String(rawSerial).includes('विलोपित'))) {
               statusVal = 'Deleted';
             }
 
             const cleanEpic = (epic && epic !== '-' && epic.trim() !== '') ? epic.trim() : `VOTER_W${rowWard}_P${rowBooth}_S${serialVal || (finalVoterList.length + 1)}`;
+
+            // Secondary safety net: Prevent duplicate EPIC entries in finalVoterList
+            const existingVoterIdx = (cleanEpic && !cleanEpic.startsWith('VOTER_') && !cleanEpic.startsWith('UNREADABLE_'))
+              ? finalVoterList.findIndex(v => v.epic === cleanEpic)
+              : -1;
+
+            if (existingVoterIdx !== -1) {
+              if (statusVal === 'Deleted') {
+                finalVoterList[existingVoterIdx].status = 'Deleted';
+              }
+              if ((!finalVoterList[existingVoterIdx].houseNo || finalVoterList[existingVoterIdx].houseNo === '-') && finalHouse && finalHouse !== '-') {
+                finalVoterList[existingVoterIdx].houseNo = finalHouse;
+              }
+              if (!finalVoterList[existingVoterIdx].age && ageVal) {
+                finalVoterList[existingVoterIdx].age = ageVal;
+              }
+              return;
+            }
             finalVoterList.push({
               serialNo: serialVal || (finalVoterList.length + 1),
               epic: cleanEpic,
