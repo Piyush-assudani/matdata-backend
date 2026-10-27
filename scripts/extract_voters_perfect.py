@@ -1488,8 +1488,8 @@ def save_templated_voter_excel(voters_list, output_file_path, template_path=None
     if not template_path:
         script_dir = os.path.dirname(os.path.abspath(__file__))
         candidates = [
-            "/Users/piyush/Documents/moxrathore_projects/matdata_portal/voter-import-template.xlsx",
-            os.path.abspath(os.path.join(script_dir, "../../../..", "voter-import-template.xlsx")),
+            os.path.abspath(os.path.join(script_dir, "../data", "voter-import-template.xlsx")),
+            os.path.abspath(os.path.join(script_dir, "..", "voter-import-template.xlsx")),
             os.path.abspath(os.path.join(script_dir, "voter-import-template.xlsx")),
         ]
         for c in candidates:

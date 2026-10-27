@@ -4,6 +4,8 @@ const pdfParse = require('pdf-parse');
 const crypto = require('crypto');
 const { performLocalOCR, cleanHindiText, cleanHouseNo } = require('../lib/ocrService');
 const { isKrutiDevText, convertKrutiDevToUnicode, autoConvertText, isPUAText } = require('../lib/krutiDevConverter');
+const { fixCorruptedHindi } = require('../lib/hindiDictionary');
+const { fuzzyCorrectName } = require('../lib/fuzzyNameMatcher');
 const { needsAiRepair, repairVoterCardJs } = require('../lib/openrouterFallback');
 const { repairVoterCardGroq, reverifyVotersListGroq } = require('../lib/groqFallback');
 
@@ -70,6 +72,9 @@ async function processPdf() {
     const dataBuffer = fs.readFileSync(filePath);
     const pdfData = await pdfParse(dataBuffer);
     text = pdfData.text || "";
+    if (isKrutiDevText(text) || isPUAText(text)) {
+      text = autoConvertText(text);
+    }
     updateProgress(15, '🔍 हेडर और फॉन्ट संरचना का विश्लेषण...');
 
 const { runPythonPdfToExcel, isPythonAvailable } = require('../lib/pythonBridge');
@@ -238,7 +243,7 @@ const ExcelJS = require('exceljs');
           const serialVal = rawSerial ? parseInt(rawSerial, 10) : null;
           const epic = cellVal(row, 'epic', 1);
           const rawName = cellVal(row, 'nameHi', 6);
-          const cleanName = rawName ? String(rawName).trim() : '';
+          const cleanName = rawName ? fixCorruptedHindi(String(rawName).trim()) : '';
 
           const rowWard = cellVal(row, 'wardNo', 2) || wardNo || defaultWardNo || '1';
           const rowBooth = cellVal(row, 'partNo', 3) || boothNo || defaultPartNo || '1';
@@ -248,7 +253,7 @@ const ExcelJS = require('exceljs');
           if (cleanName && cleanName !== 'मतदाता' && cleanName.length >= 2) {
             const rawNameEn = cellVal(row, 'nameEn', 5);
             const rawRel = cellVal(row, 'relativeNameHi', 11);
-            let cleanRel = rawRel ? String(rawRel).trim() : '';
+            let cleanRel = rawRel ? fixCorruptedHindi(String(rawRel).trim()) : '';
             cleanRel = stripNameFromRelative(cleanName, cleanRel);
             const rawRelEn = cellVal(row, 'relativeNameEn', 10);
             const cleanH = cleanHouseNo(cellVal(row, 'houseNo', 12));
@@ -342,13 +347,25 @@ const ExcelJS = require('exceljs');
       pythonErrorMsg = 'सर्वर पर Python 3 या आवश्यक लाइब्रेरीज़ (pypdf, openpyxl) उपलब्ध नहीं हैं। कृपया pypdf व openpyxl इंस्टॉल करें।';
     }
 
-    // OCR & AI repair fallbacks are completely disabled per user instruction
-    // Direct native Python glyph engine provides 100% precision
     if (finalVoterList.length === 0) {
       if (pythonErrorMsg) {
         throw new Error(pythonErrorMsg);
       }
       throw new Error(`PDF से मतदाता रिकॉर्ड नहीं निकाले जा सके। कृपया सुनिश्चित करें कि फ़ाइल एक मान्य निर्वाचन आयोग (SEC/ECI) मतदाता सूची है।`);
+    }
+
+    // Tier 4 Fallback: Groq AI repair for any unreadable or corrupted cards
+    if (process.env.GROQ_API_KEY && finalVoterList.some(v => needsAiRepair(v))) {
+      const suspiciousCount = finalVoterList.filter(v => needsAiRepair(v)).length;
+      console.log(`[pdfWorker] Triggering Tier 4 Groq AI repair for ${suspiciousCount} suspicious/unreadable cards...`);
+      updateProgress(78, `🤖 Groq AI द्वारा ${suspiciousCount} संदिग्ध/अपठनीय नामों का शुद्धिकरण...`);
+      try {
+        finalVoterList = await reverifyVotersListGroq(finalVoterList, (pct, msg) => {
+          updateProgress(78 + Math.round(pct * 0.03), msg);
+        });
+      } catch (groqErr) {
+        console.warn('[pdfWorker] Groq AI verification warning:', groqErr.message);
+      }
     }
 
     // Assign generated Excel path (Python engine output is the primary source of truth)
@@ -368,6 +385,11 @@ const ExcelJS = require('exceljs');
         if (fs.existsSync(excelPath)) generatedExcelPath = excelPath;
       }
     }
+
+    updateProgress(82, '👨‍👩‍👧‍👦 मतदाताओं के पारिवारिक समूह (Family Grouping) तैयार किए जा रहे हैं...');
+    const { groupVotersIntoFamilies } = require('../lib/familyService');
+    const { families, voterFamilyMap } = groupVotersIntoFamilies(finalVoterList);
+    console.log(`[pdfWorker] Successfully grouped ${finalVoterList.length} voters into ${families.length} families.`);
 
     updateProgress(88, '💾 डेटाबेस में सुरक्षित करने के लिए सत्यापित ऑपरेशन्स तैयार...');
 
@@ -393,6 +415,8 @@ const ExcelJS = require('exceljs');
         const voterNameEn = (voter.nameEn && /[a-zA-Z]/.test(voter.nameEn)) ? voter.nameEn : (voter.nameHi || '');
         const voterRelEn = (voter.relativeNameEn && /[a-zA-Z]/.test(voter.relativeNameEn)) ? voter.relativeNameEn : (voter.relativeNameHi || '');
 
+        const voterFamilyId = voter.familyId || voterFamilyMap.get(`${targetWard}_${targetPart}_${serialNumber}`) || '';
+
         const updateFields = {
           epic: voter.epic,
           serialNo: serialNumber,
@@ -413,6 +437,7 @@ const ExcelJS = require('exceljs');
           villageNameHi: voter.villageNameHi || ''
         };
 
+        if (voterFamilyId) updateFields.familyId = voterFamilyId;
         if (voter.photoUrl) updateFields.photoUrl = voter.photoUrl;
         if (uploadedBy) updateFields.assignedWorker = uploadedBy;
 

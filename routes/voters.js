@@ -885,9 +885,29 @@ router.put('/:id', verifyToken, (req, res, next) => {
       query._id = id;
     }
     
+    const existingVoter = await Voter.findOne(query).select('nameHi relativeNameHi').lean();
     const voter = await Voter.findOneAndUpdate(query, { $set: updates }, { returnDocument: 'after' }).lean();
     
     if (!voter) return res.status(404).json({ message: 'Voter not found or access denied.' });
+
+    // 🧠 Dynamic Self-Learning Dictionary Feedback Loop:
+    // If admin or client manually corrected nameHi or relativeNameHi, save correction permanently!
+    try {
+      const { learnNameCorrection } = require('../lib/dictionaryService');
+      if (updates.nameHi && existingVoter && existingVoter.nameHi !== updates.nameHi) {
+        void learnNameCorrection(existingVoter.nameHi, updates.nameHi, `voter_edit_${voter._id}`);
+      } else if (updates.nameHi) {
+        void learnNameCorrection('', updates.nameHi, `voter_edit_${voter._id}`);
+      }
+
+      if (updates.relativeNameHi && existingVoter && existingVoter.relativeNameHi !== updates.relativeNameHi) {
+        void learnNameCorrection(existingVoter.relativeNameHi, updates.relativeNameHi, `voter_rel_edit_${voter._id}`);
+      } else if (updates.relativeNameHi) {
+        void learnNameCorrection('', updates.relativeNameHi, `voter_rel_edit_${voter._id}`);
+      }
+    } catch (learnErr) {
+      console.warn('[VotersRoute] learnNameCorrection warning:', learnErr.message);
+    }
 
     // Invalidate Cache for this organization
     const orgKey = query.organizationId || req.user.organizationId || 'org_default';

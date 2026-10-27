@@ -573,6 +573,9 @@ router.put('/update-unreadable-voter', verifyToken, isAdmin, async (req, res) =>
       return res.status(404).json({ error: 'मतदाता रिकॉर्ड नहीं मिला।' });
     }
 
+    const oldName = voter.nameHi;
+    const oldRel = voter.relativeNameHi;
+
     if (nameHi) voter.nameHi = String(nameHi).trim();
     if (nameEn) voter.nameEn = String(nameEn).trim();
     if (relativeNameHi !== undefined) voter.relativeNameHi = String(relativeNameHi).trim();
@@ -590,6 +593,21 @@ router.put('/update-unreadable-voter', verifyToken, isAdmin, async (req, res) =>
     voter.notes = 'अपठनीय कार्ड को सफलतापूर्वक संपादित करके सक्रिय किया गया।';
 
     await voter.save();
+
+    // 🧠 Dynamic Self-Learning Dictionary Feedback Loop:
+    try {
+      const { learnNameCorrection } = require('../lib/dictionaryService');
+      if (nameHi && oldName && oldName !== String(nameHi).trim()) {
+        void learnNameCorrection(oldName, String(nameHi).trim(), `admin_unreadable_fix_${voter._id}`);
+      } else if (nameHi) {
+        void learnNameCorrection('', String(nameHi).trim(), `admin_unreadable_fix_${voter._id}`);
+      }
+      if (relativeNameHi && oldRel && oldRel !== String(relativeNameHi).trim()) {
+        void learnNameCorrection(oldRel, String(relativeNameHi).trim(), `admin_unreadable_rel_${voter._id}`);
+      }
+    } catch (lErr) {
+      console.warn('[AdminPdf] learnNameCorrection warning:', lErr.message);
+    }
 
     // Invalidate cache
     try {

@@ -213,7 +213,7 @@ async function runTests() {
   try {
     const badRes = await makeRequest({ path: '/api/non_existent_route_404_trigger' });
     assert(!badRes.body.includes('passwordHash'), 'No password hashes leaked in error response');
-    assert(!badRes.body.includes('/Users/piyush'), 'No absolute server file paths leaked in error response');
+    assert(!badRes.body.includes('/Users/') && !badRes.body.includes('/home/'), 'No absolute server file paths leaked in error response');
     assert(!badRes.body.includes('mongodb://'), 'No database connection strings leaked');
   } catch (err) {
     assert(false, `Info leakage audit failed: ${err.message}`);

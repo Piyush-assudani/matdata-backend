@@ -390,28 +390,55 @@ def strip_name_from_relative(voter_name: str, rel_name: str) -> str:
     return rn
 
 
+def descramble_sec_glyphs(w: str) -> str:
+    """De-scrambles Rajasthan SEC/ECI font glyph desynchronizations (e.g. 'च' -> 'ु')"""
+    if not w:
+        return ""
+    s = w
+    s = re.sub(r'([क-ह])च([क-ह])', r'\1ु\2', s)
+    s = re.sub(r'([क-ह])चर्', r'\1ुर्', s)
+    s = re.sub(r'द[कलग]रल', 'देवी', s)
+    s = re.sub(r'दकर(?=\s|$)', 'देव', s)
+    s = re.sub(r'लरल(?=\s|$)', 'लाल', s)
+    s = re.sub(r'ररम(?=\s|$)', 'राम', s)
+    s = re.sub(r'कचमरर(?=\s|$)', 'कुमार', s)
+    s = re.sub(r'पकरश(?=\s|$)', 'प्रकाश', s)
+    s = re.sub(r'([क-ह])मरा(?=\s|$)', r'\1र्मा', s)
+    s = re.sub(r'([क-ह])मरर(?=\s|$)', r'\1र्मा', s)
+    s = re.sub(r'([ािीुूृेैोौं्])\1+', r'\1', s)
+    return s
+
+
 def fuzzy_lexicon_correct(name: str) -> str:
     """
     Pillar 5: Custom Lexicon & Levenshtein Correction
-    Replaces minor OCR typos (e.g. 'श्यान' -> 'श्याम', 'समितरा' -> 'सुमित्रा')
-    using fuzzy dictionary matching.
+    Replaces font glyph corruptions ('दचर्गा' -> 'दुर्गा', 'कचमार' -> 'कुमार')
+    and minor OCR typos using first-letter bucketing & Levenshtein distance.
+    Safe-guard: Already valid Indian names are never mutated.
     """
     if not name:
         return ""
     words = name.split()
     corrected_words = []
-    for w in words:
+    for raw_w in words:
+        if raw_w in RAJASTHAN_LEXICON:
+            corrected_words.append(raw_w)
+            continue
+        w = descramble_sec_glyphs(raw_w)
         if w in RAJASTHAN_LEXICON:
             corrected_words.append(w)
             continue
         best_match = w
         min_d = 99
+        first_char = w[0] if w else ''
         for candidate in RAJASTHAN_LEXICON:
-            if abs(len(w) - len(candidate)) <= 1:
+            if candidate.startswith(first_char) and abs(len(w) - len(candidate)) <= 1:
                 d = levenshtein_dist(w, candidate)
                 if d < min_d and d <= 1:
                     min_d = d
                     best_match = candidate
+                    if d == 1:
+                        break
         corrected_words.append(best_match)
     return " ".join(corrected_words)
 
@@ -663,7 +690,10 @@ SEC_RAJASTHAN_DICTIONARY = {
     'करलपररम': 'कालूराम', 'अमरर ररम': 'अमरा राम', 'चजनरररम': 'चेनाराम',
     'जसपदर': 'यशोदा', 'मपतललरल': 'मोतीलाल', 'टलकप': 'टीकू', 'आसमररम': 'आसाराम',
     'आरतल': 'आरती', 'दकरललरल': 'देवीलाल', 'गणपत ररम': 'गणपत राम', 'अमरतल': 'अमृती',
-    'हसतच': 'हस्तू', 'आमबरररम': 'आंबाराम', 'गयरध�def clean_house_no(raw: str) -> str:
+    'हसतच': 'हस्तू', 'आमबरररम': 'आंबाराम'
+}
+
+def clean_house_no(raw: str) -> str:
     """
     Accurate House Number extraction and normalization for Indian Electoral Rolls.
     1. Converts Devanagari numerals (०-९ -> 0-9).
@@ -682,7 +712,7 @@ SEC_RAJASTHAN_DICTIONARY = {
     s = normalize_numerals(str(raw).strip())
     
     # Strip quotes, apostrophes, hashtags
-    s = re.sub(r'['"`‘’“”#]', '', s).strip()
+    s = re.sub(r'[\'"`‘’“”#]', '', s).strip()
     
     # Check invalid placeholders
     s_lower = s.lower()

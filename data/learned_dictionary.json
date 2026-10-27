@@ -275,8 +275,10 @@
     "1428919c17": "फ",
     "96ce23ca34": "क"
   },
-  "words": {},
+  "words": {
+    "दमगरश": "दिनेश"
+  },
   "total_glyphs": 279,
-  "total_words": 0,
-  "last_updated": "1792943954.3509753"
+  "total_words": 1,
+  "last_updated": "2026-10-27T17:10:55.233Z"
 }

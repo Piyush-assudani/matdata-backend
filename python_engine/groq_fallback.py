@@ -29,8 +29,9 @@ if not GROQ_API_KEY:
 
 GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODELS = [
-    "llama-3.3-70b-versatile",
-    "llama-3.1-8b-instant"
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-20b",
+    "qwen/qwen3.8-27b"
 ]
 
 ADMIN_WORDS = [
@@ -69,11 +70,18 @@ def needs_ai_repair(record: Dict[str, Any]) -> bool:
     return False
 
 
+GROQ_CIRCUIT_BREAKER = False
+
+
 def _call_groq_api(prompt: str, timeout: int = 8) -> Optional[str]:
-    if not GROQ_API_KEY:
+    global GROQ_CIRCUIT_BREAKER
+    if not GROQ_API_KEY or GROQ_CIRCUIT_BREAKER:
         return None
 
     for model in GROQ_MODELS:
+        if GROQ_CIRCUIT_BREAKER:
+            return None
+
         headers = {
             "Authorization": f"Bearer {GROQ_API_KEY}",
             "Content-Type": "application/json",
@@ -107,6 +115,12 @@ def _call_groq_api(prompt: str, timeout: int = 8) -> Optional[str]:
                 choices = result.get("choices", [])
                 if choices:
                     return choices[0].get("message", {}).get("content", "")
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 402):
+                print(f"⚠️ [GroqFallback] Groq HTTP {e.code} (Rate Limit/Quota). Circuit breaker tripped; proceeding with native engine.")
+                GROQ_CIRCUIT_BREAKER = True
+                return None
+            continue
         except Exception:
             continue
 

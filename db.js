@@ -72,33 +72,38 @@ const ensureSchema = async () => {
       console.log('✅ Master Admin updated: ID: matdata');
     }
 
-    // 3. Ensure Second Admin Account (Piyushassudani / 9413879444)
-    const secondPassHash = await bcrypt.hash('9413879444', 10);
-    let secondAdmin = await User.findOne({
-      $or: [{ username: /^Piyushassudani$/i }, { email: /^piyushassudani@/i }]
-    });
-    if (!secondAdmin) {
-      secondAdmin = await User.create({
-        _id: 'user_admin_piyushassudani',
-        username: 'Piyushassudani',
-        email: 'piyushassudani@matdataportal.com',
-        passwordHash: secondPassHash,
-        initialPassword: '9413879444',
-        fullName: 'Piyush Assudani (Admin)',
-        phone: '9413879444',
-        role: 'admin',
-        organizationId: defaultOrgId,
-        isActive: true,
+    // 3. Optional Second Admin Account (Configurable via environment variables)
+    const secondAdminUser = (process.env.SECOND_ADMIN_USERNAME || '').trim();
+    if (secondAdminUser) {
+      const secondAdminPass = process.env.SECOND_ADMIN_PASSWORD || 'ChangeMe123!';
+      const secondPassHash = await bcrypt.hash(secondAdminPass, 10);
+      const secondAdminEmail = (process.env.SECOND_ADMIN_EMAIL || `${secondAdminUser.toLowerCase()}@chunavranniti.com`).trim();
+      const secondAdminPhone = (process.env.SECOND_ADMIN_PHONE || '9876543210').trim();
+      const secondAdminName = (process.env.SECOND_ADMIN_FULL_NAME || `${secondAdminUser} (व्यवस्थापक)`).trim();
+
+      let secondAdmin = await User.findOne({
+        $or: [{ username: new RegExp(`^${secondAdminUser}$`, 'i') }, { email: new RegExp(`^${secondAdminEmail}$`, 'i') }]
       });
-      console.log('✅ Second Admin created: ID: Piyushassudani, Pass: 9413879444');
-    } else {
-      secondAdmin.username = 'Piyushassudani';
-      secondAdmin.passwordHash = secondPassHash;
-      secondAdmin.initialPassword = '9413879444';
-      secondAdmin.role = 'admin';
-      secondAdmin.isActive = true;
-      await secondAdmin.save();
-      console.log('✅ Second Admin updated: ID: Piyushassudani');
+      if (!secondAdmin) {
+        secondAdmin = await User.create({
+          _id: `user_admin_${secondAdminUser.toLowerCase()}`,
+          username: secondAdminUser,
+          email: secondAdminEmail,
+          passwordHash: secondPassHash,
+          initialPassword: secondAdminPass,
+          fullName: secondAdminName,
+          phone: secondAdminPhone,
+          role: 'admin',
+          organizationId: defaultOrgId,
+          isActive: true,
+        });
+        console.log(`✅ Second Admin initialized from ENV: ID: ${secondAdminUser}`);
+      } else {
+        secondAdmin.username = secondAdminUser;
+        secondAdmin.role = 'admin';
+        secondAdmin.isActive = true;
+        await secondAdmin.save();
+      }
     }
 
     // 4. Default admin fallback
