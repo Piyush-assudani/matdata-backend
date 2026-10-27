@@ -57,10 +57,10 @@ const authLimiter = rateLimit({
   validate: { trustProxy: false },
 });
 
-// 3. Upload Rate Limiter (Prevents server exhaustion from spam uploads)
+// 3. Upload Rate Limiter (Allows batch sequential uploads while protecting from flood attacks)
 const uploadLimiter = rateLimit({
   windowMs: 1 * 60 * 1000,
-  max: 15,
+  max: 120, // Allows up to 120 files per minute for sequential multi-PDF uploads
   message: { error: 'फाइल अपलोड की सीमा पार हो गई है। कृपया 1 मिनट बाद पुनः प्रयास करें।' },
   standardHeaders: true,
   legacyHeaders: false,

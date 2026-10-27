@@ -25,20 +25,11 @@ const upload = multer({
   limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit
 });
 
-const uploadJobs = new Map();
+const pdfQueue = require('../lib/pdfQueue');
 
-// Task 4: STRICT AUTOMATED CLEANUP (2-Hour Deletion)
+// Task 4: STRICT AUTOMATED CLEANUP (2-Hour Deletion for PDF files)
 cron.schedule('0 * * * *', () => {
   console.log('Running PDF cleanup cron job...');
-  
-  // Cleanup uploadJobs map (older than 2 hours)
-  const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
-  for (const [id, job] of uploadJobs.entries()) {
-    if (new Date(job.uploadedAt) < twoHoursAgo) {
-      uploadJobs.delete(id);
-    }
-  }
-
   fs.readdir(uploadDir, (err, files) => {
     if (err) return console.error('Cleanup error:', err);
     files.forEach(file => {
@@ -64,46 +55,34 @@ cron.schedule('0 * * * *', () => {
 // GET /jobs - to fetch recent upload jobs (SuperAdmin Only)
 router.get('/jobs', verifyToken, isAdmin, (req, res) => {
   const orgId = req.query.organizationId;
-  
-  // Deduplicate identical duplicate jobs in memory (same file, same org, within 20s)
-  const seenJobKeys = new Set();
-  for (const [id, job] of uploadJobs.entries()) {
-    const timeBucket = Math.floor(new Date(job.uploadedAt).getTime() / 20000);
-    const key = `${job.organizationId}_${job.filename}_${job.wardNo || ''}_${timeBucket}`;
-    if (seenJobKeys.has(key)) {
-      uploadJobs.delete(id);
-    } else {
-      seenJobKeys.add(key);
-    }
-  }
-
-  let jobs = Array.from(uploadJobs.values());
-  if (orgId) {
-    jobs = jobs.filter(j => j.organizationId === orgId);
-  }
-  jobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
+  const jobs = pdfQueue.getJobs(orgId);
   res.json(jobs);
 });
 
+// GET /queue-status - Real-time telemetry on the sequential PDF processing queue
+router.get('/queue-status', verifyToken, isAdmin, (req, res) => {
+  res.json(pdfQueue.getQueueStatus());
+});
+
 // DELETE /jobs/:id - remove single job from history (SuperAdmin Only)
-router.delete('/jobs/:id', verifyToken, isAdmin, (req, res) => {
+router.delete('/jobs/:id', verifyToken, isAdmin, async (req, res) => {
   const { id } = req.params;
-  if (uploadJobs.has(id)) {
-    uploadJobs.delete(id);
+  const deleted = await pdfQueue.deleteJob(id);
+  if (deleted) {
     return res.json({ success: true, message: 'जॉब हटा दी गई।' });
   }
   res.status(404).json({ error: 'Job not found' });
 });
 
 // DELETE /jobs - clear upload jobs (SuperAdmin Only)
-router.delete('/jobs', verifyToken, isAdmin, (req, res) => {
-  uploadJobs.clear();
+router.delete('/jobs', verifyToken, isAdmin, async (req, res) => {
+  await pdfQueue.clearJobs();
   res.json({ success: true, message: 'Upload history cleared.' });
 });
 
 // GET /download-excel/:id - Download generated Excel file for a PDF job
 router.get('/download-excel/:id', verifyToken, isAdmin, (req, res) => {
-  const job = uploadJobs.get(req.params.id);
+  const job = pdfQueue.getJob(req.params.id);
   if (!job || !job.excelPath || !fs.existsSync(job.excelPath)) {
     return res.status(404).json({ error: 'Excel फाइल उपलब्ध नहीं है या अभी प्रोसेस हो रही है।' });
   }
@@ -252,211 +231,27 @@ router.post('/upload', verifyToken, isAdmin, (req, res, next) => {
       // Always extract photos by default unless explicitly disabled by user
       const fileWithPhotos = withPhotos;
 
-      uploadJobs.set(jobId, {
+      const createdJob = await pdfQueue.enqueueJob({
         id: jobId,
         filename: file.originalname,
-        organizationId: organizationId,
-        wardNo: wardNo,
+        filePath,
+        organizationId,
+        wardNo,
         panchayat: globalPanchayat,
-        boothNo: boothNo,
-        uploadedBy: uploadedBy,
+        boothNo,
+        uploadedBy,
         withPhotos: fileWithPhotos,
-        listDescription: listDescription,
-        status: 'processing',
-        progress: 5,
-        stageMessage: fileWithPhotos ? '📄 PDF प्राप्त हुई (फोटो मोड चालू)...' : '📄 PDF फ़ाइल प्राप्त हुई, प्रक्रिया शुरू...',
-        extractedCount: 0,
-        uploadedAt: new Date().toISOString()
+        useOcr,
+        listDescription
       });
 
-      createdJobs.push({ jobId, filename: file.originalname, wardNo, panchayat: globalPanchayat, withPhotos: fileWithPhotos });
-
-      // Start worker thread
-      const worker = new Worker(path.join(__dirname, '../workers/pdfWorker.js'), {
-        workerData: {
-          filePath,
-          organizationId,
-          useOcr,
-          withPhotos: fileWithPhotos,
-          jobId,
-          wardNo,
-          boothNo,
-          panchayat: globalPanchayat,
-          uploadedBy
-        }
-      });
-
-      worker.on('message', async (msg) => {
-        if (msg.type === 'progress') {
-          uploadJobs.set(jobId, { 
-            ...uploadJobs.get(jobId), 
-            progress: typeof msg.data === 'number' ? msg.data : (msg.progress || 0),
-            stageMessage: msg.stage || uploadJobs.get(jobId)?.stageMessage || 'प्रोसेसिंग चालू है...'
-          });
-        } else if (msg.type === 'done') {
-          const operations = msg.data;
-          const epicsCount = msg.epicsCount;
-          
-          try {
-            if (operations && operations.length > 0) {
-              // Preserve existing photos if current upload did not extract photos
-              try {
-                const missingPhotoOps = operations.filter(op => !op.updateOne?.update?.$set?.photoUrl);
-                if (missingPhotoOps.length > 0) {
-                  const existingVoters = await Voter.find({
-                    organizationId,
-                    photoUrl: { $exists: true, $ne: '' }
-                  }, { serialNo: 1, epic: 1, photoUrl: 1, wardNo: 1 }).lean();
-
-                  const photoMapBySerial = new Map();
-                  const photoMapByEpic = new Map();
-                  for (const ev of existingVoters) {
-                    if (ev.serialNo) {
-                      photoMapBySerial.set(`${String(ev.wardNo || '').trim()}_${ev.serialNo}`, ev.photoUrl);
-                      photoMapBySerial.set(String(ev.serialNo), ev.photoUrl);
-                    }
-                    if (ev.epic) {
-                      photoMapByEpic.set(String(ev.epic).trim(), ev.photoUrl);
-                    }
-                  }
-
-                  for (const op of missingPhotoOps) {
-                    const f = op.updateOne?.filter;
-                    const s = op.updateOne?.update?.$set;
-                    if (f && s) {
-                      const existingUrl = photoMapBySerial.get(`${String(f.wardNo || '').trim()}_${f.serialNo}`)
-                        || photoMapBySerial.get(String(f.serialNo))
-                        || (s.epic ? photoMapByEpic.get(String(s.epic).trim()) : null);
-                      if (existingUrl) {
-                        s.photoUrl = existingUrl;
-                      }
-                    }
-                  }
-                }
-              } catch (photoPreserveErr) {
-                console.warn('[admin_pdf] Photo preservation check error:', photoPreserveErr.message);
-              }
-
-              const CHUNK_SIZE = 2500;
-              let processed = 0;
-              for (let i = 0; i < operations.length; i += CHUNK_SIZE) {
-                const chunk = operations.slice(i, i + CHUNK_SIZE);
-                await Voter.bulkWrite(chunk, { ordered: false });
-                processed += chunk.length;
-                const dbProgress = Math.floor((processed / operations.length) * 11);
-                uploadJobs.set(jobId, { 
-                  ...uploadJobs.get(jobId), 
-                  progress: 88 + dbProgress,
-                  stageMessage: `💾 सत्यापित डेटा डेटाबेस में सुरक्षित हो रहा है (${processed}/${operations.length})...`
-                });
-              }
-
-              // 🚀 AUTOMATIC WARD ROLL SYNCHRONIZATION:
-              // Remove any stale serials from previous uploads that are no longer in this roll.
-              try {
-                const activeSerialsByWard = new Map();
-                for (const op of operations) {
-                  const f = op.updateOne?.filter;
-                  if (f && f.wardNo && f.serialNo) {
-                    const key = `${f.wardNo}_${f.partNo || ''}`;
-                    if (!activeSerialsByWard.has(key)) {
-                      activeSerialsByWard.set(key, { wardNo: f.wardNo, partNo: f.partNo, serials: new Set() });
-                    }
-                    activeSerialsByWard.get(key).serials.add(f.serialNo);
-                  }
-                }
-                for (const { wardNo: wNo, partNo: pNo, serials } of activeSerialsByWard.values()) {
-                  const cleanupFilter = {
-                    organizationId: organizationId,
-                    wardNo: wNo,
-                    serialNo: { $nin: Array.from(serials) }
-                  };
-                  if (pNo) cleanupFilter.partNo = pNo;
-                  try {
-                    const staleWithPhotos = await Voter.find(cleanupFilter, { photoUrl: 1 }).lean();
-                    const urls = staleWithPhotos.map(v => v.photoUrl).filter(Boolean);
-                    if (urls.length > 0) {
-                      const { deleteVoterPhotos } = require('../lib/cloudinaryService');
-                      deleteVoterPhotos(urls).catch(e => console.warn('[admin_pdf] Cloudinary stale photo cleanup error:', e.message));
-                    }
-                  } catch (photoErr) {
-                    console.warn('[admin_pdf] Cloudinary photo check failed:', photoErr.message);
-                  }
-                  const delRes = await Voter.deleteMany(cleanupFilter);
-                  if (delRes.deletedCount > 0) {
-                    console.log(`[admin_pdf] Synchronized Ward ${wNo}: Removed ${delRes.deletedCount} stale records.`);
-                  }
-                }
-              } catch (cleanErr) {
-                console.warn('[admin_pdf] Ward synchronization cleanup warning:', cleanErr.message);
-              }
-            }
-
-            // Sync any newly learned dictionary entries to MongoDB
-            try {
-              const { syncFromDiskToDb } = require('../lib/dictionaryService');
-              await syncFromDiskToDb();
-            } catch {}
-            
-            uploadJobs.set(jobId, {
-              ...uploadJobs.get(jobId),
-              status: 'completed',
-              progress: 100,
-              stageMessage: '✅ सत्यापन व डिक्शनरी विस्तार पूर्ण! सभी मतदाता रिकॉर्ड्स सुरक्षित हो गए हैं।',
-              extractedCount: epicsCount,
-              excelPath: msg.excelPath,
-              excelFilename: msg.excelFilename,
-              hasExcel: Boolean(msg.excelPath)
-            });
-
-            // Invalidate cache immediately so UI shows exact live voter counts
-            try {
-              const cache = require('../lib/cache');
-              if (cache && cache.flushAll) {
-                cache.flushAll();
-              }
-            } catch {}
-
-            console.log(`Background PDF processing complete for ${filePath}. Extracted ${epicsCount} voters. Excel: ${msg.excelFilename}`);
-          } catch (dbError) {
-            uploadJobs.set(jobId, { 
-              ...uploadJobs.get(jobId), 
-              status: 'failed', 
-              progress: 0, 
-              errorMessage: `डेटाबेस में सुरक्षित करने में त्रुटि: ${dbError.message}` 
-            });
-            console.error(`Database write failed for ${filePath}:`, dbError);
-          }
-        } else if (msg.type === 'error') {
-          uploadJobs.set(jobId, { 
-            ...uploadJobs.get(jobId), 
-            status: 'failed', 
-            progress: 0, 
-            errorMessage: msg.data || 'PDF पार्सिंग में समस्या आई।' 
-          });
-          console.error(`Worker PDF processing failed for ${filePath}:`, msg.data);
-        }
-      });
-
-      worker.on('error', (err) => {
-        uploadJobs.set(jobId, { 
-          ...uploadJobs.get(jobId), 
-          status: 'failed', 
-          progress: 0, 
-          errorMessage: err.message || 'Worker thread execution error' 
-        });
-        console.error(`Worker error for ${filePath}:`, err);
-      });
-
-      worker.on('exit', (code) => {
-        if (code !== 0 && uploadJobs.get(jobId)?.status !== 'completed') {
-          uploadJobs.set(jobId, { 
-            ...uploadJobs.get(jobId), 
-            status: 'failed', 
-            progress: 0, 
-            errorMessage: `Worker process exited with code ${code}` 
-          });
-        }
+      createdJobs.push({
+        jobId,
+        filename: file.originalname,
+        wardNo,
+        panchayat: globalPanchayat,
+        withPhotos: fileWithPhotos,
+        status: createdJob.status
       });
     }
 
@@ -626,5 +421,6 @@ router.put('/update-unreadable-voter', verifyToken, isAdmin, async (req, res) =>
   }
 });
 
-router.uploadJobs = uploadJobs;
+router.uploadJobs = pdfQueue.inMemoryJobs;
+router.pdfQueue = pdfQueue;
 module.exports = router;
