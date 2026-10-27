@@ -338,6 +338,19 @@ RAJASTHAN_LEXICON = {
     'ककली', 'मूमली', 'आम्बु', 'प्रतापराम', 'सेवाराम', 'कालूराम', 'प्रताप',
 }
 
+# Dynamically merge all 22,000+ authentic Indian & Rajasthani names from master JSON
+try:
+    _master_p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'master_indian_names.json')
+    if os.path.exists(_master_p):
+        with open(_master_p, 'r', encoding='utf-8') as _mf:
+            for _item in json.load(_mf):
+                if _item and isinstance(_item, str):
+                    for _part in _item.split():
+                        if len(_part) >= 2:
+                            RAJASTHAN_LEXICON.add(_part.strip())
+except Exception as _e:
+    pass
+
 def levenshtein_dist(s1: str, s2: str) -> int:
     """Computes Levenshtein edit distance between two strings"""
     if len(s1) < len(s2):
@@ -397,6 +410,33 @@ def descramble_sec_glyphs(w: str) -> str:
     if not w:
         return ""
     s = w
+
+    # Systematic SEC font glyph & CMap desynchronizations (Booth 5791 & SEC Rajasthan rolls)
+    s = re.sub(r'([क-ह])देवल(?=\s|$)', r'\1 देवी', s)
+    s = re.sub(r'\bलललादेवल\b', 'लीला देवी', s)
+    s = re.sub(r'\bजमनादेवल\b', 'जमना देवी', s)
+    s = re.sub(r'\bमछादेवल\b', 'मच्छा देवी', s)
+    s = re.sub(r'\bललला\b', 'लीला', s)
+    s = re.sub(r'\bगलविन्द\b', 'गोविन्द', s)
+    s = re.sub(r'\bगलतम\b', 'गौतम', s)
+    s = re.sub(r'\bभलखल\b', 'भीखी', s)
+    s = re.sub(r'\bखमलल\b', 'खीमी', s)
+    s = re.sub(r'\bगलमलल\b', 'गोमती', s)
+    s = re.sub(r'\bसणगारल\b', 'सणगारी', s)
+    s = re.sub(r'\bगुडल\b', 'गुडी', s)
+    s = re.sub(r'\bजलला\b', 'जीला', s)
+    s = re.sub(r'\bभलला\b', 'भीला', s)
+    s = re.sub(r'\bगलला\b', 'गोला', s)
+    s = re.sub(r'\bबदकी\b', 'बदामी', s)
+    s = re.sub(r'\bमदकी\b', 'मादकी', s)
+    s = re.sub(r'\bद्रलपतल\b', 'दलपत', s)
+    s = re.sub(r'\bकु़महेश्वरा\b', 'कामेश्वर', s)
+    s = re.sub(r'\bकौश्शलया\b', 'कौशल्या', s)
+    s = re.sub(r'\bलूमबा\b', 'लूंबा', s)
+    s = re.sub(r'\bआमबा\b', 'आंबा', s)
+    s = re.sub(r'\bबाबल\b', 'बाबू', s)
+    s = re.sub(r'\bसलना\b', 'सजना', s)
+
     # Consonant drops / missing padastha & conjuncts
     s = re.sub(r'\bपताप\s*राम\b', 'प्रतापराम', s)
     s = re.sub(r'\bपताप\b', 'प्रताप', s)
@@ -428,7 +468,7 @@ def fuzzy_lexicon_correct(name: str) -> str:
     Pillar 5: Custom Lexicon & Levenshtein Correction
     Replaces font glyph corruptions ('दचर्गा' -> 'दुर्गा', 'कचमार' -> 'कुमार')
     and minor OCR typos using first-letter bucketing & Levenshtein distance.
-    Safe-guard: Already valid Indian names are never mutated.
+    CRITICAL SAFEGUARD: Clean, valid Hindi words are NEVER mutated into different names!
     """
     if not name:
         return ""
@@ -442,6 +482,14 @@ def fuzzy_lexicon_correct(name: str) -> str:
         if w in RAJASTHAN_LEXICON:
             corrected_words.append(w)
             continue
+
+        # If w is a clean, well-formed Devanagari word without OCR artifacts,
+        # DO NOT mutate it to a different dictionary name just because distance is 1!
+        has_artifacts = bool(re.search(r'[0-9\d«»|“”….,~`!@#$%^&*()_+=\[\]{}?\/\\]', w)) or bool(re.match(r'^[ािीुूृेैोौं्]', w))
+        if not has_artifacts:
+            corrected_words.append(w)
+            continue
+
         best_match = w
         min_d = 99
         first_char = w[0] if w else ''
