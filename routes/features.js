@@ -850,11 +850,11 @@ router.get('/export.xlsx', async (req, res) => {
     }
 
     const workbook = createWorkbook();
-    addSheet(workbook, 'Export', voters.map((v) => ({
+    addSheet(workbook, 'Export', voters.map((v, index) => ({
       'EPIC No': v.epic,
       'Ward': v.wardNo,
       'Part': v.partNo,
-      'Serial No': v.serialNo,
+      'Serial No': index + 1,
       'Name (English)': v.nameEn,
       'Name (Hindi)': v.nameHi,
       'Age': v.age,

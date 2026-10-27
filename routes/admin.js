@@ -1398,8 +1398,8 @@ router.get('/export-voters', verifyToken, isAdmin, async (req, res) => {
     const voters = await Voter.find(query).sort({ wardNo: 1, partNo: 1, serialNo: 1 }).lean();
     
     const workbook = createWorkbook();
-    addSheet(workbook, 'मतदाता सूची', voters.map((v) => ({
-      'क्रमांक': v.serialNo,
+    addSheet(workbook, 'मतदाता सूची', voters.map((v, index) => ({
+      'क्रमांक': index + 1,
       'पहचान पत्र (EPIC No)': v.epic,
       'मतदाता का नाम': v.nameHi || '',
       'संबंधी का नाम': v.relativeNameHi || '',
@@ -1418,11 +1418,11 @@ router.get('/export-voters', verifyToken, isAdmin, async (req, res) => {
       'मतदान स्थिति': v.voted ? 'वोट दिया' : 'शेष'
     })));
 
-    addSheet(workbook, 'Voters', voters.map((v) => ({
+    addSheet(workbook, 'Voters', voters.map((v, index) => ({
       'EPIC No': v.epic,
       'Ward': v.wardNo,
       'Part': v.partNo,
-      'Serial No': v.serialNo,
+      'Serial No': index + 1,
       'Name (English)': '',
       'Name (Hindi)': v.nameHi,
       'Age': v.age,
