@@ -1,0 +1,1602 @@
+[
+  {
+    "ac_no": 1,
+    "name_en": "Sadulshahar",
+    "name_hi": "सादुलशहर",
+    "category": "GEN",
+    "district": "Ganganagar",
+    "pc_name": "Ganganagar"
+  },
+  {
+    "ac_no": 2,
+    "name_en": "Ganganagar",
+    "name_hi": "गंगानगर",
+    "category": "GEN",
+    "district": "Ganganagar",
+    "pc_name": "Ganganagar"
+  },
+  {
+    "ac_no": 3,
+    "name_en": "Karanpur",
+    "name_hi": "करणपुर",
+    "category": "GEN",
+    "district": "Ganganagar",
+    "pc_name": "Ganganagar"
+  },
+  {
+    "ac_no": 4,
+    "name_en": "Suratgarh",
+    "name_hi": "सूरतगढ़",
+    "category": "GEN",
+    "district": "Ganganagar",
+    "pc_name": "Ganganagar"
+  },
+  {
+    "ac_no": 5,
+    "name_en": "Raisinghnagar",
+    "name_hi": "रायसिंहनगर",
+    "category": "SC",
+    "district": "Anupgarh",
+    "pc_name": "Ganganagar"
+  },
+  {
+    "ac_no": 6,
+    "name_en": "Anupgarh",
+    "name_hi": "अनूपगढ़",
+    "category": "SC",
+    "district": "Anupgarh",
+    "pc_name": "Bikaner"
+  },
+  {
+    "ac_no": 7,
+    "name_en": "Sangaria",
+    "name_hi": "संगरिया",
+    "category": "GEN",
+    "district": "Hanumangarh",
+    "pc_name": "Ganganagar"
+  },
+  {
+    "ac_no": 8,
+    "name_en": "Hanumangarh",
+    "name_hi": "हनुमानगढ़",
+    "category": "GEN",
+    "district": "Hanumangarh",
+    "pc_name": "Ganganagar"
+  },
+  {
+    "ac_no": 9,
+    "name_en": "Pilibanga",
+    "name_hi": "पीलीबंगा",
+    "category": "SC",
+    "district": "Hanumangarh",
+    "pc_name": "Ganganagar"
+  },
+  {
+    "ac_no": 10,
+    "name_en": "Nohar",
+    "name_hi": "नोहर",
+    "category": "GEN",
+    "district": "Hanumangarh",
+    "pc_name": "Churu"
+  },
+  {
+    "ac_no": 11,
+    "name_en": "Bhadra",
+    "name_hi": "भादरा",
+    "category": "GEN",
+    "district": "Hanumangarh",
+    "pc_name": "Churu"
+  },
+  {
+    "ac_no": 12,
+    "name_en": "Khajuwala",
+    "name_hi": "खाजूवाला",
+    "category": "SC",
+    "district": "Anupgarh",
+    "pc_name": "Bikaner"
+  },
+  {
+    "ac_no": 13,
+    "name_en": "Bikaner West",
+    "name_hi": "बीकानेर पश्चिम",
+    "category": "GEN",
+    "district": "Bikaner",
+    "pc_name": "Bikaner"
+  },
+  {
+    "ac_no": 14,
+    "name_en": "Bikaner East",
+    "name_hi": "बीकानेर पूर्व",
+    "category": "GEN",
+    "district": "Bikaner",
+    "pc_name": "Bikaner"
+  },
+  {
+    "ac_no": 15,
+    "name_en": "Kolayat",
+    "name_hi": "कोलायत",
+    "category": "GEN",
+    "district": "Bikaner",
+    "pc_name": "Bikaner"
+  },
+  {
+    "ac_no": 16,
+    "name_en": "Lunkaransar",
+    "name_hi": "लूणकरणसर",
+    "category": "GEN",
+    "district": "Bikaner",
+    "pc_name": "Bikaner"
+  },
+  {
+    "ac_no": 17,
+    "name_en": "Dungargarh",
+    "name_hi": "डूंगरगढ़",
+    "category": "GEN",
+    "district": "Bikaner",
+    "pc_name": "Bikaner"
+  },
+  {
+    "ac_no": 18,
+    "name_en": "Nokha",
+    "name_hi": "नोखा",
+    "category": "GEN",
+    "district": "Bikaner",
+    "pc_name": "Bikaner"
+  },
+  {
+    "ac_no": 19,
+    "name_en": "Sadulpur",
+    "name_hi": "सादुलपुर",
+    "category": "GEN",
+    "district": "Churu",
+    "pc_name": "Churu"
+  },
+  {
+    "ac_no": 20,
+    "name_en": "Taranagar",
+    "name_hi": "तारानगर",
+    "category": "GEN",
+    "district": "Churu",
+    "pc_name": "Churu"
+  },
+  {
+    "ac_no": 21,
+    "name_en": "Sardarshahar",
+    "name_hi": "सरदारशहर",
+    "category": "GEN",
+    "district": "Churu",
+    "pc_name": "Churu"
+  },
+  {
+    "ac_no": 22,
+    "name_en": "Churu",
+    "name_hi": "चुरू",
+    "category": "GEN",
+    "district": "Churu",
+    "pc_name": "Churu"
+  },
+  {
+    "ac_no": 23,
+    "name_en": "Ratangarh",
+    "name_hi": "रतनगढ़",
+    "category": "GEN",
+    "district": "Churu",
+    "pc_name": "Churu"
+  },
+  {
+    "ac_no": 24,
+    "name_en": "Sujangarh",
+    "name_hi": "सुजानगढ़",
+    "category": "SC",
+    "district": "Churu",
+    "pc_name": "Churu"
+  },
+  {
+    "ac_no": 25,
+    "name_en": "Pilani",
+    "name_hi": "पिलानी",
+    "category": "SC",
+    "district": "Jhunjhunu",
+    "pc_name": "Jhunjhunu"
+  },
+  {
+    "ac_no": 26,
+    "name_en": "Surajgarh",
+    "name_hi": "सूरजगढ़",
+    "category": "GEN",
+    "district": "Jhunjhunu",
+    "pc_name": "Jhunjhunu"
+  },
+  {
+    "ac_no": 27,
+    "name_en": "Jhunjhunu",
+    "name_hi": "झुंझुनू",
+    "category": "GEN",
+    "district": "Jhunjhunu",
+    "pc_name": "Jhunjhunu"
+  },
+  {
+    "ac_no": 28,
+    "name_en": "Mandawa",
+    "name_hi": "मंडावा",
+    "category": "GEN",
+    "district": "Jhunjhunu",
+    "pc_name": "Jhunjhunu"
+  },
+  {
+    "ac_no": 29,
+    "name_en": "Nawalgarh",
+    "name_hi": "नवलगढ़",
+    "category": "GEN",
+    "district": "Jhunjhunu",
+    "pc_name": "Jhunjhunu"
+  },
+  {
+    "ac_no": 30,
+    "name_en": "Udaipurwati",
+    "name_hi": "उदयपुरवाटी",
+    "category": "GEN",
+    "district": "Jhunjhunu",
+    "pc_name": "Jhunjhunu"
+  },
+  {
+    "ac_no": 31,
+    "name_en": "Khetri",
+    "name_hi": "खेतड़ी",
+    "category": "GEN",
+    "district": "Jhunjhunu",
+    "pc_name": "Jhunjhunu"
+  },
+  {
+    "ac_no": 32,
+    "name_en": "Fatehpur",
+    "name_hi": "फतेहपुर",
+    "category": "GEN",
+    "district": "Sikar",
+    "pc_name": "Jhunjhunu"
+  },
+  {
+    "ac_no": 33,
+    "name_en": "Lachhmangarh",
+    "name_hi": "Lachhmangarh",
+    "category": "GEN",
+    "district": "Sikar",
+    "pc_name": "Sikar"
+  },
+  {
+    "ac_no": 34,
+    "name_en": "Dhod",
+    "name_hi": "धोद",
+    "category": "SC",
+    "district": "Sikar",
+    "pc_name": "Sikar"
+  },
+  {
+    "ac_no": 35,
+    "name_en": "Sikar",
+    "name_hi": "सीकर",
+    "category": "GEN",
+    "district": "Sikar",
+    "pc_name": "Sikar"
+  },
+  {
+    "ac_no": 36,
+    "name_en": "Danta Ramgarh",
+    "name_hi": "Danta Ramgarh",
+    "category": "GEN",
+    "district": "Sikar",
+    "pc_name": "Sikar"
+  },
+  {
+    "ac_no": 37,
+    "name_en": "Khandela",
+    "name_hi": "खंडेला",
+    "category": "GEN",
+    "district": "Sikar",
+    "pc_name": "Sikar"
+  },
+  {
+    "ac_no": 38,
+    "name_en": "Neem Ka Thana",
+    "name_hi": "Neem Ka Thana",
+    "category": "GEN",
+    "district": "Neem Ka Thana",
+    "pc_name": "Sikar"
+  },
+  {
+    "ac_no": 39,
+    "name_en": "Srimadhopur",
+    "name_hi": "श्रीमाधोपुर",
+    "category": "GEN",
+    "district": "Neem Ka Thana",
+    "pc_name": "Sikar"
+  },
+  {
+    "ac_no": 40,
+    "name_en": "Kotputli",
+    "name_hi": "कोटपूतली",
+    "category": "GEN",
+    "district": "Kotputli-Behror",
+    "pc_name": "Jaipur Rural"
+  },
+  {
+    "ac_no": 41,
+    "name_en": "Viratnagar",
+    "name_hi": "विराटनगर",
+    "category": "GEN",
+    "district": "Kotputli-Behror",
+    "pc_name": "Jaipur Rural"
+  },
+  {
+    "ac_no": 42,
+    "name_en": "Shahpura",
+    "name_hi": "शाहपुरा",
+    "category": "GEN",
+    "district": "Jaipur",
+    "pc_name": "Jaipur Rural"
+  },
+  {
+    "ac_no": 43,
+    "name_en": "Chomu",
+    "name_hi": "चौमूं",
+    "category": "GEN",
+    "district": "Jaipur Rural",
+    "pc_name": "Sikar"
+  },
+  {
+    "ac_no": 44,
+    "name_en": "Phulera",
+    "name_hi": "फुलेरा",
+    "category": "GEN",
+    "district": "Jaipur Rural",
+    "pc_name": "Jaipur Rural"
+  },
+  {
+    "ac_no": 45,
+    "name_en": "Dudu",
+    "name_hi": "दूदू",
+    "category": "SC",
+    "district": "Dudu",
+    "pc_name": "Ajmer"
+  },
+  {
+    "ac_no": 46,
+    "name_en": "Jhotwara",
+    "name_hi": "झोटवाड़ा",
+    "category": "GEN",
+    "district": "Jaipur",
+    "pc_name": "Jaipur Rural"
+  },
+  {
+    "ac_no": 47,
+    "name_en": "Amber",
+    "name_hi": "आमेर",
+    "category": "GEN",
+    "district": "Jaipur",
+    "pc_name": "Jaipur Rural"
+  },
+  {
+    "ac_no": 48,
+    "name_en": "Jamwa Ramgarh",
+    "name_hi": "जमवारामगढ़",
+    "category": "ST",
+    "district": "Jaipur Rural",
+    "pc_name": "Jaipur Rural"
+  },
+  {
+    "ac_no": 49,
+    "name_en": "Hawa Mahal",
+    "name_hi": "हवामहल",
+    "category": "GEN",
+    "district": "Jaipur",
+    "pc_name": "Jaipur"
+  },
+  {
+    "ac_no": 50,
+    "name_en": "Vidhyadhar Nagar",
+    "name_hi": "विद्याधर नगर",
+    "category": "GEN",
+    "district": "Jaipur",
+    "pc_name": "Jaipur"
+  },
+  {
+    "ac_no": 51,
+    "name_en": "Civil Lines",
+    "name_hi": "सिविल लाइन्स",
+    "category": "GEN",
+    "district": "Jaipur",
+    "pc_name": "Jaipur"
+  },
+  {
+    "ac_no": 52,
+    "name_en": "Kishanpole",
+    "name_hi": "किशनपोल",
+    "category": "GEN",
+    "district": "Jaipur",
+    "pc_name": "Jaipur"
+  },
+  {
+    "ac_no": 53,
+    "name_en": "Adarsh Nagar",
+    "name_hi": "आदर्श नगर",
+    "category": "GEN",
+    "district": "Jaipur",
+    "pc_name": "Jaipur"
+  },
+  {
+    "ac_no": 54,
+    "name_en": "Malviya Nagar",
+    "name_hi": "मालवीय नगर",
+    "category": "GEN",
+    "district": "Jaipur",
+    "pc_name": "Jaipur"
+  },
+  {
+    "ac_no": 55,
+    "name_en": "Sanganer",
+    "name_hi": "सांगानेर",
+    "category": "GEN",
+    "district": "Jaipur",
+    "pc_name": "Jaipur"
+  },
+  {
+    "ac_no": 56,
+    "name_en": "Bagru",
+    "name_hi": "बगरू",
+    "category": "SC",
+    "district": "Jaipur Rural",
+    "pc_name": "Jaipur"
+  },
+  {
+    "ac_no": 57,
+    "name_en": "Bassi",
+    "name_hi": "बस्सी",
+    "category": "ST",
+    "district": "Jaipur Rural",
+    "pc_name": "Dausa"
+  },
+  {
+    "ac_no": 58,
+    "name_en": "Chaksu",
+    "name_hi": "चाकसू",
+    "category": "SC",
+    "district": "Jaipur Rural",
+    "pc_name": "Dausa"
+  },
+  {
+    "ac_no": 59,
+    "name_en": "Tijara",
+    "name_hi": "तिजारा",
+    "category": "GEN",
+    "district": "Khairthal-Tijara",
+    "pc_name": "Alwar"
+  },
+  {
+    "ac_no": 60,
+    "name_en": "Kishangarh Bas",
+    "name_hi": "किशनगढ़ बास",
+    "category": "GEN",
+    "district": "Khairthal-Tijara",
+    "pc_name": "Alwar"
+  },
+  {
+    "ac_no": 61,
+    "name_en": "Mundawar",
+    "name_hi": "मुंडावर",
+    "category": "GEN",
+    "district": "Khairthal-Tijara",
+    "pc_name": "Alwar"
+  },
+  {
+    "ac_no": 62,
+    "name_en": "Behror",
+    "name_hi": "बहरोड़",
+    "category": "GEN",
+    "district": "Alwar",
+    "pc_name": "Alwar"
+  },
+  {
+    "ac_no": 63,
+    "name_en": "Bansur",
+    "name_hi": "बानसूर",
+    "category": "GEN",
+    "district": "Alwar",
+    "pc_name": "Jaipur Rural"
+  },
+  {
+    "ac_no": 64,
+    "name_en": "Thanagazi",
+    "name_hi": "थानागाजी",
+    "category": "GEN",
+    "district": "Alwar",
+    "pc_name": "Dausa"
+  },
+  {
+    "ac_no": 65,
+    "name_en": "Alwar Rural",
+    "name_hi": "अलवर ग्रामीण",
+    "category": "SC",
+    "district": "Alwar",
+    "pc_name": "Alwar"
+  },
+  {
+    "ac_no": 66,
+    "name_en": "Alwar Urban",
+    "name_hi": "अलवर शहर",
+    "category": "GEN",
+    "district": "Alwar",
+    "pc_name": "Alwar"
+  },
+  {
+    "ac_no": 67,
+    "name_en": "Ramgarh",
+    "name_hi": "रामगढ़",
+    "category": "GEN",
+    "district": "Alwar",
+    "pc_name": "Alwar"
+  },
+  {
+    "ac_no": 68,
+    "name_en": "Rajgarh Laxmangarh",
+    "name_hi": "राजगढ़ लक्ष्मणगढ़",
+    "category": "ST",
+    "district": "Alwar",
+    "pc_name": "Alwar"
+  },
+  {
+    "ac_no": 69,
+    "name_en": "Kathumar",
+    "name_hi": "कठूमर",
+    "category": "SC",
+    "district": "Alwar",
+    "pc_name": "Bharatpur"
+  },
+  {
+    "ac_no": 70,
+    "name_en": "Kaman",
+    "name_hi": "कामा",
+    "category": "GEN",
+    "district": "Deeg",
+    "pc_name": "Bharatpur"
+  },
+  {
+    "ac_no": 71,
+    "name_en": "Nagar",
+    "name_hi": "नगर",
+    "category": "GEN",
+    "district": "Deeg",
+    "pc_name": "Bharatpur"
+  },
+  {
+    "ac_no": 72,
+    "name_en": "Deeg-Kumher",
+    "name_hi": "डीग-कुम्हेर",
+    "category": "GEN",
+    "district": "Deeg",
+    "pc_name": "Bharatpur"
+  },
+  {
+    "ac_no": 73,
+    "name_en": "Bharatpur",
+    "name_hi": "भरतपुर",
+    "category": "GEN",
+    "district": "Bharatpur",
+    "pc_name": "Bharatpur"
+  },
+  {
+    "ac_no": 74,
+    "name_en": "Nadbai",
+    "name_hi": "नदबई",
+    "category": "GEN",
+    "district": "Bharatpur",
+    "pc_name": "Bharatpur"
+  },
+  {
+    "ac_no": 75,
+    "name_en": "Weir",
+    "name_hi": "वैर",
+    "category": "SC",
+    "district": "Bharatpur",
+    "pc_name": "Bharatpur"
+  },
+  {
+    "ac_no": 76,
+    "name_en": "Bayana",
+    "name_hi": "बयाना",
+    "category": "SC",
+    "district": "Bharatpur",
+    "pc_name": "Bharatpur"
+  },
+  {
+    "ac_no": 77,
+    "name_en": "Baseri",
+    "name_hi": "बसेड़ी",
+    "category": "SC",
+    "district": "Dholpur",
+    "pc_name": "Karauli–Dholpur"
+  },
+  {
+    "ac_no": 78,
+    "name_en": "Bari",
+    "name_hi": "बाड़ी",
+    "category": "GEN",
+    "district": "Dholpur",
+    "pc_name": "Karauli–Dholpur"
+  },
+  {
+    "ac_no": 79,
+    "name_en": "Dholpur",
+    "name_hi": "धौलपुर",
+    "category": "GEN",
+    "district": "Dholpur",
+    "pc_name": "Karauli–Dholpur"
+  },
+  {
+    "ac_no": 80,
+    "name_en": "Rajakhera",
+    "name_hi": "राजाखेड़ा",
+    "category": "GEN",
+    "district": "Dholpur",
+    "pc_name": "Karauli–Dholpur"
+  },
+  {
+    "ac_no": 81,
+    "name_en": "Todabhim",
+    "name_hi": "टोडाभीम",
+    "category": "ST",
+    "district": "Karauli",
+    "pc_name": "Karauli–Dholpur"
+  },
+  {
+    "ac_no": 82,
+    "name_en": "Hindaun",
+    "name_hi": "हिण्डौन",
+    "category": "SC",
+    "district": "Karauli",
+    "pc_name": "Karauli–Dholpur"
+  },
+  {
+    "ac_no": 83,
+    "name_en": "Karauli",
+    "name_hi": "करौली",
+    "category": "GEN",
+    "district": "Karauli",
+    "pc_name": "Karauli–Dholpur"
+  },
+  {
+    "ac_no": 84,
+    "name_en": "Sapotra",
+    "name_hi": "सपोटरा",
+    "category": "ST",
+    "district": "Karauli",
+    "pc_name": "Karauli–Dholpur"
+  },
+  {
+    "ac_no": 85,
+    "name_en": "Bandikui",
+    "name_hi": "बांदीकुई",
+    "category": "GEN",
+    "district": "Dausa",
+    "pc_name": "Dausa"
+  },
+  {
+    "ac_no": 86,
+    "name_en": "Mahuwa",
+    "name_hi": "Mahuwa",
+    "category": "GEN",
+    "district": "Dausa",
+    "pc_name": "Dausa"
+  },
+  {
+    "ac_no": 87,
+    "name_en": "Sikrai",
+    "name_hi": "सिकराय",
+    "category": "SC",
+    "district": "Dausa",
+    "pc_name": "Dausa"
+  },
+  {
+    "ac_no": 88,
+    "name_en": "Dausa",
+    "name_hi": "दौसा",
+    "category": "GEN",
+    "district": "Dausa",
+    "pc_name": "Dausa"
+  },
+  {
+    "ac_no": 89,
+    "name_en": "Lalsot",
+    "name_hi": "लालसोट",
+    "category": "ST",
+    "district": "Dausa",
+    "pc_name": "Dausa"
+  },
+  {
+    "ac_no": 90,
+    "name_en": "Gangapur",
+    "name_hi": "Gangapur",
+    "category": "GEN",
+    "district": "Gangapur City",
+    "pc_name": "Tonk-Sawai Madhopur"
+  },
+  {
+    "ac_no": 91,
+    "name_en": "Bamanwas",
+    "name_hi": "बामनवास",
+    "category": "ST",
+    "district": "Gangapur City",
+    "pc_name": "Tonk-Sawai Madhopur"
+  },
+  {
+    "ac_no": 92,
+    "name_en": "Sawai Madhopur",
+    "name_hi": "सवाई माधोपुर",
+    "category": "GEN",
+    "district": "Sawai Madhopur",
+    "pc_name": "Tonk-Sawai Madhopur"
+  },
+  {
+    "ac_no": 93,
+    "name_en": "Khandar",
+    "name_hi": "खण्डार",
+    "category": "SC",
+    "district": "Sawai Madhopur",
+    "pc_name": "Tonk-Sawai Madhopur"
+  },
+  {
+    "ac_no": 94,
+    "name_en": "Malpura",
+    "name_hi": "मालपुरा",
+    "category": "GEN",
+    "district": "Tonk",
+    "pc_name": "Tonk-Sawai Madhopur"
+  },
+  {
+    "ac_no": 95,
+    "name_en": "Niwai",
+    "name_hi": "निवाई",
+    "category": "SC",
+    "district": "Tonk",
+    "pc_name": "Tonk-Sawai Madhopur"
+  },
+  {
+    "ac_no": 96,
+    "name_en": "Tonk",
+    "name_hi": "टोंक",
+    "category": "GEN",
+    "district": "Tonk",
+    "pc_name": "Tonk-Sawai Madhopur"
+  },
+  {
+    "ac_no": 97,
+    "name_en": "Deoli-Uniara",
+    "name_hi": "देवली-उनियारा",
+    "category": "GEN",
+    "district": "Tonk",
+    "pc_name": "Tonk-Sawai Madhopur"
+  },
+  {
+    "ac_no": 98,
+    "name_en": "Kishangarh",
+    "name_hi": "किशनगढ़",
+    "category": "GEN",
+    "district": "Ajmer",
+    "pc_name": "Ajmer"
+  },
+  {
+    "ac_no": 99,
+    "name_en": "Pushkar",
+    "name_hi": "पुष्कर",
+    "category": "GEN",
+    "district": "Ajmer",
+    "pc_name": "Ajmer"
+  },
+  {
+    "ac_no": 100,
+    "name_en": "Ajmer North",
+    "name_hi": "अजमेर उत्तर",
+    "category": "GEN",
+    "district": "Ajmer",
+    "pc_name": "Ajmer"
+  },
+  {
+    "ac_no": 101,
+    "name_en": "Ajmer South",
+    "name_hi": "अजमेर दक्षिण",
+    "category": "SC",
+    "district": "Ajmer",
+    "pc_name": "Ajmer"
+  },
+  {
+    "ac_no": 102,
+    "name_en": "Nasirabad",
+    "name_hi": "नसीराबाद",
+    "category": "GEN",
+    "district": "Ajmer",
+    "pc_name": "Ajmer"
+  },
+  {
+    "ac_no": 103,
+    "name_en": "Beawar",
+    "name_hi": "ब्यावर",
+    "category": "GEN",
+    "district": "Beawar",
+    "pc_name": "Rajsamand"
+  },
+  {
+    "ac_no": 104,
+    "name_en": "Masuda",
+    "name_hi": "मसूदा",
+    "category": "GEN",
+    "district": "Beawar",
+    "pc_name": "Ajmer"
+  },
+  {
+    "ac_no": 105,
+    "name_en": "Kekri",
+    "name_hi": "केकड़ी",
+    "category": "GEN",
+    "district": "Kekri",
+    "pc_name": "Ajmer"
+  },
+  {
+    "ac_no": 106,
+    "name_en": "Ladnun",
+    "name_hi": "लाडनूं",
+    "category": "GEN",
+    "district": "Didwana Kuchaman",
+    "pc_name": "Nagaur"
+  },
+  {
+    "ac_no": 107,
+    "name_en": "Deedwana",
+    "name_hi": "डीडवाना",
+    "category": "GEN",
+    "district": "Didwana Kuchaman",
+    "pc_name": "Nagaur"
+  },
+  {
+    "ac_no": 108,
+    "name_en": "Jayal",
+    "name_hi": "जायल",
+    "category": "SC",
+    "district": "Nagaur",
+    "pc_name": "Nagaur"
+  },
+  {
+    "ac_no": 109,
+    "name_en": "Nagaur",
+    "name_hi": "नागौर",
+    "category": "GEN",
+    "district": "Nagaur",
+    "pc_name": "Nagaur"
+  },
+  {
+    "ac_no": 110,
+    "name_en": "Khinwsar",
+    "name_hi": "Khinwsar",
+    "category": "GEN",
+    "district": "Nagaur",
+    "pc_name": "Nagaur"
+  },
+  {
+    "ac_no": 111,
+    "name_en": "Merta",
+    "name_hi": "मेड़ता",
+    "category": "SC",
+    "district": "Nagaur",
+    "pc_name": "Rajsamand"
+  },
+  {
+    "ac_no": 112,
+    "name_en": "Degana",
+    "name_hi": "डेगाना",
+    "category": "GEN",
+    "district": "Nagaur",
+    "pc_name": "Rajsamand"
+  },
+  {
+    "ac_no": 113,
+    "name_en": "Makrana",
+    "name_hi": "मकराना",
+    "category": "GEN",
+    "district": "Didwana Kuchaman",
+    "pc_name": "Nagaur"
+  },
+  {
+    "ac_no": 114,
+    "name_en": "Parbatsar",
+    "name_hi": "परबतसर",
+    "category": "GEN",
+    "district": "Didwana Kuchaman",
+    "pc_name": "Nagaur"
+  },
+  {
+    "ac_no": 115,
+    "name_en": "Nawan",
+    "name_hi": "नावां",
+    "category": "GEN",
+    "district": "Didwana Kuchaman",
+    "pc_name": "Nagaur"
+  },
+  {
+    "ac_no": 116,
+    "name_en": "Jaitaran",
+    "name_hi": "जैतारण",
+    "category": "GEN",
+    "district": "Pali",
+    "pc_name": "Rajsamand"
+  },
+  {
+    "ac_no": 117,
+    "name_en": "Sojat",
+    "name_hi": "सोजत",
+    "category": "GEN",
+    "district": "Pali",
+    "pc_name": "Pali"
+  },
+  {
+    "ac_no": 118,
+    "name_en": "Pali",
+    "name_hi": "पाली",
+    "category": "GEN",
+    "district": "Pali",
+    "pc_name": "Pali"
+  },
+  {
+    "ac_no": 119,
+    "name_en": "Marwar Junction",
+    "name_hi": "मारवाड़ जंक्शन",
+    "category": "GEN",
+    "district": "Pali",
+    "pc_name": "Pali"
+  },
+  {
+    "ac_no": 120,
+    "name_en": "Bali",
+    "name_hi": "बाली",
+    "category": "GEN",
+    "district": "Pali",
+    "pc_name": "Pali"
+  },
+  {
+    "ac_no": 121,
+    "name_en": "Sumerpur",
+    "name_hi": "सुमेरपुर",
+    "category": "GEN",
+    "district": "Pali",
+    "pc_name": "Pali"
+  },
+  {
+    "ac_no": 122,
+    "name_en": "Phalodi",
+    "name_hi": "फलौदी",
+    "category": "GEN",
+    "district": "Phalodi",
+    "pc_name": "Jodhpur"
+  },
+  {
+    "ac_no": 123,
+    "name_en": "Lohawat",
+    "name_hi": "लोहावट",
+    "category": "GEN",
+    "district": "Phalodi",
+    "pc_name": "Jodhpur"
+  },
+  {
+    "ac_no": 124,
+    "name_en": "Shergarh",
+    "name_hi": "शेरगढ़",
+    "category": "GEN",
+    "district": "Jodhpur Rural",
+    "pc_name": "Jodhpur"
+  },
+  {
+    "ac_no": 125,
+    "name_en": "Osian",
+    "name_hi": "ओसियां",
+    "category": "GEN",
+    "district": "Jodhpur Rural",
+    "pc_name": "Pali"
+  },
+  {
+    "ac_no": 126,
+    "name_en": "Bhopalgarh",
+    "name_hi": "भोपालगढ़",
+    "category": "SC",
+    "district": "Jodhpur Rural",
+    "pc_name": "Pali"
+  },
+  {
+    "ac_no": 127,
+    "name_en": "Sardarpura",
+    "name_hi": "सरदारपुरा",
+    "category": "GEN",
+    "district": "Jodhpur",
+    "pc_name": "Jodhpur"
+  },
+  {
+    "ac_no": 128,
+    "name_en": "Jodhpur",
+    "name_hi": "जोधपुर",
+    "category": "GEN",
+    "district": "Jodhpur",
+    "pc_name": "Jodhpur"
+  },
+  {
+    "ac_no": 129,
+    "name_en": "Soorsagar",
+    "name_hi": "सूरसागर",
+    "category": "GEN",
+    "district": "Jodhpur",
+    "pc_name": "Jodhpur"
+  },
+  {
+    "ac_no": 130,
+    "name_en": "Luni",
+    "name_hi": "लूणी",
+    "category": "GEN",
+    "district": "Jodhpur Rural",
+    "pc_name": "Jodhpur"
+  },
+  {
+    "ac_no": 131,
+    "name_en": "Bilara",
+    "name_hi": "बिलाड़ा",
+    "category": "SC",
+    "district": "Jodhpur Rural",
+    "pc_name": "Pali"
+  },
+  {
+    "ac_no": 132,
+    "name_en": "Jaisalmer",
+    "name_hi": "जैसलमेर",
+    "category": "GEN",
+    "district": "Jaisalmer",
+    "pc_name": "Barmer"
+  },
+  {
+    "ac_no": 133,
+    "name_en": "Pokaran",
+    "name_hi": "पोकरण",
+    "category": "GEN",
+    "district": "Jaisalmer",
+    "pc_name": "Jodhpur"
+  },
+  {
+    "ac_no": 134,
+    "name_en": "Sheo",
+    "name_hi": "शिव",
+    "category": "GEN",
+    "district": "Barmer",
+    "pc_name": "Barmer"
+  },
+  {
+    "ac_no": 135,
+    "name_en": "Barmer",
+    "name_hi": "बाड़मेर",
+    "category": "GEN",
+    "district": "Barmer",
+    "pc_name": "Barmer"
+  },
+  {
+    "ac_no": 136,
+    "name_en": "Baytoo",
+    "name_hi": "बायतू",
+    "category": "GEN",
+    "district": "Balotra",
+    "pc_name": "Barmer"
+  },
+  {
+    "ac_no": 137,
+    "name_en": "Pachpadra",
+    "name_hi": "पचपदरा",
+    "category": "GEN",
+    "district": "Balotra",
+    "pc_name": "Barmer"
+  },
+  {
+    "ac_no": 138,
+    "name_en": "Siwana",
+    "name_hi": "सिवाना",
+    "category": "GEN",
+    "district": "Balotra",
+    "pc_name": "Barmer"
+  },
+  {
+    "ac_no": 139,
+    "name_en": "Gudha Malani",
+    "name_hi": "Gudha Malani",
+    "category": "GEN",
+    "district": "Barmer",
+    "pc_name": "Barmer"
+  },
+  {
+    "ac_no": 140,
+    "name_en": "Chohtan",
+    "name_hi": "चौहटन",
+    "category": "SC",
+    "district": "Barmer",
+    "pc_name": "Barmer"
+  },
+  {
+    "ac_no": 141,
+    "name_en": "Ahore",
+    "name_hi": "आहोर",
+    "category": "GEN",
+    "district": "Jalore",
+    "pc_name": "Jalore"
+  },
+  {
+    "ac_no": 142,
+    "name_en": "Jalore",
+    "name_hi": "जालोर",
+    "category": "SC",
+    "district": "Jalore",
+    "pc_name": "Jalore"
+  },
+  {
+    "ac_no": 143,
+    "name_en": "Bhinmal",
+    "name_hi": "भीनमाल",
+    "category": "GEN",
+    "district": "Jalore",
+    "pc_name": "Jalore"
+  },
+  {
+    "ac_no": 144,
+    "name_en": "Sanchore",
+    "name_hi": "सांचौर",
+    "category": "GEN",
+    "district": "Sanchore",
+    "pc_name": "Jalore"
+  },
+  {
+    "ac_no": 145,
+    "name_en": "Raniwara",
+    "name_hi": "रानीवाड़ा",
+    "category": "GEN",
+    "district": "Sanchore",
+    "pc_name": "Jalore"
+  },
+  {
+    "ac_no": 146,
+    "name_en": "Sirohi",
+    "name_hi": "सिरोही",
+    "category": "GEN",
+    "district": "Sirohi",
+    "pc_name": "Jalore"
+  },
+  {
+    "ac_no": 147,
+    "name_en": "Pindwara-Abu",
+    "name_hi": "पिंडवाड़ा-आबू",
+    "category": "ST",
+    "district": "Sirohi",
+    "pc_name": "Jalore"
+  },
+  {
+    "ac_no": 148,
+    "name_en": "Reodar",
+    "name_hi": "रेवदर",
+    "category": "SC",
+    "district": "Sirohi",
+    "pc_name": "Jalore"
+  },
+  {
+    "ac_no": 149,
+    "name_en": "Gogunda",
+    "name_hi": "गोगुंदा",
+    "category": "ST",
+    "district": "Udaipur",
+    "pc_name": "Udaipur"
+  },
+  {
+    "ac_no": 150,
+    "name_en": "Jhadol",
+    "name_hi": "झाड़ोल",
+    "category": "ST",
+    "district": "Udaipur",
+    "pc_name": "Udaipur"
+  },
+  {
+    "ac_no": 151,
+    "name_en": "Kherwara",
+    "name_hi": "खेरवाड़ा",
+    "category": "ST",
+    "district": "Udaipur",
+    "pc_name": "Udaipur"
+  },
+  {
+    "ac_no": 152,
+    "name_en": "Udaipur Rural",
+    "name_hi": "उदयपुर ग्रामीण",
+    "category": "ST",
+    "district": "Udaipur",
+    "pc_name": "Udaipur"
+  },
+  {
+    "ac_no": 153,
+    "name_en": "Udaipur",
+    "name_hi": "उदयपुर",
+    "category": "GEN",
+    "district": "Udaipur",
+    "pc_name": "Udaipur"
+  },
+  {
+    "ac_no": 154,
+    "name_en": "Mavli",
+    "name_hi": "मावली",
+    "category": "GEN",
+    "district": "Udaipur",
+    "pc_name": "Chittorgarh"
+  },
+  {
+    "ac_no": 155,
+    "name_en": "Vallabhnagar",
+    "name_hi": "वल्लभनगर",
+    "category": "GEN",
+    "district": "Udaipur",
+    "pc_name": "Chittorgarh"
+  },
+  {
+    "ac_no": 156,
+    "name_en": "Salumber",
+    "name_hi": "सलूम्बर",
+    "category": "ST",
+    "district": "Salumbar",
+    "pc_name": "Udaipur"
+  },
+  {
+    "ac_no": 157,
+    "name_en": "Dhariawad",
+    "name_hi": "धरियावद",
+    "category": "ST",
+    "district": "Salumbar",
+    "pc_name": "Udaipur"
+  },
+  {
+    "ac_no": 158,
+    "name_en": "Dungarpur",
+    "name_hi": "डूंगरपुर",
+    "category": "ST",
+    "district": "Dungarpur",
+    "pc_name": "Banswara"
+  },
+  {
+    "ac_no": 159,
+    "name_en": "Aspur",
+    "name_hi": "आसपुर",
+    "category": "ST",
+    "district": "Dungarpur",
+    "pc_name": "Udaipur"
+  },
+  {
+    "ac_no": 160,
+    "name_en": "Sagwara",
+    "name_hi": "सागवाड़ा",
+    "category": "ST",
+    "district": "Dungarpur",
+    "pc_name": "Banswara"
+  },
+  {
+    "ac_no": 161,
+    "name_en": "Chorasi",
+    "name_hi": "चौरासी",
+    "category": "ST",
+    "district": "Dungarpur",
+    "pc_name": "Banswara"
+  },
+  {
+    "ac_no": 162,
+    "name_en": "Ghatol",
+    "name_hi": "घाटोल",
+    "category": "ST",
+    "district": "Banswara",
+    "pc_name": "Banswara"
+  },
+  {
+    "ac_no": 163,
+    "name_en": "Garhi",
+    "name_hi": "गढ़ी",
+    "category": "ST",
+    "district": "Banswara",
+    "pc_name": "Banswara"
+  },
+  {
+    "ac_no": 164,
+    "name_en": "Banswara",
+    "name_hi": "बांसवाड़ा",
+    "category": "ST",
+    "district": "Banswara",
+    "pc_name": "Banswara"
+  },
+  {
+    "ac_no": 165,
+    "name_en": "Bagidora",
+    "name_hi": "बागीदोरा",
+    "category": "ST",
+    "district": "Banswara",
+    "pc_name": "Banswara"
+  },
+  {
+    "ac_no": 166,
+    "name_en": "Kushalgarh",
+    "name_hi": "कुशलगढ़",
+    "category": "ST",
+    "district": "Banswara",
+    "pc_name": "Banswara"
+  },
+  {
+    "ac_no": 167,
+    "name_en": "Kapasan",
+    "name_hi": "कपासन",
+    "category": "SC",
+    "district": "Chittorgarh",
+    "pc_name": "Chittorgarh"
+  },
+  {
+    "ac_no": 168,
+    "name_en": "Begun",
+    "name_hi": "बेगूं",
+    "category": "GEN",
+    "district": "Chittorgarh",
+    "pc_name": "Chittorgarh"
+  },
+  {
+    "ac_no": 169,
+    "name_en": "Chittorgarh",
+    "name_hi": "चित्तौड़गढ़",
+    "category": "GEN",
+    "district": "Chittorgarh",
+    "pc_name": "Chittorgarh"
+  },
+  {
+    "ac_no": 170,
+    "name_en": "Nimbahera",
+    "name_hi": "निम्बाहेड़ा",
+    "category": "GEN",
+    "district": "Chittorgarh",
+    "pc_name": "Chittorgarh"
+  },
+  {
+    "ac_no": 171,
+    "name_en": "Bari Sadri",
+    "name_hi": "बड़ी सादड़ी",
+    "category": "GEN",
+    "district": "Chittorgarh",
+    "pc_name": "Chittorgarh"
+  },
+  {
+    "ac_no": 172,
+    "name_en": "Pratapgarh",
+    "name_hi": "प्रतापगढ़",
+    "category": "ST",
+    "district": "Chittorgarh",
+    "pc_name": "Chittorgarh"
+  },
+  {
+    "ac_no": 173,
+    "name_en": "Bhim",
+    "name_hi": "भीम",
+    "category": "GEN",
+    "district": "Rajsamand",
+    "pc_name": "Rajsamand"
+  },
+  {
+    "ac_no": 174,
+    "name_en": "Kumbhalgarh",
+    "name_hi": "कुम्भलगढ़",
+    "category": "GEN",
+    "district": "Rajsamand",
+    "pc_name": "Rajsamand"
+  },
+  {
+    "ac_no": 175,
+    "name_en": "Rajsamand",
+    "name_hi": "राजसमंद",
+    "category": "GEN",
+    "district": "Rajsamand",
+    "pc_name": "Rajsamand"
+  },
+  {
+    "ac_no": 176,
+    "name_en": "Nathdwara",
+    "name_hi": "नाथद्वारा",
+    "category": "GEN",
+    "district": "Rajsamand",
+    "pc_name": "Rajsamand"
+  },
+  {
+    "ac_no": 177,
+    "name_en": "Asind",
+    "name_hi": "आसीन्द",
+    "category": "GEN",
+    "district": "Bhilwara",
+    "pc_name": "Bhilwara"
+  },
+  {
+    "ac_no": 178,
+    "name_en": "Mandal",
+    "name_hi": "मांडल",
+    "category": "GEN",
+    "district": "Bhilwara",
+    "pc_name": "Bhilwara"
+  },
+  {
+    "ac_no": 179,
+    "name_en": "Sahara",
+    "name_hi": "Sahara",
+    "category": "GEN",
+    "district": "Bhilwara",
+    "pc_name": "Bhilwara"
+  },
+  {
+    "ac_no": 180,
+    "name_en": "Bhilwara",
+    "name_hi": "भीलवाड़ा",
+    "category": "GEN",
+    "district": "Bhilwara",
+    "pc_name": "Bhilwara"
+  },
+  {
+    "ac_no": 181,
+    "name_en": "Shahpura",
+    "name_hi": "शाहपुरा",
+    "category": "SC",
+    "district": "Shahpura",
+    "pc_name": "Bhilwara"
+  },
+  {
+    "ac_no": 182,
+    "name_en": "Jahazpur",
+    "name_hi": "जहाजपुर",
+    "category": "GEN",
+    "district": "Shahpura",
+    "pc_name": "Bhilwara"
+  },
+  {
+    "ac_no": 183,
+    "name_en": "Mandalgarh",
+    "name_hi": "मांडलगढ़",
+    "category": "GEN",
+    "district": "Bhilwara",
+    "pc_name": "Bhilwara"
+  },
+  {
+    "ac_no": 184,
+    "name_en": "Hindoli",
+    "name_hi": "हिण्डोली",
+    "category": "GEN",
+    "district": "Bundi",
+    "pc_name": "Bhilwara"
+  },
+  {
+    "ac_no": 185,
+    "name_en": "Keshoraipatan",
+    "name_hi": "केशोरायपाटन",
+    "category": "SC",
+    "district": "Bundi",
+    "pc_name": "Kota"
+  },
+  {
+    "ac_no": 186,
+    "name_en": "Bundi",
+    "name_hi": "बूंदी",
+    "category": "GEN",
+    "district": "Bundi",
+    "pc_name": "Kota"
+  },
+  {
+    "ac_no": 187,
+    "name_en": "Pipalda",
+    "name_hi": "पीपल्दा",
+    "category": "GEN",
+    "district": "Kota",
+    "pc_name": "Kota"
+  },
+  {
+    "ac_no": 188,
+    "name_en": "Sangod",
+    "name_hi": "सांगोद",
+    "category": "GEN",
+    "district": "Kota",
+    "pc_name": "Kota"
+  },
+  {
+    "ac_no": 189,
+    "name_en": "Kota North",
+    "name_hi": "कोटा उत्तर",
+    "category": "GEN",
+    "district": "Kota",
+    "pc_name": "Kota"
+  },
+  {
+    "ac_no": 190,
+    "name_en": "Kota South",
+    "name_hi": "कोटा दक्षिण",
+    "category": "GEN",
+    "district": "Kota",
+    "pc_name": "Kota"
+  },
+  {
+    "ac_no": 191,
+    "name_en": "Ladpura",
+    "name_hi": "लाडपुरा",
+    "category": "GEN",
+    "district": "Kota",
+    "pc_name": "Kota"
+  },
+  {
+    "ac_no": 192,
+    "name_en": "Ramganj Mandi",
+    "name_hi": "रामगंज मंडी",
+    "category": "SC",
+    "district": "Kota",
+    "pc_name": "Kota"
+  },
+  {
+    "ac_no": 193,
+    "name_en": "Anta",
+    "name_hi": "अन्ता",
+    "category": "GEN",
+    "district": "Baran",
+    "pc_name": "Jhalawar-Baran"
+  },
+  {
+    "ac_no": 194,
+    "name_en": "Kishanganj",
+    "name_hi": "किशनगंज",
+    "category": "ST",
+    "district": "Baran",
+    "pc_name": "Jhalawar-Baran"
+  },
+  {
+    "ac_no": 195,
+    "name_en": "Baran-Atru",
+    "name_hi": "बारां-अटरू",
+    "category": "SC",
+    "district": "Baran",
+    "pc_name": "Jhalawar-Baran"
+  },
+  {
+    "ac_no": 196,
+    "name_en": "Chhabra",
+    "name_hi": "छबड़ा",
+    "category": "GEN",
+    "district": "Baran",
+    "pc_name": "Jhalawar-Baran"
+  },
+  {
+    "ac_no": 197,
+    "name_en": "Dag",
+    "name_hi": "डग",
+    "category": "SC",
+    "district": "Jhalawar",
+    "pc_name": "Jhalawar-Baran"
+  },
+  {
+    "ac_no": 198,
+    "name_en": "Jhalrapatan",
+    "name_hi": "झालरापाटन",
+    "category": "GEN",
+    "district": "Jhalawar",
+    "pc_name": "Jhalawar-Baran"
+  },
+  {
+    "ac_no": 199,
+    "name_en": "Khanpur",
+    "name_hi": "खानपुर",
+    "category": "GEN",
+    "district": "Jhalawar",
+    "pc_name": "Jhalawar-Baran"
+  },
+  {
+    "ac_no": 200,
+    "name_en": "Manohar Thana",
+    "name_hi": "मनोहर थाना",
+    "category": "GEN",
+    "district": "Jhalawar",
+    "pc_name": "Jhalawar-Baran"
+  }
+]

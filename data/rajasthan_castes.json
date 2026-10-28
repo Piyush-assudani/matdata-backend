@@ -1,0 +1,165 @@
+{
+  "General": {
+    "communities": [
+      "Rajput",
+      "Brahmin",
+      "Vaishya / Mahajan / Baniya",
+      "Kayastha"
+    ],
+    "surnames": [
+      "Singh",
+      "Rathore",
+      "Shekhawat",
+      "Chauhan",
+      "Sisodia",
+      "Bhati",
+      "Solanki",
+      "Parihar",
+      "Panwar",
+      "Sharma",
+      "Joshi",
+      "Vyas",
+      "Dave",
+      "Purohit",
+      "Gaud",
+      "Agarwal",
+      "Maheshwari",
+      "Oswal",
+      "Gupta",
+      "Jain",
+      "Khandelwal",
+      "Mathur"
+    ]
+  },
+  "OBC": {
+    "communities": [
+      "Jat",
+      "Gurjar / Gujjar",
+      "Bishnoi",
+      "Rebari / Raika / Dewasi",
+      "Mali / Saini",
+      "Kumhar / Prajapat",
+      "Suthar / Jangid",
+      "Yadav / Ahir",
+      "Charan",
+      "Lohar",
+      "Darji",
+      "Nai / Sen",
+      "Khati",
+      "Ghanchi",
+      "Kalal"
+    ],
+    "surnames": [
+      "Chaudhary",
+      "Jat",
+      "Godara",
+      "Beniwal",
+      "Punia",
+      "Dhaka",
+      "Saharan",
+      "Doodi",
+      "Siyag",
+      "Jakhar",
+      "Kaswan",
+      "Khileri",
+      "Bhadu",
+      "Khichar",
+      "Moond",
+      "Gurjar",
+      "Bainsla",
+      "Bishnoi",
+      "Dewasi",
+      "Rebari",
+      "Raika",
+      "Mali",
+      "Saini",
+      "Kumhar",
+      "Prajapat",
+      "Prajapati",
+      "Suthar",
+      "Jangid",
+      "Yadav",
+      "Charan",
+      "Panchal"
+    ]
+  },
+  "SC": {
+    "communities": [
+      "Meghwal",
+      "Bairwa",
+      "Balai",
+      "Regar / Raigar",
+      "Jatav / Chamar",
+      "Dhobi",
+      "Valmiki / Bhangi",
+      "Khatik",
+      "Dhanak",
+      "Sansi",
+      "Kanjar",
+      "Bawariya"
+    ],
+    "surnames": [
+      "Meghwal",
+      "Bairwa",
+      "Balai",
+      "Regar",
+      "Raigar",
+      "Jatav",
+      "Verma",
+      "Khatik",
+      "Valmiki",
+      "Dhanak",
+      "Sansi",
+      "Bawariya"
+    ]
+  },
+  "ST": {
+    "communities": [
+      "Meena",
+      "Bheel / Bhil",
+      "Damor",
+      "Garasia",
+      "Sahariya",
+      "Roat",
+      "Katara"
+    ],
+    "surnames": [
+      "Meena",
+      "Bheel",
+      "Bhil",
+      "Damor",
+      "Garasia",
+      "Sahariya",
+      "Roat",
+      "Katara"
+    ]
+  },
+  "Muslim": {
+    "communities": [
+      "Kayamkhani",
+      "Mev / Meo",
+      "Sindhi Musalman",
+      "Mansuri",
+      "Qureshi",
+      "Ansari",
+      "Khan / Pathan",
+      "Sayyid / Syed",
+      "Deshwali",
+      "Cheetah-Merat"
+    ],
+    "surnames": [
+      "Khan",
+      "Kayamkhani",
+      "Mansuri",
+      "Qureshi",
+      "Ansari",
+      "Pathan",
+      "Syed",
+      "Shah",
+      "Ali",
+      "Mohammad",
+      "Ahmed",
+      "Deen"
+    ]
+  }
+}
