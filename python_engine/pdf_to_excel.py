@@ -352,6 +352,77 @@ try:
 except Exception as _e:
     pass
 
+# Shared glyph-corruption data (same file the Node engine uses)
+GLYPH_EXACT = {}
+GLYPH_VOCAB = set()
+try:
+    _gp = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'glyph_corrections.json')
+    with open(_gp, 'r', encoding='utf-8') as _gf:
+        _gd = json.load(_gf)
+    GLYPH_EXACT = {k: v for k, v in _gd.get('exact_words', {}).items()}
+    GLYPH_VOCAB = set(_gd.get('village_vocab', []))
+except Exception:
+    pass
+
+_GLYPH_OPTS = {'ल': ['ी'], 'प': ['ो', 'ं', 'ू', 'ों'], 'क': ['ों']}
+
+
+def is_known_word(w: str) -> bool:
+    if not w:
+        return False
+    if w in RAJASTHAN_LEXICON or w in GLYPH_VOCAB:
+        return True
+    if len(w) > 3 and w.endswith('ों'):
+        stem = w[:-2]
+        return stem in RAJASTHAN_LEXICON or stem in GLYPH_VOCAB
+    return False
+
+
+def glyph_repair(tok: str) -> str:
+    """
+    Inverse of the SEC font bug ('ी'->'ल', 'ो'/'ं'/'ू'->'प', plural 'ों'->'प'/'क').
+    Fewest substitutions first; a candidate is accepted ONLY if it is a known word,
+    so valid words are never mutated.
+    """
+    if not tok:
+        return ""
+    if tok in GLYPH_EXACT:
+        return GLYPH_EXACT[tok]
+    if len(tok) < 3 or is_known_word(tok):
+        return tok
+    chars = list(tok)
+    idx = [i for i, c in enumerate(chars)
+           if c in ('ल', 'प') or (c == 'क' and i == len(chars) - 1)]
+    if not idx or len(idx) > 8:
+        return tok
+    evals = [0]
+    for k in range(1, min(4, len(idx)) + 1):
+        found = []
+
+        def rec(start, left, cur):
+            if found or evals[0] > 20000:
+                return
+            if left == 0:
+                evals[0] += 1
+                cand = ''.join(cur)
+                if is_known_word(cand):
+                    found.append(cand)
+                return
+            for p in range(start, len(idx)):
+                pos = idx[p]
+                orig = cur[pos]
+                for r in _GLYPH_OPTS[orig]:
+                    cur[pos] = r
+                    rec(p + 1, left - 1, cur)
+                    cur[pos] = orig
+                    if found:
+                        return
+
+        rec(0, k, chars[:])
+        if found:
+            return found[0]
+    return tok
+
 def levenshtein_dist(s1: str, s2: str) -> int:
     """Computes Levenshtein edit distance between two strings"""
     if len(s1) < len(s2):
@@ -550,12 +621,19 @@ def fuzzy_lexicon_correct(name: str) -> str:
     words = name.split()
     corrected_words = []
     for raw_w in words:
+        if raw_w in GLYPH_EXACT:
+            corrected_words.append(GLYPH_EXACT[raw_w])
+            continue
         if raw_w in RAJASTHAN_LEXICON:
             corrected_words.append(raw_w)
             continue
         w = descramble_sec_glyphs(raw_w)
         if w in RAJASTHAN_LEXICON:
             corrected_words.append(w)
+            continue
+        _rep = glyph_repair(w)
+        if _rep != w:
+            corrected_words.append(_rep)
             continue
 
         # If w is a clean, well-formed Devanagari word without OCR artifacts,
@@ -662,7 +740,22 @@ def clean_village_or_section_name(text: str) -> str:
     s = re.sub(r'([क-ह]+)क\s+का\s+बास', r'\1ों का बास', s)
     s = re.sub(r'([क-ह]+)ल\s+का\s+बास', r'\1ों का बास', s)
 
-    return re.sub(r'\s+', ' ', s).strip()
+    # Token-level repair: plural/honorific context + generic inverse-glyph engine
+    toks = re.sub(r'\s+', ' ', s).strip().split(' ')
+    out = []
+    for i, t in enumerate(toks):
+        nxt = toks[i + 1] if i + 1 < len(toks) else ''
+        if t in GLYPH_EXACT:
+            out.append(GLYPH_EXACT[t])
+        elif is_known_word(t):
+            out.append(t)
+        elif nxt in ('का', 'की', 'के') and len(t) > 2 and t[-1] in ('प', 'क'):
+            out.append(t[:-1] + 'ों')
+        elif t == 'जल' and nxt.startswith('ढाण'):
+            out.append('जी')
+        else:
+            out.append(glyph_repair(t))
+    return re.sub(r'\s+', ' ', ' '.join(out)).strip()
 
 
 
