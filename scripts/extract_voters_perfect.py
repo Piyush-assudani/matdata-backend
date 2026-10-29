@@ -296,10 +296,20 @@ GLYPH_HASH_TO_HINDI = {
     'fb772abf30': 'ड़',
     'fe0dc18178': 'फ',
     'ff774a509c': 'े',
+    # Rajasthan SEC Critical Verified Font CMap Fixes
+    'fd2c68b827': 'ी',
+    '539252633f': 'ु',
+    '18bede6132': 'ीं',
+    'b96edff874': 'प्र',
+    'a65bc08781': 'ो',
+    'ee740424e8': 'ि',
+    '0b26a93619': 'िर्',
+    '318f846b5b': 'िर्',
+    '02680e665a': 'ं',
 }
 
-PRE_BASE_HASHES = set(['2b15a97444', '326b85b3ae', '3a9f4a0e0a', '3e6d4c4f43', '52e1ecd704', '61ece8dbe0', '940f102545', '9dbe3751a3', 'cad285f226', 'd9036427cf', 'f5e95ba074', 'f762cc5fd1', 'f90e17bc6a'])
-REPH_HASHES = set(['25e9022dfc', '384789ba2d', '4d4d1bf640', '513d4f697f', '6fee751c4f', '738886d79d', '7f66e38315', '906d14ca84', '9a18581fbc', 'a7e73062a8', 'b516ed4428', 'b627b4ad55', 'd64d1492a7', 'def56c5e38'])
+PRE_BASE_HASHES = set(['2b15a97444', '326b85b3ae', '3a9f4a0e0a', '3e6d4c4f43', '52e1ecd704', '61ece8dbe0', '940f102545', '9dbe3751a3', 'cad285f226', 'd9036427cf', 'f5e95ba074', 'f762cc5fd1', 'f90e17bc6a', 'ee740424e8', '0b26a93619', '318f846b5b'])
+REPH_HASHES = set(['25e9022dfc', '384789ba2d', '4d4d1bf640', '513d4f697f', '6fee751c4f', '738886d79d', '7f66e38315', '906d14ca84', '9a18581fbc', 'a7e73062a8', 'b516ed4428', 'b627b4ad55', 'd64d1492a7', 'def56c5e38', '0b26a93619', '318f846b5b'])
 MATRA_CHARS = {'ा', 'ि', 'ी', 'ु', 'ू', 'ृ', 'े', 'ै', 'ो', 'ौ', 'ं', 'ँ', 'ः', 'ॅ', 'ों', 'ौं', 'ैं', 'ीं', 'ें', '्'}
 
 # ==============================================================================
@@ -374,10 +384,12 @@ def parse_to_unicode_map(to_uni_obj):
 
     return u_map
 
-# Dynamically merge learned dictionary on startup
+# Dynamically merge learned dictionary on startup (never overwrite verified master glyphs)
 _learned_g, _learned_w = load_learned_dictionary()
 if _learned_g:
-    GLYPH_HASH_TO_HINDI.update(_learned_g)
+    for k, v in _learned_g.items():
+        if k not in GLYPH_HASH_TO_HINDI:
+            GLYPH_HASH_TO_HINDI[k] = v
 
 # ==============================================================================
 # 2. UNIVERSAL GOVERNMENT ELECTORAL LEXICON (Standardized Hindi Names)
@@ -579,6 +591,66 @@ GOV_LEXICON_RULES = [
     (dev_word('पताप'), 'प्रताप'),
     (re.compile(r'\bआमबु\s*देवी\b'), 'आम्बु देवी'),
     (dev_word('आमबु'), 'आम्बु'),
+    
+    # 12. Client-Reported SEC CMap Font Normalizations
+    (dev_word('खींम सिंह'), 'खीम सिंह'),
+    (dev_word('खींमसिंह'), 'खीम सिंह'),
+    (dev_word('खींम'), 'खीम'),
+    (dev_word('खसम सिंह'), 'खीम सिंह'),
+    (dev_word('खसमाराम'), 'खीमाराम'),
+    (dev_word('बाबच सिंह'), 'बाबू सिंह'),
+    (dev_word('बाबु सिंह'), 'बाबू सिंह'),
+    (dev_word('बाबच'), 'बाबू'),
+    (dev_word('बाबु'), 'बाबू'),
+    (dev_word('जलतेन्द्र'), 'जितेन्द्र'),
+    (dev_word('अमलषा'), 'अमीषा'),
+    (dev_word('विष्णच दास'), 'विष्णु दास'),
+    (dev_word('विष्णचदास'), 'विष्णुदास'),
+    (dev_word('विष्णच'), 'विष्णु'),
+    (dev_word('सररता'), 'सरिता'),
+    (dev_word('पवीण कुमार'), 'प्रवीण कुमार'),
+    (dev_word('पवीण'), 'प्रवीण'),
+    (dev_word('सलहन लाल'), 'सोहन लाल'),
+    (dev_word('सलहनलाल'), 'सोहनलाल'),
+    (dev_word('सलहन'), 'सोहन'),
+    (dev_word('उरमला'), 'उर्मिला'),
+    (dev_word('नरससग'), 'नरसिंह'),
+    (dev_word('खचशल'), 'खुशी'),
+    (dev_word('सचन्दर'), 'सुन्दर'),
+    (dev_word('शरमला'), 'शर्मिला'),
+    (dev_word('नरमला'), 'निर्मला'),
+    (dev_word('प्रकाशुन्द्र'), 'प्रकाशचन्द्र'),
+    (dev_word('मनलज'), 'मनोज'),
+    (dev_word('मनलज कुमार'), 'मनोज कुमार'),
+    (dev_word('मनलज पालीवाल'), 'मनोज पालीवाल'),
+    (dev_word('बीमनलज कुमार'), 'बी. मनोज कुमार'),
+    (dev_word('बलमनलज कुमार'), 'बी. मनोज कुमार'),
+    (dev_word('बीमनलज'), 'बी. मनोज'),
+    (dev_word('बलमनलज'), 'बी. मनोज'),
+    (dev_word('सरसवतल'), 'सरस्वती'),
+    (dev_word('सरसवती'), 'सरस्वती'),
+    (dev_word('क्रमानिता कुमारी'), 'अनिता कुमारी'),
+    (dev_word('क्रमानिता'), 'अनिता'),
+    (dev_word('क्रमानिल कुमार'), 'अनिल कुमार'),
+    (dev_word('क्रमानिल'), 'अनिल'),
+    (dev_word('क्रमारविंत'), 'अरविन्द'),
+    (dev_word('क्रमारविंत पालीवाल'), 'अरविन्द पालीवाल'),
+    (dev_word('क्रमानीता'), 'अनीता'),
+    (dev_word('क्रमानीता पालीवाल'), 'अनीता पालीवाल'),
+    (dev_word('जलगा राम'), 'जोगा राम'),
+    (dev_word('जलगा'), 'जोगा'),
+    (dev_word('जलगाराम'), 'जोगाराम'),
+    (dev_word('जलरा राम'), 'जोरा राम'),
+    (dev_word('जलरा'), 'जोरा'),
+    (dev_word('जलरारा'), 'जोराराम'),
+    (dev_word('जलधा राम'), 'जोधा राम'),
+    (dev_word('जलधा'), 'जोधा'),
+    (dev_word('संतलष'), 'संतोष'),
+    (dev_word('पवेश'), 'भावेश'),
+    (dev_word('पवेश कुमार'), 'भावेश कुमार'),
+    (re.compile(r'([क-ह])वतल\b'), r'\1वती'),
+    (re.compile(r'([क-ह])ुन्द्र\b'), r'\1चन्द्र'),
+    (re.compile(r'\bक्रमा([अ-ह])'), r'\1'),
 ]
 
 ENDRA_CONJUNCT_RULES = [
@@ -750,7 +822,9 @@ def decode_hashes_to_hindi(hash_list):
         s = GLYPH_HASH_TO_HINDI.get(h, '')
         if not s or s == '◌':
             continue
-        if s in ['ि', 'िं']:
+        if s in ['िर्', 'िर्ं']:
+            tokens.append(('PRE_I_REPH', s))
+        elif s in ['ि', 'िं']:
             tokens.append(('PRE_I', s))
         elif 'र्' in s:
             tokens.append(('REPH_COMP', s))
@@ -760,6 +834,28 @@ def decode_hashes_to_hindi(hash_list):
             tokens.append(('HALF', s))
         else:
             tokens.append(('CONS', s))
+
+    # Rule 0: Chhoti-i with Reph ('िर्' / 'िर्ं') placed before next consonant cluster
+    i = 0
+    while i < len(tokens):
+        if tokens[i][0] == 'PRE_I_REPH':
+            reph_tok = tokens[i]
+            matra_val = 'िं' if 'िं' in reph_tok[1] else 'ि'
+            j = i + 1
+            while j < len(tokens) and tokens[j][0] == 'HALF':
+                j += 1
+            if j < len(tokens) and tokens[j][0] == 'CONS':
+                cons_tok = tokens[j]
+                tokens.pop(j)
+                tokens.pop(i)
+                tokens.insert(i, ('HALF', 'र्'))
+                tokens.insert(i + 1, cons_tok)
+                tokens.insert(i + 2, ('MATRA', matra_val))
+                i += 3
+            else:
+                i += 1
+        else:
+            i += 1
 
     # Rule 1: Chhoti-i ('ि' / 'िं') ko agle consonant / conjunct cluster ke baad lagao
     i = 0

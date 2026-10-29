@@ -303,10 +303,9 @@ async function migrateVoterNames() {
       needsUpdate = true;
     }
 
-    // Fix nameEn if it contains Devanagari or is empty
-    const hasHindiInNameEn = /[\u0900-\u097F]/.test(rawEn) || !rawEn.trim();
-    if (hasHindiInNameEn && (cleanHi || rawHi)) {
-      const correctNameEn = transliterateDevanagari(cleanHi || rawHi);
+    // Always ensure nameEn matches authentic clean Hindi name
+    if (cleanHi) {
+      const correctNameEn = transliterateDevanagari(cleanHi);
       if (correctNameEn && correctNameEn !== rawEn) {
         updateDoc.nameEn = correctNameEn;
         enChanges++;
@@ -314,10 +313,9 @@ async function migrateVoterNames() {
       }
     }
 
-    // Fix relativeNameEn if it contains Devanagari or is empty
-    const hasHindiInRelEn = /[\u0900-\u097F]/.test(rawRelEn) || !rawRelEn.trim();
-    if (hasHindiInRelEn && (cleanRelHi || rawRelHi)) {
-      const correctRelEn = transliterateDevanagari(cleanRelHi || rawRelHi);
+    // Always ensure relativeNameEn matches authentic clean Hindi relative name
+    if (cleanRelHi) {
+      const correctRelEn = transliterateDevanagari(cleanRelHi);
       if (correctRelEn && correctRelEn !== rawRelEn) {
         updateDoc.relativeNameEn = correctRelEn;
         enChanges++;
